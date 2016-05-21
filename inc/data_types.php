@@ -121,7 +121,7 @@ function SanitizePayStatus($pay_status_obj)
 {
     if(gettype($pay_status_obj) == 'object')
     {
-        if(get_class($pay_status_obj) == 'PayStatusTypeClass' )
+        if(get_class($pay_status_obj) ==  __NAMESPACE__ . '\PayStatusTypeClass' )
         {
             return $pay_status_obj->Sanitize();
         }

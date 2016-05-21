@@ -92,6 +92,30 @@ class PageViewManagerClass extends DatabaseInterfaceClass
         return $user_has_paid;
     }
 
+    public function HasUserPaidForThisPageView($pageview_id)
+    {
+        $post_id = null;
+
+        $user_id = $this->GrabUserId();
+
+        if(!is_null($user_id))
+        {
+            $pageview = $this->DB_GetPageViewData($pageview_id);
+
+            if(!is_null($pageview))
+            {
+                $pay_status = $pageview->GetPayStatus();
+                if($pay_status->GetString() == "PAID")
+                {
+                    $post_id = $pageview->GetPostId();
+                }
+            }
+        }
+
+        return $post_id;
+    }
+   
+
     public function RegisterNewPageView($post_id, $price)
     {
         $pageview_id_val = null;
@@ -154,6 +178,20 @@ class PageViewManagerClass extends DatabaseInterfaceClass
         }
 
         return $pageview;
+    }
+
+    public function SetPagePaid($pageview_id)
+    {
+        if(SanitizePageViewId($pageview_id))
+        {
+            $pageview = $this->DB_GetPageViewData($pageview_id);
+
+            $pay_status = new PayStatusTypeClass('PAID');
+
+            $pageview->SetPayStatus($pay_status);
+
+            $this->DB_UpdateRecord($pageview);
+        }
     }
 }
 

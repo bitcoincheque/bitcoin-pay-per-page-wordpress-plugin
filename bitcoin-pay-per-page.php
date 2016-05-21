@@ -41,6 +41,8 @@ define ('BCF_PAYPAGE_OPTION_REQ_COUNTER', 'bcf_paypage_option_req_counter');
 define ('BCF_PAYPAGE_OPTION_SALES_COUNTER', 'bcf_paypage_option_sales_counter');
 define ('BCF_PAYPAGE_OPTION_COOCKIE_COUNTER', 'bcf_paypage_option_coockie_counter');
 
+define ('BCF_PAYPAGE_REQUIRE_PAYMENT_TAG', '[require_payment]');
+
 
 function SanitizeInputText($text)
 {
@@ -48,8 +50,14 @@ function SanitizeInputText($text)
     $text = str_replace('>', '&gt;', $text);
 
     return $text;
-
 }
+
+function SanitizeInputInteger($text)
+{
+    $value = intval($text);
+    return $value;
+}
+
 
 function ValidateCheque($cheque)
 {
@@ -102,15 +110,15 @@ function GetPaymentRequest($ref)
 {
     $payment_support = $_SERVER["HTTP_PAYMENT_APP"];
 
-    echo $payment_support;
-
     if($payment_support != 1)
     {
-        $payment_info_link = "http://localhost/wordpress/wp-admin/admin-ajax.php?action=bcf_payperpage_process_ajax_get_payment_data&ref=". $ref;
+        $wallet_address = '1Q66D5mFm278drW7RbguqT8H8khTzMfMsh';
 
-        $href = 'bitcoin:1Q66D5mFm278drW7RbguqT8H8khTzMfMsh?request=' . $payment_info_link;
+        $payment_info_link = site_url() . '/wp-admin/admin-ajax.php?action=bcf_payperpage_process_ajax_get_payment_data&ref='. $ref;
 
-        $payment_url = '<a id="bcf_paylink1" href=' . $href . ' class="bitcoin-address">1Q66D5mFm278drW7RbguqT8H8khTzMfMsh</a>';
+        $href = 'bitcoin:' . $wallet_address . '?request=' . $payment_info_link;
+
+        $payment_url = '<a id="bcf_paylink1" href=' . $href . ' class="bitcoin-address">' . $wallet_address . '</a>';
     }
     else
     {
@@ -123,7 +131,7 @@ function GetPaymentRequest($ref)
 
 function FilterContent( $content )
 {
-    $position = strpos ($content, '[require_payment]');
+    $position = strpos ($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
 
     if($position)
     {
@@ -134,7 +142,7 @@ function FilterContent( $content )
 
         if($pageview_manager->HasUserPaidForThisPage($post_id))
         {
-            $content = str_replace('[require_payment]', '', $content);
+            $content = str_replace(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG, '', $content);
         }
         else
         {
@@ -142,11 +150,19 @@ function FilterContent( $content )
 
             $ref = $pageview_manager->RegisterNewPageView($post_id, $price);
 
+            $url_to_my_site = site_url() . '/wp-admin/admin-ajax.php';
+
+            $translation_array = array(
+                'url_to_my_site'    => $url_to_my_site,
+                'post_id_ref'       => intval($ref)
+            );
+            wp_localize_script('bcf_demo_script_handler', 'bcf_demo_script_handler_vars', $translation_array);
+
             $content = substr ($content , 0 , $position);
 
             $content .= '<div id="bcf_remaining_content">';
 
-            $content .= '<br>To read the rest of the arthicle, please pay ' . $price->GetFormattedCurrencyString('BTC', true) . ' to this address:';
+            $content .= '<br><b>To read the rest of the article, please pay ' . $price->GetFormattedCurrencyString('BTC', true) . ' to this address:</b>';
             $content .= '<br>';
             $content .= GetPaymentRequest($ref);
             $content .= "<br>";
@@ -165,20 +181,38 @@ function FilterContent( $content )
 
 function LoadRestOfContent()
 {
-    $request_counter = get_option(BCF_PAYPAGE_OPTION_REQ_COUNTER);
-    $sales_counter = get_option(BCF_PAYPAGE_OPTION_SALES_COUNTER);
+    $pageview_ref = SanitizeInputInteger($_REQUEST['post_id']);
 
-    if($sales_counter == 1)
+    if($pageview_ref >= 0)
     {
-        echo 'Dette er en test1234...';
-        echo '<br>Requests:';
-        echo strval($request_counter);
-        echo '<br>Sales:';
-        echo strval($sales_counter);
-    }
-    else
-    {
-        echo 'No payment verified.';
+        $pageview_id = new PageViewIdTypeClass($pageview_ref);
+
+        if(!is_null($pageview_id))
+        {
+            $pageview_manager = new PageViewManagerClass();
+
+            $post_id = $pageview_manager->HasUserPaidForThisPageView($pageview_id);
+
+            if(!is_null($post_id))
+            {
+                $post_id_val = $post_id->GetInt();
+
+                $post = get_post($post_id_val);
+                $content = $post->post_content;
+
+                $position = strpos ($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG) + strlen(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
+
+                $content = substr ($content , $position );
+
+                $content2 = str_replace("\r\n", '<p>', $content);
+
+                echo $content2;
+            }
+            else
+            {
+                echo 'No payment verified.';
+            }
+        }
     }
 
     die();
@@ -240,6 +274,11 @@ function ProcessAjaxReceiveCheque()
 
     if($cheque_is_valid == 'VALID')
     {
+        $pageview_id_val = intval($cheque['receiver_reference']);
+        $pageview_manager = new PageViewManagerClass();
+        $pageview_id = new PageViewIdTypeClass($pageview_id_val);
+        $pageview_manager->SetPagePaid($pageview_id);
+        
         $data = array(
             'pay_status' => 'OK',
             'request_counter' => strval($request_counter),
@@ -308,8 +347,7 @@ function DeactivatePlugin()
 function AddScript()
 {
     $src = plugin_dir_url( __FILE__ ) . 'js/script.js';
-
-    wp_enqueue_script( 'bcf_demo_script_handler', $src, array( 'jquery' ));
+    wp_enqueue_script('bcf_demo_script_handler', $src, array( 'jquery' ), '0.1', true);
 
     if(!isset($_COOKIE[BCF_PAYPAGE_OPTION_COOKIE_NAME]))
     {

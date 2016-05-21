@@ -6,17 +6,15 @@ var text = "";
 var retry = false;
 var timeout = 0;
 var error_counter = 0;
+var processing_text = 'Processing';
 
 jQuery(document).ready(function($)
 {
-
-	$('p#bcf_payment_status').html('x');
-
 	$( 'a#bcf_paylink1' ).click(
 		function()
 		{
 			window.setTimeout(bcf_demo_update_payment_status, 500);
-			$('p#bcf_payment_status').html('Processing...');
+			$('p#bcf_payment_status').html(processing_text);
 
 			timeout = 0;
 			error_counter = 0;
@@ -25,16 +23,12 @@ jQuery(document).ready(function($)
 
 	function bcf_demo_update_payment_status()
 	{
-        // http://localhost/wordpress/wp-admin/admin-ajax.php?action=bcf_payperpage_process_ajax_pay_status
-
 		var data = {
 			action: 'bcf_payperpage_process_ajax_pay_status',
-			post_id: '1'
-			// Must add cheque data here...x
+			post_id: bcf_demo_script_handler_vars.post_id_ref
 		}
 
-		$.getJSON('http://localhost/wordpress/wp-admin/admin-ajax.php', data, function(resp, status)
-        //$.getJSON('wp-admin/admin-ajax.php', data, function(resp, status)
+		$.getJSON(bcf_demo_script_handler_vars.url_to_my_site, data, function(resp, status)
 		{
 			retry = false;
 
@@ -71,7 +65,8 @@ jQuery(document).ready(function($)
 
 			if(retry == true)
 			{
-				text = "Processing " + timeout.toString();
+				processing_text = processing_text.concat('.');
+				text = processing_text;
 
 				if(error_counter < 3)
 				{
@@ -99,15 +94,14 @@ jQuery(document).ready(function($)
 
 	function bcf_demo_update_load_remaining_content()
 	{
-		$('div#bcf_remaining_content').html("Loading...");
+		$('p#bcf_payment_status').html("Loading...");
 
 		var data = {
 			action: 'bcf_payperpage_load_rest_of_content',
-			post_id: '1'
+			post_id: bcf_demo_script_handler_vars.post_id_ref
 		}
 
-        $.post('http://localhost/wordpress/wp-admin/admin-ajax.php', data, function(resp)
-        //$.post('wp-admin/admin-ajax.php', data, function(resp)
+        $.post(bcf_demo_script_handler_vars.url_to_my_site, data, function(resp)
 		{
 			$('div#bcf_remaining_content').html(resp);
 		});

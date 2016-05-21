@@ -313,6 +313,10 @@ class UnsigedIntegerTypeClass extends BaseTypeClass
         $data = intval($data_str);
         return parent::SetData($data);
     }
+    public function GetInt()
+    {
+        return parent::GetData();
+    }
     public function GetString()
     {
         return strval( parent::GetData() );
