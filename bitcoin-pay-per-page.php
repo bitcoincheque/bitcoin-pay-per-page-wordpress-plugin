@@ -42,7 +42,7 @@ define ('BCF_PAYPAGE_OPTION_SALES_COUNTER', 'bcf_paypage_option_sales_counter');
 define ('BCF_PAYPAGE_OPTION_COOCKIE_COUNTER', 'bcf_paypage_option_coockie_counter');
 
 
-function sanitize_input_text($text)
+function SanitizeInputText($text)
 {
     $text = str_replace('<', '&lt;', $text);
     $text = str_replace('>', '&gt;', $text);
@@ -51,7 +51,7 @@ function sanitize_input_text($text)
 
 }
 
-function validate_cheque($cheque)
+function ValidateCheque($cheque)
 {
     $result = 'Error';
     error_log('****** validate_cheque ******');
@@ -98,19 +98,7 @@ function validate_cheque($cheque)
     return $result;
 }
 
-
-function bcf_testing1()
-{
-    $output = site_url();
-    $output .= '<br>';
-    $output .= get_site_url();
-    $output .= '<br>';
-
-    return $output;
-}
-
-
-function print_payment_request($ref)
+function GetPaymentRequest($ref)
 {
     $payment_support = $_SERVER["HTTP_PAYMENT_APP"];
 
@@ -133,7 +121,7 @@ function print_payment_request($ref)
 }
 
 
-function demo_filter_content( $content )
+function FilterContent( $content )
 {
     $position = strpos ($content, '[require_payment]');
 
@@ -160,7 +148,7 @@ function demo_filter_content( $content )
 
             $content .= '<br>To read the rest of the arthicle, please pay ' . $price->GetFormattedCurrencyString('BTC', true) . ' to this address:';
             $content .= '<br>';
-            $content .= print_payment_request($ref);
+            $content .= GetPaymentRequest($ref);
             $content .= "<br>";
 
             $content .= '<p id="bcf_payment_status"></p>';
@@ -175,7 +163,7 @@ function demo_filter_content( $content )
     return $content;
 }
 
-function load_rest_of_content()
+function LoadRestOfContent()
 {
     $request_counter = get_option(BCF_PAYPAGE_OPTION_REQ_COUNTER);
     $sales_counter = get_option(BCF_PAYPAGE_OPTION_SALES_COUNTER);
@@ -197,7 +185,7 @@ function load_rest_of_content()
 }
 
 
-function process_ajax_pay_status()
+function ProcessAjaxPayStatus()
 {
     $request_counter = get_option(BCF_PAYPAGE_OPTION_REQ_COUNTER);
     $sales_counter = get_option(BCF_PAYPAGE_OPTION_SALES_COUNTER);
@@ -238,9 +226,9 @@ function process_ajax_pay_status()
     die();
 }
 
-function process_ajax_receive_cheque()
+function ProcessAjaxReceiveCheque()
 {
-    $cheque_json = sanitize_input_text($_REQUEST['cheque']);
+    $cheque_json = SanitizeInputText($_REQUEST['cheque']);
     $cheque_json = html_entity_decode($cheque_json);
     $cheque_json = str_replace ('\"', '"', $cheque_json);
     $cheque = json_decode($cheque_json, true);
@@ -248,7 +236,7 @@ function process_ajax_receive_cheque()
     $request_counter = get_option(BCF_PAYPAGE_OPTION_REQ_COUNTER);
     $sales_counter = get_option(BCF_PAYPAGE_OPTION_SALES_COUNTER);
 
-    $cheque_is_valid = validate_cheque($cheque);
+    $cheque_is_valid = ValidateCheque($cheque);
 
     if($cheque_is_valid == 'VALID')
     {
@@ -277,7 +265,7 @@ function process_ajax_receive_cheque()
     die();
 }
 
-function ajax_get_payment_data()
+function AjaxGetPaymentData()
 {
     $ref = intval($_REQUEST['ref']);
 
@@ -301,7 +289,7 @@ function ajax_get_payment_data()
     die();
 }
 
-function activate_plugin()
+function ActivatePlugin()
 {
     add_option( BCF_PAYPAGE_OPTION_REQ_COUNTER, 0 );
     add_option( BCF_PAYPAGE_OPTION_SALES_COUNTER, 0 );
@@ -311,13 +299,13 @@ function activate_plugin()
 }
 
 
-function deactivate_plugin()
+function DeactivatePlugin()
 {
     delete_option( BCF_PAYPAGE_OPTION_REQ_COUNTER );
     delete_option( BCF_PAYPAGE_OPTION_SALES_COUNTER );
 }
 
-function demo_add_script()
+function AddScript()
 {
     $src = plugin_dir_url( __FILE__ ) . 'js/script.js';
 
@@ -353,28 +341,28 @@ function testingpage()
 }
 
 /* Add AJAX handlers */
-add_action( 'wp_ajax_bcf_payperpage_process_ajax_get_payment_data',        'BCF_PayPerPage\ajax_get_payment_data');
-add_action( 'wp_ajax_nopriv_bcf_payperpage_process_ajax_get_payment_data', 'BCF_PayPerPage\ajax_get_payment_data');
+add_action('wp_ajax_bcf_payperpage_process_ajax_get_payment_data',          'BCF_PayPerPage\AjaxGetPaymentData');
+add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_get_payment_data',   'BCF_PayPerPage\AjaxGetPaymentData');
 
-add_action( 'wp_ajax_bcf_payperpage_load_rest_of_content',          'BCF_PayPerPage\load_rest_of_content');
-add_action( 'wp_ajax_nopriv_bcf_payperpage_load_rest_of_content',   'BCF_PayPerPage\load_rest_of_content');
+add_action('wp_ajax_bcf_payperpage_load_rest_of_content',                   'BCF_PayPerPage\LoadRestOfContent');
+add_action('wp_ajax_nopriv_bcf_payperpage_load_rest_of_content',            'BCF_PayPerPage\LoadRestOfContent');
 
-add_action( 'wp_ajax_bcf_payperpage_process_ajax_send_cheque',        'BCF_PayPerPage\process_ajax_receive_cheque');
-add_action( 'wp_ajax_nopriv_bcf_payperpage_process_ajax_send_cheque', 'BCF_PayPerPage\process_ajax_receive_cheque');
+add_action('wp_ajax_bcf_payperpage_process_ajax_send_cheque',               'BCF_PayPerPage\ProcessAjaxReceiveCheque');
+add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_send_cheque',        'BCF_PayPerPage\ProcessAjaxReceiveCheque');
 
-add_action( 'wp_ajax_bcf_payperpage_process_ajax_pay_status',        'BCF_PayPerPage\process_ajax_pay_status');
-add_action( 'wp_ajax_nopriv_bcf_payperpage_process_ajax_pay_status', 'BCF_PayPerPage\process_ajax_pay_status');
+add_action('wp_ajax_bcf_payperpage_process_ajax_pay_status',                'BCF_PayPerPage\ProcessAjaxPayStatus');
+add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_pay_status',         'BCF_PayPerPage\ProcessAjaxPayStatus');
 
 /* Add handlers */
-add_action('init', 'BCF_PayPerPage\demo_add_script');
+add_action('init', 'BCF_PayPerPage\AddScript');
 
 /* Add filters */
-add_filter( 'the_content', 'BCF_PayPerPage\demo_filter_content' );
+add_filter( 'the_content', 'BCF_PayPerPage\FilterContent');
 
 /* Add shortcodes */
 add_shortcode( 'testingpage', 'BCF_PayPerPage\testingpage' );
 
-register_activation_hook(__FILE__, 'BCF_PayPerPage\activate_plugin');
-register_deactivation_hook(__FILE__, 'BCF_PayPerPage\deactivate_plugin');
+register_activation_hook(__FILE__, 'BCF_PayPerPage\ActivatePlugin');
+register_deactivation_hook(__FILE__, 'BCF_PayPerPage\DeactivatePlugin');
 
 ?>
