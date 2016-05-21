@@ -51,12 +51,19 @@ define ('PAYMENT_APP_BROWSER_HEADER_PAYMENT_CHEQUE_VER_1', '1');
  *
  * Does no sanitizing of it, use it with care.
  */
-function bcf_pbh_get_payment_app_browser_header_str()
+function get_payment_app_browser_header_str()
 {
 	$header_name_string = 'HTTP_' . strtoupper(BCF_BHP_HEADER_NAME_PAYMENT_APP);
 	$header_name_string = str_replace('-', '_', $header_name_string);
 
-	$browser_header_str = $_SERVER[$header_name_string];
+	if(isset($_SERVER[$header_name_string]))
+	{
+		$browser_header_str = $_SERVER[ $header_name_string ];
+	}
+	else
+	{
+		$browser_header_str = '';
+	}
 
 	return $browser_header_str;
 }
@@ -67,7 +74,7 @@ function bcf_pbh_get_payment_app_browser_header_str()
  * @return (bool)   true     OK.
  * @return (bool)   false    Error , too long.
  */
-function bcf_pbh_check_size_payment_app_browser_header_str($browser_header_str)
+function check_size_payment_app_browser_header_str($browser_header_str)
 {
 	if(strlen($browser_header_str) < BCF_BHP_PAYMENT_APP_MAX_LENGTH)
 	{
@@ -88,7 +95,7 @@ function bcf_pbh_check_size_payment_app_browser_header_str($browser_header_str)
  * @return (bool)   true     OK.
  * @return (bool)   false    Error, illegal characters found.
  */
-function bcf_pbh_sanitize_payment_app_browser_header_str($browser_header_str)
+function sanitize_payment_app_browser_header_str($browser_header_str)
 {
 	$result = false;
 
@@ -110,7 +117,7 @@ function bcf_pbh_sanitize_payment_app_browser_header_str($browser_header_str)
  * @return  (bool)   false  Error encoding JSON string.
  * @return  (string)        JSON string
  */
-function bcf_pbh_get_browser_json($browser_header_str)
+function get_browser_json($browser_header_str)
 {
 	$header_data_json = false;
 
@@ -219,7 +226,7 @@ function bcf_pabh_get_attr_text_description($field_name, $attribute)
  * @param (bool)    false   Error in list.
  * @param (array)           OK. Array contains the attribute values.
  */
-function bcf_pbh_get_attribute_array($value)
+function get_attribute_array($value)
 {
 	$attribute_raw_array = explode(';', $value);
 	$attribute_array = array();
@@ -257,7 +264,7 @@ function bcf_pbh_get_attribute_array($value)
 }
 
 
-function bcf_pbh_get_list_of_attributes($field_name, $attribute_array)
+function get_list_of_attributes($field_name, $attribute_array)
 {
 	$str = '';
 	$more_than_one = false;
@@ -279,18 +286,18 @@ function payment_app_get_browser_header_json()
 	$output = '';
 	$header_data_json = false;
 
-	$browser_header_str = bcf_pbh_get_payment_app_browser_header_str();
+	$browser_header_str = get_payment_app_browser_header_str();
 
 	if($browser_header_str)
 	{
 		#$output .= "Payment-App browser header detected:<br>";
 		#$output .= bcf_bph_create_paymentapp_header_table($browser_header_str);
 
-		if (bcf_pbh_check_size_payment_app_browser_header_str($browser_header_str))
+		if (check_size_payment_app_browser_header_str($browser_header_str))
 		{
-			if (bcf_pbh_sanitize_payment_app_browser_header_str($browser_header_str))
+			if (sanitize_payment_app_browser_header_str($browser_header_str))
 			{
-				$header_data_json = bcf_pbh_get_browser_json($browser_header_str);
+				$header_data_json = get_browser_json($browser_header_str);
 
 				if ($header_data_json) {
 					foreach ($header_data_json as $key => $value)
@@ -299,13 +306,13 @@ function payment_app_get_browser_header_json()
 							case PAYMENT_APP_BROWSER_HEADER_FIELD_VERSION:
 							case PAYMENT_APP_BROWSER_HEADER_FIELD_PAYMENT_PROTOCOL:
 							case PAYMENT_APP_BROWSER_HEADER_FIELD_BITCOIN_CHEQUE:
-								$attribute_list = bcf_pbh_get_attribute_array($value);
-								#$output .= bcf_pbh_create_attribute_section($key, $value, $attribute_list);
+								$attribute_list = get_attribute_array($value);
+								#$output .= create_attribute_section($key, $value, $attribute_list);
 								break;
 
 							case PAYMENT_APP_BROWSER_HEADER_FIELD_PREFERED_CURRENCY:
-								$attribute_list = bcf_pbh_get_attribute_array($value);
-								#$output .= bcf_pbh_create_prefered_currency_section($key, $value, $attribute_list);
+								$attribute_list = get_attribute_array($value);
+								#$output .= create_prefered_currency_section($key, $value, $attribute_list);
 								break;
 
 							default:
@@ -351,7 +358,7 @@ function payment_app_browser_header_contains($header_data_json, $search_key, $se
 	if ($header_data_json) {
 		foreach ($header_data_json as $key => $value) {
 			if($search_key === $key){
-				$attribute_list = bcf_pbh_get_attribute_array($value);
+				$attribute_list = get_attribute_array($value);
 				foreach ($attribute_list as $attribute)
 				{
 					if($search_attribute === $attribute)

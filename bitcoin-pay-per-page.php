@@ -35,6 +35,7 @@ Text Domain: bcf_payperpage
 namespace BCF_PayPerPage;
 
 require_once ('inc/pageview_manager.php');
+require_once ('inc/payment-browser-header.php');
 
 
 define ('BCF_PAYPAGE_OPTION_REQ_COUNTER',       'bcf_paypage_option_req_counter');
@@ -113,9 +114,7 @@ function ValidateCheque($cheque)
 
 function GetPaymentRequest($ref)
 {
-    $payment_support = $_SERVER["HTTP_PAYMENT_APP"];
-
-    if($payment_support != 1)
+    if(payment_app_bitcoin_cheque_supported())
     {
         $options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
         $wallet_address = $options['wallet_address'];
@@ -449,8 +448,8 @@ function AdminDrawSettingsWalletAddress()
 {
     $options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
     $selected = $options['wallet_address'];
-    echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[wallet_address]" type="text">'.$selected.'</textarea>';
-    //echo '<input id="bcf_payperpage_wallet_address" name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[wallet_address]" type="text" value="' . $selected . '" />';
+    //echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[wallet_address]" type="text">'.$selected.'</textarea>';
+    echo '<input id="bcf_payperpage_wallet_address" name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[wallet_address]" type="text" value="' . $selected . '" />';
 }
 
 function AdminDrawSettingsRecommendedBank()
@@ -554,13 +553,13 @@ function AdminMenu()
     );
     add_settings_field(
         'bcf_payperpage_settings_recommended_bank',
-        'URL to recommended Bitcoin Bank:',
+        'AJAX php handler:',
         '\BCF_PayPerPage\AdminDrawSettingsAjaxHandler',
         'settings_section_advanced_settings',
         'settings_section_advanced_options_tag'
     );
 
-    add_menu_page('Pay-Per-Page Menu', 'Plugin Settings', 'manage_options', __FILE__, 'BCF_PayPerPage\AdminPage');
+    add_menu_page('Pay-Per-Page Menu', 'Pay Per Page', 'manage_options', __FILE__, 'BCF_PayPerPage\AdminPage');
     add_submenu_page(__FILE__, 'Payment Status', 'Payment Status', 'manage_options', __FILE__.'about', 'BCF_PayPerPage\AdminPaymentStatus');
 }
 
