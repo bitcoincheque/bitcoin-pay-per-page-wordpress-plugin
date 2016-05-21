@@ -6,14 +6,16 @@ var text = "";
 var retry = false;
 var timeout = 0;
 var error_counter = 0;
-var processing_text = 'Processing';
+var processing_text = "";
 
 jQuery(document).ready(function($)
 {
 	$( 'a#bcf_paylink1' ).click(
 		function()
 		{
-			window.setTimeout(bcf_demo_update_payment_status, 500);
+            processing_text = "Processing";
+
+            window.setTimeout(bcf_demo_update_payment_status, 500);
 			$('p#bcf_payment_status').html(processing_text);
 
 			timeout = 0;
