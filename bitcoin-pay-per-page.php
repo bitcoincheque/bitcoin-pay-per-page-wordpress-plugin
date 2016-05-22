@@ -43,7 +43,10 @@ define ('BCF_PAYPAGE_OPTION_SALES_COUNTER',     'bcf_paypage_option_sales_counte
 define ('BCF_PAYPAGE_OPTION_COOCKIE_COUNTER',   'bcf_paypage_option_coockie_counter');
 
 define ('BCF_PAYPAGE_PAYMENT_OPTIONS',          'bcf_payperpage_payment_options');
+define ('BCF_PAYPAGE_WALLET_OPTIONS',           'bcf_payperpage_wallet_options');
+define ('BCF_PAYPAGE_RECEIVER_OPTIONS',         'bcf_payperpage_receiver_options');
 define ('BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS', 'bcf_payperpage_recommended_bank_options');
+define ('BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS', 'bcf_payperpage_cheque_condition_options');
 define ('BCF_PAYPAGE_ADVANCED_OPTIONS',         'bcf_payperpage_advanced_options');
 
 define ('BCF_PAYPAGE_REQUIRE_PAYMENT_TAG', '[require_payment]');
@@ -116,8 +119,8 @@ function GetPaymentRequest($ref)
 {
     if(payment_app_bitcoin_cheque_supported())
     {
-        $options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
-        $wallet_address = $options['wallet_address'];
+        $options = get_option(BCF_PAYPAGE_WALLET_OPTIONS);
+        $wallet_address = $options['receiver_wallet'];
 
         if($wallet_address == '')
         {
@@ -341,12 +344,41 @@ function AjaxGetPaymentData()
         $options = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
         $ajax_handler = $options['ajax_handler'];
 
+        $options = get_option(BCF_PAYPAGE_RECEIVER_OPTIONS);
+        $receiver_name = $options['receiver_name'];
+        $receiver_address = $options['receiver_address'];
+
+        $receiver_url = $options['receiver_url'];
+        $receiver_email = $options['receiver_email'];
+        $business_no = $options['business_no'];
+        $registration_country = $options['registration_country'];
+
+        $options = get_option(BCF_PAYPAGE_WALLET_OPTIONS);
+        $receiver_wallet = $options['receiver_wallet'];
+
+        $options = get_option(BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS);
+        $min_expire_hour = strval(intval($options['min_expire_hour']) * 3600);
+        $max_escrow_hour = strval(intval($options['max_escrow_hour']) * 3600);
+
         $price = $pageview->GetPrice();
 
+        $description = 'Payment for page';
+
         $data = array(
-            'amount'    => $price->GetString(),
-            'ref'       => $ref,
-            'paylink'   => site_url() . $ajax_handler . '?action=bcf_payperpage_process_ajax_send_cheque'
+            'amount'            => $price->GetString(),
+            'currency'          => 'BTC',
+            'paylink'           => site_url() . $ajax_handler . '?action=bcf_payperpage_process_ajax_send_cheque',
+            'receiver_name'     => $receiver_name,
+            'receiver_address'  => $receiver_address,
+            'receiver_url'      => $receiver_url,
+            'receiver_email'    => $receiver_email,
+            'business_no'       => $business_no,
+            'reg_country'       => $registration_country,
+            'receiver_wallet'   => $receiver_wallet,
+            'min_expire_hour'   => $min_expire_hour,
+            'max_escrow_hour'   => $max_escrow_hour,
+            'ref'               => $ref,
+            'description'       => $description
         );
 
         echo json_encode($data);
@@ -391,6 +423,29 @@ function AdminPage()
     echo '<br><hr>';
 
     echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPAGE_WALLET_OPTIONS);
+    echo do_settings_sections('settings_section_wallet_option');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+    echo '<br><hr>';
+
+    echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPAGE_RECEIVER_OPTIONS);
+    echo do_settings_sections('settings_section_receiver_option');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+
+    echo '<br><hr>';
+
+    echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS);
+    echo do_settings_sections('settings_section_cheque_options');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+
+    echo '<br><hr>';
+
+    echo '<form action="options.php" method="post">';
     echo settings_fields(BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS);
     echo do_settings_sections('settings_section_recommended_bank');
     echo '<input type="submit" name="Submit" value="Save Options" />';
@@ -420,7 +475,7 @@ function AdminDrawSettingsDefaultPrice()
 {
     $options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
     $selected = $options['default_price'];
-    echo '<input id="bcf_payperpage_default_price" name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[default_price]" type="text" value="' . $selected . '" />';
+    echo '<input name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[default_price]" type="text" value="' . $selected . '" /> Satoshis';
 }
 
 function AdminDrawSettingsBtcUnitsOption()
@@ -428,7 +483,7 @@ function AdminDrawSettingsBtcUnitsOption()
     $BTC_units = array('BTC', 'mBTC', 'uBTC');
     $options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
 
-    echo '<select id="BTC_denominator" name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[btc_unit]">';
+    echo '<select name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[btc_unit]">';
     foreach($BTC_units as $BTC_unit)
     {
         if($options['btc_unit'] == $BTC_unit)
@@ -446,38 +501,112 @@ function AdminDrawSettingsBtcUnitsOption()
 
 function AdminDrawSettingsWalletAddress()
 {
-    $options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
-    $selected = $options['wallet_address'];
-    //echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[wallet_address]" type="text">'.$selected.'</textarea>';
-    echo '<input id="bcf_payperpage_wallet_address" name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[wallet_address]" type="text" value="' . $selected . '" />';
+    $options = get_option(BCF_PAYPAGE_WALLET_OPTIONS);
+    $selected = $options['receiver_wallet'];
+    //echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_WALLET_OPTIONS . '[receiver_wallet]" type="text">'.$selected.'</textarea>';
+    echo '<input name="' . BCF_PAYPAGE_WALLET_OPTIONS . '[receiver_wallet]" type="text" value="' . $selected . '" />';
+}
+
+function AdminDrawSettingsReceiverName()
+{
+    $options = get_option(BCF_PAYPAGE_RECEIVER_OPTIONS);
+    $selected = $options['receiver_name'];
+    echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[receiver_name]" type="text">'.$selected.'</textarea>';
+    //echo '<input name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[receiver_name]" type="text" value="' . $selected . '" />';
+}
+
+function AdminDrawSettingsReceiverAddress()
+{
+    $options = get_option(BCF_PAYPAGE_RECEIVER_OPTIONS);
+    $selected = $options['receiver_address'];
+    echo '<textarea rows="4" cols="50" name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[receiver_address]" type="text">'.$selected.'</textarea>';
+    //echo '<input name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[receiver_address]" type="text" value="' . $selected . '" />';
+}
+
+function AdminDrawSettingsReceiverUrl()
+{
+    $options = get_option(BCF_PAYPAGE_RECEIVER_OPTIONS);
+    $selected = $options['receiver_url'];
+    echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[receiver_url]" type="text">'.$selected.'</textarea>';
+    //echo '<input name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[receiver_url]" type="text" value="' . $selected . '" />';
+}
+
+function AdminDrawSettingsReceiverEmail()
+{
+    $options = get_option(BCF_PAYPAGE_RECEIVER_OPTIONS);
+    $selected = $options['receiver_email'];
+    echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[receiver_email]" type="text">'.$selected.'</textarea>';
+    //echo '<input name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[receiver_email]" type="text" value="' . $selected . '" />';
+}
+
+function AdminDrawSettingsBusinessNo()
+{
+    $options = get_option(BCF_PAYPAGE_RECEIVER_OPTIONS);
+    $selected = $options['business_no'];
+    //echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[business_no]" type="text">'.$selected.'</textarea>';
+    echo '<input name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[business_no]" type="text" value="' . $selected . '" />';
+}
+
+function AdminDrawSettingsRegistrationCountry()
+{
+    $options = get_option(BCF_PAYPAGE_RECEIVER_OPTIONS);
+    $selected = $options['registration_country'];
+    //echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[registration_country]" type="text">'.$selected.'</textarea>';
+    echo '<input name="' . BCF_PAYPAGE_RECEIVER_OPTIONS . '[registration_country]" type="text" value="' . $selected . '" />';
+}
+
+function AdminDrawSettingsMinCollectTime()
+{
+    $options = get_option(BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS);
+    $selected = $options['max_escrow_hour'];
+    //echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS . '[max_escrow_hour]" type="text">'.$selected.'</textarea>';
+    echo '<input name="' . BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS . '[max_escrow_hour]" type="text" value="' . $selected . '" /> Hours';
+}
+
+function AdminDrawSettingsMaxEscrowTime()
+{
+    $options = get_option(BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS);
+    $selected = $options['min_expire_hour'];
+    //echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS . '[min_expire_hour]" type="text">'.$selected.'</textarea>';
+    echo '<input name="' . BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS . '[min_expire_hour]" type="text" value="' . $selected . '" /> Hours';
 }
 
 function AdminDrawSettingsRecommendedBank()
 {
     $options = get_option(BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS);
     $selected = $options['bank_url'];
-    echo '<textarea rows="1" cols="50" id="bcf_payperpage_recommended_bank" name="' . BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS . '[bank_url]" type="text">'.$selected.'</textarea>';
+    echo '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS . '[bank_url]" type="text">'.$selected.'</textarea>';
 }
 
 function AdminDrawSettingsRecommendedBankHelp()
 {
     $options = get_option(BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS);
     $selected = $options['help_text'];
-    echo '<textarea rows="4" cols="50" id="bcf_payperpage_recommended_bank_help_text" name="' . BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS . '[help_text]" type="text">'.$selected.'</textarea>';
+    echo '<textarea rows="4" cols="50" name="' . BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS . '[help_text]" type="text">'.$selected.'</textarea>';
 }
 
 function AdminDrawSettingsAjaxHandler()
 {
     $options = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
     $selected = $options['ajax_handler'];
-    $inp =  '<textarea rows="1" cols="50" id="bcf_payperpage_ajax_handler" name="' . BCF_PAYPAGE_ADVANCED_OPTIONS . '[ajax_handler]" type="text">'.$selected.'</textarea>';
+    $inp =  '<textarea rows="1" cols="50" name="' . BCF_PAYPAGE_ADVANCED_OPTIONS . '[ajax_handler]" type="text">'.$selected.'</textarea>';
     echo $inp;
 }
 
 
 function AdminDrawPaymentSettingsHelpText()
 {
-    echo 'Payment settings';
+    echo 'Set price in Bitcoin for each page view.';
+}
+
+function AdminDrawWalletHelpText()
+{
+    echo 'Select the Bitcoin wallet address (public key) at where your payments will be sent to.';
+}
+
+function AdminDrawBusinessHelpText()
+{
+    echo 'Enter your business information. If your site is not part of a business, enter your personal details. This information is optional, but your should provide a name.';
 }
 
 function AdminDrawSettingsHelpRecommendedBank()
@@ -485,43 +614,129 @@ function AdminDrawSettingsHelpRecommendedBank()
     echo 'In case the user has no Banking App installed, he will be directed to this bank where he can sign uf for an account and download an Banking App.';
 }
 
+function AdminDrawSettingsChequeHelp()
+{
+    echo 'Your required Bitcoin Cheque conditions. If your conditions is for tight, the user may no accept it.<br>Minimum collection time recommanded is 24 hour.<br>Maximum recommended escrow time is 24 hour';
+}
+
 function AdminDrawSettingsHelpAdvancedSettings()
 {
-    echo 'Advanced settings.';
+    echo 'If you have a special configured Wordpress site, you may need to change the link to the AJAX handler.';
 }
 
 
 function AdminMenu()
 {
     register_setting(BCF_PAYPAGE_PAYMENT_OPTIONS, BCF_PAYPAGE_PAYMENT_OPTIONS);
+    register_setting(BCF_PAYPAGE_WALLET_OPTIONS, BCF_PAYPAGE_WALLET_OPTIONS);
+    register_setting(BCF_PAYPAGE_RECEIVER_OPTIONS, BCF_PAYPAGE_RECEIVER_OPTIONS);
     register_setting(BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS, BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS);
+    register_setting(BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS, BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS);
     register_setting(BCF_PAYPAGE_ADVANCED_OPTIONS, BCF_PAYPAGE_ADVANCED_OPTIONS);
 
     add_settings_section(
         'settings_section_payment_option_tag',
-        'Payment Settings',
+        'Price settings',
         'BCF_PayPerPage\AdminDrawPaymentSettingsHelpText',
         'settings_section_payment_option'
     );
     add_settings_field(
         'bcf_payperpage_settings_price',
-        'Default price per page view:',
+        'Default price per page purchase:',
         '\BCF_PayPerPage\AdminDrawSettingsDefaultPrice',
         'settings_section_payment_option',
         'settings_section_payment_option_tag'
     );
     add_settings_field(
         'bcf_payperpage_settings_btc_denominator',
-        'Price unit:', '\BCF_PayPerPage\AdminDrawSettingsBtcUnitsOption',
+        'Price unit to display on page:',
+        '\BCF_PayPerPage\AdminDrawSettingsBtcUnitsOption',
         'settings_section_payment_option',
         'settings_section_payment_option_tag'
+    );
+
+    add_settings_section(
+        'settings_section_wallet_option_tag',
+        'Bitcoin wallet settings',
+        'BCF_PayPerPage\AdminDrawWalletHelpText',
+        'settings_section_wallet_option'
     );
     add_settings_field(
         'bcf_payperpage_settings_wallet',
         'Receive Bitcoin Wallet address for payments:',
         '\BCF_PayPerPage\AdminDrawSettingsWalletAddress',
-        'settings_section_payment_option',
-        'settings_section_payment_option_tag'
+        'settings_section_wallet_option',
+        'settings_section_wallet_option_tag'
+    );
+
+    add_settings_section(
+        'settings_section_receiver_option_tag',
+        'Business information:',
+        'BCF_PayPerPage\AdminDrawBusinessHelpText',
+        'settings_section_receiver_option'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_name',
+        'Business name (receiver\'s name):',
+        '\BCF_PayPerPage\AdminDrawSettingsReceiverName',
+        'settings_section_receiver_option',
+        'settings_section_receiver_option_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_office_address',
+        'Business office address (street, town, state, zip, country etc.):',
+        '\BCF_PayPerPage\AdminDrawSettingsReceiverAddress',
+        'settings_section_receiver_option',
+        'settings_section_receiver_option_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_url',
+        'Business web site:',
+        '\BCF_PayPerPage\AdminDrawSettingsReceiverUrl',
+        'settings_section_receiver_option',
+        'settings_section_receiver_option_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_email',
+        'Business e-mail:',
+        '\BCF_PayPerPage\AdminDrawSettingsReceiverEmail',
+        'settings_section_receiver_option',
+        'settings_section_receiver_option_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_enterprice_no',
+        'Business registration number:',
+        '\BCF_PayPerPage\AdminDrawSettingsBusinessNo',
+        'settings_section_receiver_option',
+        'settings_section_receiver_option_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_registration_country',
+        'Registration country:',
+        '\BCF_PayPerPage\AdminDrawSettingsRegistrationCountry',
+        'settings_section_receiver_option',
+        'settings_section_receiver_option_tag'
+    );
+
+    add_settings_section(
+        'settings_section_cheque_options_tag',
+        'Rrequired Bitcoin Cheque conditions',
+        'BCF_PayPerPage\AdminDrawSettingsChequeHelp',
+        'settings_section_cheque_options'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_min_expire_time',
+        'Minimum collect time (Expire time):',
+        '\BCF_PayPerPage\AdminDrawSettingsMinCollectTime',
+        'settings_section_cheque_options',
+        'settings_section_cheque_options_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_max_escrow_time',
+        'Maximum escrow time:',
+        '\BCF_PayPerPage\AdminDrawSettingsMaxEscrowTime',
+        'settings_section_cheque_options',
+        'settings_section_cheque_options_tag'
     );
 
     add_settings_section(
@@ -568,9 +783,26 @@ function ActivatePlugin()
     add_option( BCF_PAYPAGE_OPTION_COOCKIE_COUNTER, 0 );
 
     add_option (BCF_PAYPAGE_PAYMENT_OPTIONS, array(
-            'default_price' => '1000',
-            'btc_unit' => 'mBTC',
-            'wallet_address' => ''
+            'default_price' => '100000',
+            'btc_unit' => 'mBTC'
+    ));
+
+    add_option (BCF_PAYPAGE_WALLET_OPTIONS, array(
+        'receiver_wallet' => ''
+    ));
+
+    add_option (BCF_PAYPAGE_RECEIVER_OPTIONS, array(
+        'receiver_name' => get_bloginfo('name'),
+        'receiver_address' => '',
+        'receiver_url' => site_url(),
+        'receiver_email' => '',
+        'business_no' => '',
+        'registration_country' => ''
+    ));
+
+    add_option (BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS, array(
+        'min_expire_hour' => '24',
+        'max_escrow_hour' => '24'
     ));
 
     add_option (BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS, array(
@@ -590,6 +822,9 @@ function ActivatePlugin()
 function DeactivatePlugin()
 {
     delete_option( BCF_PAYPAGE_PAYMENT_OPTIONS );
+    delete_option( BCF_PAYPAGE_WALLET_OPTIONS );
+    delete_option( BCF_PAYPAGE_RECEIVER_OPTIONS );
+    delete_option( BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS );
     delete_option( BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS );
     delete_option( BCF_PAYPAGE_ADVANCED_OPTIONS );
 }
