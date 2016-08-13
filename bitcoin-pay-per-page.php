@@ -79,9 +79,10 @@ function ValidateCheque($cheque)
     $collect_url .= '&cheque=';
 
     $json = json_encode($cheque);
-    $json_encoded = rawurlencode($json);
+    $base64 = base64_encode($json);
+    $base64_uri_encoded = urlencode($base64);
 
-    $api_url = $collect_url . $json_encoded;
+    $api_url = $collect_url . $base64_uri_encoded;
 
     error_log($api_url);
 
@@ -96,7 +97,7 @@ function ValidateCheque($cheque)
         }
         else
         {
-            echo $json . '<br>';
+            //echo $json . '<br>';
             $json = json_decode($json, true);
             if($json)
             {
@@ -117,6 +118,10 @@ function ValidateCheque($cheque)
 
 function GetPaymentRequest($ref)
 {
+    $options = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
+    $ajax_handler = $options['ajax_handler'];
+    $payment_info_link = site_url() . $ajax_handler . '?action=bcf_payperpage_process_ajax_get_payment_data&ref='. $ref;
+
     if(payment_app_bitcoin_cheque_supported())
     {
         $options = get_option(BCF_PAYPAGE_WALLET_OPTIONS);
@@ -128,13 +133,7 @@ function GetPaymentRequest($ref)
         }
         else
         {
-            $options = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
-            $ajax_handler = $options['ajax_handler'];
-
-            $payment_info_link = site_url() . $ajax_handler . '?action=bcf_payperpage_process_ajax_get_payment_data&ref='. $ref;
-
             $href = 'bitcoin:' . $wallet_address . '?request=' . $payment_info_link;
-
             $payment_url = '<a id="bcf_paylink1" href=' . $href . ' class="bitcoin-address">' . $wallet_address . '</a>';
         }
     }
@@ -144,7 +143,9 @@ function GetPaymentRequest($ref)
         $help_text = $options['help_text'];
         $bank_url = $options['bank_url'];
 
-        $payment_url = '<a class="bcf_test" href="' . $bank_url . '">' . $help_text . '</a>';
+        $payment_info_link = rawurlencode($payment_info_link);
+
+        $payment_url = '<a class="bcf_test" href="' . $bank_url .  '?request=' . $payment_info_link . '">' . $help_text . '</a>';
     }
 
     return $payment_url;
@@ -289,9 +290,9 @@ function ProcessAjaxPayStatus()
 
 function ProcessAjaxReceiveCheque()
 {
-    $cheque_json = SanitizeInputText($_REQUEST['cheque']);
-    $cheque_json = html_entity_decode($cheque_json);
-    $cheque_json = str_replace ('\"', '"', $cheque_json);
+    $cheque_base64_url_encoded = SanitizeInputText($_REQUEST['cheque']);
+    $cheque_base64 = html_entity_decode($cheque_base64_url_encoded);
+    $cheque_json = base64_decode($cheque_base64);
     $cheque = json_decode($cheque_json, true);
 
     $request_counter = get_option(BCF_PAYPAGE_OPTION_REQ_COUNTER);
@@ -305,11 +306,13 @@ function ProcessAjaxReceiveCheque()
         $pageview_manager = new PageViewManagerClass();
         $pageview_id = new PageViewIdTypeClass($pageview_id_val);
         $pageview_manager->SetPagePaid($pageview_id);
+        $post_id = $pageview_manager->GetPaymentPostId($pageview_id);
         
         $data = array(
             'pay_status' => 'OK',
             'request_counter' => strval($request_counter),
-            'sales_counter' => strval($sales_counter)
+            'sales_counter' => strval($sales_counter),
+            'return_link' => site_url() . '?p=' . $post_id->GetString()
         );
         $sales_counter = 1;
     }
@@ -357,12 +360,13 @@ function AjaxGetPaymentData()
         $receiver_wallet = $options['receiver_wallet'];
 
         $options = get_option(BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS);
-        $min_expire_hour = strval(intval($options['min_expire_hour']) * 3600);
-        $max_escrow_hour = strval(intval($options['max_escrow_hour']) * 3600);
+        $min_expire_sec = strval(intval($options['min_expire_hour']) * 3600);
+        $max_escrow_sec = strval(intval($options['max_escrow_hour']) * 3600);
 
         $price = $pageview->GetPrice();
+        $post_id = $pageview->GetPostId();
 
-        $description = 'Payment for page';
+        $description = 'Payment for page ' . get_the_title($post_id->GetInt());
 
         $data = array(
             'amount'            => $price->GetString(),
@@ -375,8 +379,8 @@ function AjaxGetPaymentData()
             'business_no'       => $business_no,
             'reg_country'       => $registration_country,
             'receiver_wallet'   => $receiver_wallet,
-            'min_expire_hour'   => $min_expire_hour,
-            'max_escrow_hour'   => $max_escrow_hour,
+            'min_expire_sec'   => $min_expire_sec,
+            'max_escrow_sec'   => $max_escrow_sec,
             'ref'               => $ref,
             'description'       => $description
         );
@@ -806,7 +810,7 @@ function ActivatePlugin()
     ));
 
     add_option (BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS, array(
-        'bank_url' => 'http://localhost/wordpress/',
+        'bank_url' => 'https://www.bitcoindemobank.com/payment/',
         'help_text'=> 'No Banking App has been installed in your browser. Get one here.'
     ));
 

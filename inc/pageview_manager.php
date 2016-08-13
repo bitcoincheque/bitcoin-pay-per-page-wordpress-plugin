@@ -193,6 +193,15 @@ class PageViewManagerClass extends DatabaseInterfaceClass
             $this->DB_UpdateRecord($pageview);
         }
     }
+
+    public function GetPaymentPostId($pageview_id)
+    {
+        $pageview = null;
+
+        $pageview = $this->DB_GetPageViewData($pageview_id);
+
+        return $pageview->GetPostId();
+    }
 }
 
 function AnotherTest()
