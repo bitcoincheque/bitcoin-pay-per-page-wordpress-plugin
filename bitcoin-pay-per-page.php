@@ -846,6 +846,20 @@ function testingpage()
     }
 }
 
+function remove_payments()
+{
+    $pageview_manager = new PageViewManagerClass();
+
+    if($pageview_manager->RemoveAllUserPayments())
+    {
+        return 'User payments removed.';
+    }
+    else
+    {
+        return 'No user payment found.';
+    }
+}
+
 /* Add AJAX handlers */
 add_action('wp_ajax_bcf_payperpage_process_ajax_get_payment_data',          'BCF_PayPerPage\AjaxGetPaymentData');
 add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_get_payment_data',   'BCF_PayPerPage\AjaxGetPaymentData');
@@ -868,6 +882,7 @@ add_filter( 'the_content', 'BCF_PayPerPage\FilterContent');
 
 /* Add shortcodes */
 add_shortcode( 'testingpage', 'BCF_PayPerPage\testingpage' );
+add_shortcode( 'remove_payments', 'BCF_PayPerPage\remove_payments' );
 
 register_activation_hook(__FILE__, 'BCF_PayPerPage\ActivatePlugin');
 register_deactivation_hook(__FILE__, 'BCF_PayPerPage\DeactivatePlugin');

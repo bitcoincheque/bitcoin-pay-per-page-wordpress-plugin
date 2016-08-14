@@ -277,7 +277,34 @@ class DatabaseInterfaceClass
 
         return $bank_user_data;
     }
-    
+
+    protected function DB_RemovePaymentRecord($user_id)
+    {
+        $result = false;
+
+        if(SanitizeUserId($user_id))
+        {
+            global $wpdb;
+
+            $user_id_str = $user_id->GetString();
+
+            $database_table = PageView_Class::DB_TABLE_NAME;
+
+            $prefixed_table_name = $wpdb->prefix . $database_table;
+
+            $where = array(
+                PageView_Class::DB_FIELD_USER_ID => $user_id_str
+            );
+
+            if($wpdb->delete( $prefixed_table_name, $where) != false)
+            {
+                $result = true;
+            }
+
+        }
+        return $result;
+    }
+
     /*
 
     protected function DB_GetAccountData($account_id)

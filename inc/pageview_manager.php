@@ -202,6 +202,20 @@ class PageViewManagerClass extends DatabaseInterfaceClass
 
         return $pageview->GetPostId();
     }
+
+    public function RemoveAllUserPayments()
+    {
+        $result = false;
+
+        $user_id = $this->GrabUserId();
+
+        if(!is_null($user_id))
+        {
+            $result = $this->DB_RemovePaymentRecord($user_id);
+        }
+
+        return $result;
+    }
 }
 
 function AnotherTest()
