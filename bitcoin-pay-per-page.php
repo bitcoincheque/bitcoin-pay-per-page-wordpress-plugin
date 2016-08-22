@@ -368,7 +368,8 @@ function AjaxGetPaymentData()
 
         $description = 'Payment for page ' . get_the_title($post_id->GetInt());
 
-        $data = array(
+        $cheque_request = array(
+            'request_no'        => 1,
             'amount'            => $price->GetString(),
             'currency'          => 'BTC',
             'paylink'           => site_url() . $ajax_handler . '?action=bcf_payperpage_process_ajax_send_cheque',
@@ -379,13 +380,35 @@ function AjaxGetPaymentData()
             'business_no'       => $business_no,
             'reg_country'       => $registration_country,
             'receiver_wallet'   => $receiver_wallet,
-            'min_expire_sec'   => $min_expire_sec,
-            'max_escrow_sec'   => $max_escrow_sec,
+            'min_expire_sec'    => $min_expire_sec,
+            'max_escrow_sec'    => $max_escrow_sec,
             'ref'               => $ref,
             'description'       => $description
         );
 
-        echo json_encode($data);
+        $cheque_request_json = json_encode($cheque_request, true);
+
+        for($i=1; $i<20; $i++)
+        {
+            $cheque_request_json_padded_base64 = 'PAYMENT_INVOICE_' . base64_encode($cheque_request_json);
+
+            if(!strpos($cheque_request_json_padded_base64, '=') === false)
+            {
+                $cheque_request_json .= ' ';
+            }
+            else
+            {
+                break;
+            }
+        }
+
+
+        $response_data = array(
+            'cheque_request' => $cheque_request_json_padded_base64
+        );
+
+        echo json_encode($response_data);
+
     }
 
     die();
