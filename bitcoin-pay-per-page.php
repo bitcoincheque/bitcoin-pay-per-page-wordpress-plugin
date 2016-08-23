@@ -36,6 +36,7 @@ namespace BCF_PayPerPage;
 
 require_once ('inc/pageview_manager.php');
 require_once ('inc/payment-browser-header.php');
+require_once ('inc/payment_data_codec.php');
 
 
 define ('BCF_PAYPAGE_OPTION_REQ_COUNTER',       'bcf_paypage_option_req_counter');
@@ -368,8 +369,10 @@ function AjaxGetPaymentData()
 
         $description = 'Payment for page ' . get_the_title($post_id->GetInt());
 
-        $cheque_request = array(
+        $data = array(
+            'ver'               => 1,
             'request_no'        => 1,
+            'ref'               => $ref,
             'amount'            => $price->GetString(),
             'currency'          => 'BTC',
             'paylink'           => site_url() . $ajax_handler . '?action=bcf_payperpage_process_ajax_send_cheque',
@@ -382,29 +385,15 @@ function AjaxGetPaymentData()
             'receiver_wallet'   => $receiver_wallet,
             'min_expire_sec'    => $min_expire_sec,
             'max_escrow_sec'    => $max_escrow_sec,
-            'ref'               => $ref,
             'description'       => $description
         );
 
-        $cheque_request_json = json_encode($cheque_request, true);
-
-        for($i=1; $i<20; $i++)
-        {
-            $cheque_request_json_padded_base64 = 'PAYMENT_INVOICE_' . base64_encode($cheque_request_json);
-
-            if(!strpos($cheque_request_json_padded_base64, '=') === false)
-            {
-                $cheque_request_json .= ' ';
-            }
-            else
-            {
-                break;
-            }
-        }
-
+        $payment_file_base64 = new PaymentDataFile();
+        $payment_file_base64->SetDataArray($data);
+        $payment_file_base64->SetFilePrefix('PAYMENT_REQUEST');
 
         $response_data = array(
-            'cheque_request' => $cheque_request_json_padded_base64
+            'cheque_request' => $payment_file_base64->GetEncodedPaymentFile()
         );
 
         echo json_encode($response_data);
