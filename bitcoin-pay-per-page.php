@@ -68,6 +68,24 @@ function SanitizeInputInteger($text)
     return $value;
 }
 
+function EncodeAndSignBitcoinCheque($cheque_data)
+{
+    $payment_file = new PaymentDataFile();
+    $payment_file->SetDataArray($cheque_data, 'PAYMENT_CHEQUE_');
+    $payment_file->SetFilePrefix('PAYMENT_CHEQUE');
+    $encoded_file = $payment_file->GetEncodedPaymentFile();
+
+    return $encoded_file;
+}
+
+function DecodeAndVerifyPaymentFile($payment_file)
+{
+    $encoded_payment_file = new PaymentDataFile();
+    $encoded_payment_file->SetEncodedPaymentFile($payment_file);
+    $decoded_data = $encoded_payment_file->GetDataArray();
+
+    return $decoded_data;
+}
 
 function ValidateCheque($cheque)
 {
@@ -291,10 +309,10 @@ function ProcessAjaxPayStatus()
 
 function ProcessAjaxReceiveCheque()
 {
-    $cheque_base64_url_encoded = SanitizeInputText($_REQUEST['cheque']);
-    $cheque_base64 = html_entity_decode($cheque_base64_url_encoded);
-    $cheque_json = base64_decode($cheque_base64);
-    $cheque = json_decode($cheque_json, true);
+    $payment_cheque_file_url_encoded = SanitizeInputText($_REQUEST['cheque']);
+
+    $payment_cheque_file = html_entity_decode($payment_cheque_file_url_encoded);
+    $cheque = DecodeAndVerifyPaymentFile($payment_cheque_file);
 
     $request_counter = get_option(BCF_PAYPAGE_OPTION_REQ_COUNTER);
     $sales_counter = get_option(BCF_PAYPAGE_OPTION_SALES_COUNTER);
@@ -393,7 +411,7 @@ function AjaxGetPaymentData()
         $payment_file_base64->SetFilePrefix('PAYMENT_REQUEST');
 
         $response_data = array(
-            'cheque_request' => $payment_file_base64->GetEncodedPaymentFile()
+            'payment_request' => $payment_file_base64->GetEncodedPaymentFile()
         );
 
         echo json_encode($response_data);
