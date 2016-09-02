@@ -87,48 +87,38 @@ function DecodeAndVerifyPaymentFile($payment_file)
     return $decoded_data;
 }
 
-function ValidateCheque($cheque)
+function ValidateCheque($cheque, $hash)
 {
-    $result = 'Error';
-    error_log('****** validate_cheque ******');
-
-    error_log($cheque);
+    $result = 'ERROR';
 
     $collect_url = $cheque['collect_url'];
-    $collect_url .= '&cheque=';
 
-    $json = json_encode($cheque);
-    $base64 = base64_encode($json);
-    $base64_uri_encoded = urlencode($base64);
+    $data = array(
+        'body' => array(
+            'action'        => 'validate_payment_cheque',
+            'cheque_no'     => $cheque['cheque_id'],
+            'access_code'   => $cheque['access_code'],
+            'hash'          => $hash
+        )
+    );
 
-    $api_url = $collect_url . $base64_uri_encoded;
+    $response = wp_remote_post( $collect_url, $data );
 
-    error_log($api_url);
-
-    $api_response = wp_remote_get( $api_url );
-    if(wp_remote_retrieve_response_code($api_response) == 200)
+    if(is_wp_error($response))
     {
-        $json = wp_remote_retrieve_body( $api_response );
+        $result = 'ERROR';
+    }
+    else
+    {
+        $answer = json_decode($response['body'], true);
 
-        if(empty($json))
+        if($answer['result'] == 'OK')
         {
-            echo 'JSON object empty<br>';
+            $result = 'VALID';
         }
         else
         {
-            //echo $json . '<br>';
-            $json = json_decode($json, true);
-            if($json)
-            {
-                if($json['status'] == 'VALID')
-                {
-                    $result = 'VALID';
-                }
-                else
-                {
-                    $result = $json['errors'];
-                }
-            }
+            $result = $answer['message'];
         }
     }
 
@@ -153,7 +143,7 @@ function GetPaymentRequest($ref)
         else
         {
             $href = 'bitcoin:' . $wallet_address . '?request=' . $payment_info_link;
-            $payment_url = '<a id="bcf_paylink1" href=' . $href . ' class="bitcoin-address">' . $wallet_address . '</a>';
+            $payment_url = '<a id="bcf_paylink1" href=' . $href . ' class="bitcoin-address">Bitcoin Cheque Payment Link</a>';
         }
     }
     else
@@ -309,47 +299,55 @@ function ProcessAjaxPayStatus()
 
 function ProcessAjaxReceiveCheque()
 {
-    $payment_cheque_file_url_encoded = SanitizeInputText($_REQUEST['cheque']);
-
-    $payment_cheque_file = html_entity_decode($payment_cheque_file_url_encoded);
-    $cheque = DecodeAndVerifyPaymentFile($payment_cheque_file);
-
-    $request_counter = get_option(BCF_PAYPAGE_OPTION_REQ_COUNTER);
-    $sales_counter = get_option(BCF_PAYPAGE_OPTION_SALES_COUNTER);
-
-    $cheque_is_valid = ValidateCheque($cheque);
-
-    if($cheque_is_valid == 'VALID')
+    if(!empty($_REQUEST['cheque']))
     {
-        $pageview_id_val = intval($cheque['receiver_reference']);
-        $pageview_manager = new PageViewManagerClass();
-        $pageview_id = new PageViewIdTypeClass($pageview_id_val);
-        $pageview_manager->SetPagePaid($pageview_id);
-        $post_id = $pageview_manager->GetPaymentPostId($pageview_id);
-        
-        $data = array(
-            'pay_status' => 'OK',
-            'request_counter' => strval($request_counter),
-            'sales_counter' => strval($sales_counter),
-            'return_link' => site_url() . '?p=' . $post_id->GetString()
-        );
-        $sales_counter = 1;
+        $payment_cheque_file = SanitizeInputText($_REQUEST['cheque']);
+
+        $encoded_payment_file = new PaymentDataFile();
+        $encoded_payment_file->SetEncodedPaymentFile($payment_cheque_file);
+        $cheque_data = $encoded_payment_file->GetDataArray();
+        $hash = $encoded_payment_file->GetHash();
+
+        $cheque_is_valid = ValidateCheque($cheque_data, $hash);
+
+
+        if($cheque_is_valid == 'VALID')
+        {
+            $pageview_id_val  = intval($cheque_data['receiver_reference']);
+            $pageview_manager = new PageViewManagerClass();
+            $pageview_id      = new PageViewIdTypeClass($pageview_id_val);
+            $pageview_manager->SetPagePaid($pageview_id);
+            $post_id = $pageview_manager->GetPaymentPostId($pageview_id);
+
+            $data          = array(
+                'result'          => 'OK',
+                'message'         => 'Cheque accepted.',
+                'return_link'     => site_url() . '?p=' . $post_id->GetString()
+            );
+
+            $sales_counter = 1;
+            update_option(BCF_PAYPAGE_OPTION_SALES_COUNTER, $sales_counter);
+        }
+        else
+        {
+            $data = array(
+                'result'          => 'ERROR',
+                'message'         => 'Error validating cheque at bank. (Message from bank: ' . $cheque_is_valid . ')'
+            );
+        }
     }
     else
     {
         $data = array(
-            'pay_status' => 'INVALID',
-            'request_counter' => strval($request_counter),
-            'sales_counter' => strval($sales_counter)
+            'result'    => 'ERROR',
+            'message'   => 'No cheque received.'
         );
 
         $sales_counter = 2;
+        update_option(BCF_PAYPAGE_OPTION_SALES_COUNTER, $sales_counter);
     }
 
     echo json_encode($data);
-
-    update_option(BCF_PAYPAGE_OPTION_SALES_COUNTER, $sales_counter);
-
     die();
 }
 
@@ -393,7 +391,7 @@ function AjaxGetPaymentData()
             'ref'               => $ref,
             'amount'            => $price->GetString(),
             'currency'          => 'BTC',
-            'paylink'           => site_url() . $ajax_handler . '?action=bcf_payperpage_process_ajax_send_cheque',
+            'paylink'           => site_url() . $ajax_handler,
             'receiver_name'     => $receiver_name,
             'receiver_address'  => $receiver_address,
             'receiver_url'      => $receiver_url,
@@ -897,8 +895,8 @@ add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_get_payment_data',   'BCF
 add_action('wp_ajax_bcf_payperpage_load_rest_of_content',                   'BCF_PayPerPage\LoadRestOfContent');
 add_action('wp_ajax_nopriv_bcf_payperpage_load_rest_of_content',            'BCF_PayPerPage\LoadRestOfContent');
 
-add_action('wp_ajax_bcf_payperpage_process_ajax_send_cheque',               'BCF_PayPerPage\ProcessAjaxReceiveCheque');
-add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_send_cheque',        'BCF_PayPerPage\ProcessAjaxReceiveCheque');
+add_action('wp_ajax_send_payment_cheque',                                   'BCF_PayPerPage\ProcessAjaxReceiveCheque');
+add_action('wp_ajax_nopriv_send_payment_cheque',                            'BCF_PayPerPage\ProcessAjaxReceiveCheque');
 
 add_action('wp_ajax_bcf_payperpage_process_ajax_pay_status',                'BCF_PayPerPage\ProcessAjaxPayStatus');
 add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_pay_status',         'BCF_PayPerPage\ProcessAjaxPayStatus');

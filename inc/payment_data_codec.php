@@ -85,6 +85,11 @@ class PaymentDataFile
         return $this->file_prefix;
     }
 
+    public function GetHash()
+    {
+        return $this->md5sum;
+    }
+
     public function Sign($private_key)
     {
         $result = false;
