@@ -252,7 +252,7 @@ function FilterContent( $content )
                 'post_id_ref'       => intval($ref['ref']),
                 'nonce'             => $ref['nonce']
             );
-            wp_localize_script('bcf_payperpage_script_handler', 'bcf_demo_script_handler_vars', $translation_array);
+            wp_localize_script('bcf_payperpage_script_handler', 'pppc_script_handler_vars', $translation_array);
 
             $content = substr ($content , 0 , $position);
 
@@ -383,8 +383,8 @@ function LoadRestOfContent()
 
 function ProcessAjaxPayStatus()
 {
-    $pageview_ref_int = SafeReadGetInt('ref');
-    $nonce_str = SafeReadGetString('nonce');
+    $pageview_ref_int = SafeReadPostInt('ref');
+    $nonce_str = SafeReadPostString('nonce');
 
     if(is_null($pageview_ref_int))
     {

@@ -15,7 +15,7 @@ jQuery(document).ready(function($)
 		{
             processing_text = "Processing";
 
-            window.setTimeout(bcf_demo_update_payment_status, 500);
+            window.setTimeout(pppc_update_payment_status, 500);
 			$('p#bcf_payment_status').html(processing_text);
 
 			timeout = 0;
@@ -23,15 +23,15 @@ jQuery(document).ready(function($)
 			ok = false;
 		});
 
-	function bcf_demo_update_payment_status()
+	function pppc_update_payment_status()
 	{
 		var data = {
 			action: 'bcf_payperpage_process_ajax_pay_status',
-			ref: bcf_demo_script_handler_vars.post_id_ref,
-			nonce : bcf_demo_script_handler_vars.nonce
+			ref: pppc_script_handler_vars.post_id_ref,
+			nonce : pppc_script_handler_vars.nonce
 		}
 
-		$.getJSON(bcf_demo_script_handler_vars.url_to_my_site, data, function(resp, status)
+		$.post(pppc_script_handler_vars.url_to_my_site, data, function(resp, status)
 		{
 			retry = false;
 
@@ -40,7 +40,7 @@ jQuery(document).ready(function($)
 				if(resp.pay_status == "OK")
 				{
 					text = "Payment OK!";
-					window.setTimeout(bcf_demo_update_load_remaining_content, 500);
+					window.setTimeout(pppc_load_remaining_content, 500);
 				}
 				else if(resp.pay_status == "INVALID")
 				{
@@ -75,7 +75,7 @@ jQuery(document).ready(function($)
 				{
 					if(timeout < 10)
 					{
-						window.setTimeout(bcf_demo_update_payment_status, 500);
+						window.setTimeout(pppc_update_payment_status, 500);
 						timeout++;
 					}
 					else
@@ -91,21 +91,21 @@ jQuery(document).ready(function($)
 
 			$('p#bcf_payment_status').html(text);
 
-		});
+		},'json');
 
 	}
 
-	function bcf_demo_update_load_remaining_content()
+	function pppc_load_remaining_content()
 	{
 		$('p#bcf_payment_status').html("Loading...");
 
 		var data = {
 			action: 'bcf_payperpage_load_rest_of_content',
-			ref: bcf_demo_script_handler_vars.post_id_ref,
-			nonce : bcf_demo_script_handler_vars.nonce
+			ref: pppc_script_handler_vars.post_id_ref,
+			nonce : pppc_script_handler_vars.nonce
 		}
 
-		$.post(bcf_demo_script_handler_vars.url_to_my_site, data, function(resp, status)
+		$.post(pppc_script_handler_vars.url_to_my_site, data, function(resp, status)
 		{
 			if(status == "success") {
 				if(resp.result == "OK"){
