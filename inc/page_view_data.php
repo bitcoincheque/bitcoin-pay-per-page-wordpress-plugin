@@ -40,6 +40,7 @@ class PageView_Class extends DataBaseClass
     const DB_FIELD_USER_ID = 'user_id';
     const DB_FIELD_PRICE = 'price';
     const DB_FIELD_PAY_STATUS = 'pay_status';
+    const DB_FIELD_NONCE = 'nonce';
 
     /* Metadata describing database field and data properties: */
     protected $MetaData = array(
@@ -78,6 +79,12 @@ class PageView_Class extends DataBaseClass
             'db_field_name' => self::DB_FIELD_PAY_STATUS,
             'db_primary_key'=> false,
             'default_value' => 'UNPAID'
+        ),
+        self::DB_FIELD_NONCE => array(
+            'class_type'    => 'TextTypeClass',
+            'db_field_name' => self::DB_FIELD_NONCE,
+            'db_primary_key'=> false,
+            'default_value' => ''
         )
     );
 
@@ -170,4 +177,19 @@ class PageView_Class extends DataBaseClass
     {
         return $this->GetDataObjects(self::DB_FIELD_PAY_STATUS);
     }
+
+    public function SetNonce($nonce)
+    {
+        if(SanitizeText($nonce))
+        {
+            return $this->SetDataObject(self::DB_FIELD_NONCE, $nonce);
+        }
+        return false;
+    }
+
+    public function GetNonce()
+    {
+        return $this->GetDataObjects(self::DB_FIELD_NONCE);
+    }
+
 }

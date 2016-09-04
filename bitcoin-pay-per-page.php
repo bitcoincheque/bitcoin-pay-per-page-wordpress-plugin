@@ -53,20 +53,77 @@ define ('BCF_PAYPAGE_ADVANCED_OPTIONS',         'bcf_payperpage_advanced_options
 define ('BCF_PAYPAGE_REQUIRE_PAYMENT_TAG', '[require_payment]');
 
 
-
 function SanitizeInputText($text)
 {
     $text = str_replace('<', '&lt;', $text);
     $text = str_replace('>', '&gt;', $text);
+    //$text = str_replace('"', '&quot;', $text);
 
     return $text;
 }
 
 function SanitizeInputInteger($text)
 {
-    $value = intval($text);
+    if (preg_match('/^[1-9][0-9]{0,15}$/', $text))
+    {
+        $value = intval($text);
+    }
+    else
+    {
+        $value = null;
+    }
+
     return $value;
 }
+
+function SafeReadGetString($key)
+{
+    if(!empty($_GET[$key]))
+    {
+        return SanitizeInputText($_GET[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SafeReadGetInt($key)
+{
+    if(!empty($_GET[$key]))
+    {
+        return SanitizeInputInteger($_GET[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SafeReadPostString($key)
+{
+    if(!empty($_POST[$key]))
+    {
+        return SanitizeInputText($_POST[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SafeReadPostInt($key)
+{
+    if(!empty($_POST[$key]))
+    {
+        return SanitizeInputInteger($_POST[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
 
 function EncodeAndSignBitcoinCheque($cheque_data)
 {
@@ -192,7 +249,8 @@ function FilterContent( $content )
 
             $translation_array = array(
                 'url_to_my_site'    => $url_to_my_site,
-                'post_id_ref'       => intval($ref)
+                'post_id_ref'       => intval($ref['ref']),
+                'nonce'             => $ref['nonce']
             );
             wp_localize_script('bcf_payperpage_script_handler', 'bcf_demo_script_handler_vars', $translation_array);
 
@@ -202,7 +260,7 @@ function FilterContent( $content )
 
             $content .= '<br><b>To read the rest of the article, please pay ' . $price->GetFormattedCurrencyString($BTC_denominator, true) . ' to this address:</b>';
             $content .= '<br>';
-            $content .= GetPaymentRequest($ref);
+            $content .= GetPaymentRequest($ref['ref']);
             $content .= "<br>";
 
             $content .= '<p id="bcf_payment_status"></p>';
@@ -219,81 +277,177 @@ function FilterContent( $content )
 
 function LoadRestOfContent()
 {
-    $pageview_ref = SanitizeInputInteger($_REQUEST['post_id']);
+    $pageview_ref_int = SafeReadPostInt('ref');
+    $nonce_str = SafeReadPostString('nonce');
 
-    if($pageview_ref >= 0)
+    if(is_null($pageview_ref_int))
     {
-        $pageview_id = new PageViewIdTypeClass($pageview_ref);
+        $response_data = array(
+            'result'    => 'ERROR',
+            'message'   => 'Page ref missing in text request.'
+        );
+        echo json_encode($response_data);
+        die();
+    }
 
-        if(!is_null($pageview_id))
+    if(is_null($nonce_str))
+    {
+        $response_data = array(
+            'result'    => 'ERROR',
+            'message'   => 'Nonce missing in text request.'
+        );
+        echo json_encode($response_data);
+        die();
+    }
+
+    $pageview_manager = new PageViewManagerClass();
+    $pageview         = $pageview_manager->GetPaymentInfo($pageview_ref_int);
+
+    $pay_status     = $pageview->GetPayStatus();
+    $pay_status_str = $pay_status->GetString();
+
+    $my_nonce     = $pageview->GetNonce();
+    $my_nonce_str = $my_nonce->GetString();
+
+    if($pay_status_str != 'PAID')
+    {
+        $response_data = array(
+            'result'    => 'ERROR',
+            'message'   => 'ERROR: Page has not been paid.'
+        );
+        echo json_encode($response_data);
+        die();
+    }
+
+    if($nonce_str != $my_nonce_str)
+    {
+        $response_data = array(
+            'result'    => 'ERROR',
+            'message'   => 'ERROR: Invalid nonce.'
+        );
+        echo json_encode($response_data);
+        die();
+    }
+
+    if($pageview_ref_int >= 0)
+    {
+        $pageview_id = new PageViewIdTypeClass($pageview_ref_int);
+
+        if( ! is_null($pageview_id))
         {
             $pageview_manager = new PageViewManagerClass();
 
             $post_id = $pageview_manager->HasUserPaidForThisPageView($pageview_id);
 
-            if(!is_null($post_id))
+            if( ! is_null($post_id))
             {
                 $post_id_val = $post_id->GetInt();
 
-                $post = get_post($post_id_val);
+                $post    = get_post($post_id_val);
                 $content = $post->post_content;
 
-                $position = strpos ($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG) + strlen(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
+                $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG) + strlen(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
 
-                $content = substr ($content , $position );
+                $content = substr($content, $position);
 
-                $content2 = str_replace("\r\n", '<p>', $content);
+                $content_remaining = str_replace("\r\n", '<p>', $content);
+                //$content_remaining = base64_encode($content_remaining);
 
-                echo $content2;
+                $response_data = array(
+                    'result'    => 'OK',
+                    'message'   => $content_remaining
+                );
+
+                echo json_encode($response_data);
+                die();
             }
             else
             {
-                echo 'No payment verified.';
+                $response_data = array(
+                    'result'    => 'OK',
+                    'message'   => 'ERROR: No payment verified.'
+                );
+                echo json_encode($response_data);
+                die();
             }
         }
     }
 
+    $response_data = array(
+        'result'    => 'OK',
+        'message'   => 'ERROR: Undefined error.'
+    );
+    echo json_encode($response_data);
     die();
 }
 
 function ProcessAjaxPayStatus()
 {
-    $request_counter = get_option(BCF_PAYPAGE_OPTION_REQ_COUNTER);
-    $sales_counter = get_option(BCF_PAYPAGE_OPTION_SALES_COUNTER);
+    $pageview_ref_int = SafeReadGetInt('ref');
+    $nonce_str = SafeReadGetString('nonce');
 
-    if($sales_counter == 0)
+    if(is_null($pageview_ref_int))
     {
-        /* Waiting for payment */
-        $data = array(
-            'pay_status' => 'WAIT',
-            'request_counter' => strval($request_counter),
-            'sales_counter' => strval($sales_counter),
+        $response_data = array(
+            'pay_status' => 'ERROR',
+            'message'    => 'Missing page ref.'
         );
-    }
-    else if($sales_counter == 1)
-    {
-        /* Cheque payment confirmed ok */
-        $data = array(
-            'pay_status' => 'OK',
-            'request_counter' => strval($request_counter),
-            'sales_counter' => strval($sales_counter),
-        );
-    }
-    else if($sales_counter == 2)
-    {
-        /* Cheque payment invalid */
-        $data = array(
-            'pay_status' => 'INVALID',
-            'request_counter' => strval($request_counter),
-            'sales_counter' => strval($sales_counter)
-        );
+        echo json_encode($response_data);
+        die();
     }
 
-    echo json_encode($data);
+    if(is_null($nonce_str))
+    {
+        $response_data = array(
+            'pay_status' => 'ERROR',
+            'message'    => 'Missing nonce.'
+        );
+        echo json_encode($response_data);
+        die();
+    }
 
-    $request_counter++;
-    update_option(BCF_PAYPAGE_OPTION_REQ_COUNTER, $request_counter);
+    $pageview_manager = new PageViewManagerClass();
+    $pageview         = $pageview_manager->GetPaymentInfo($pageview_ref_int);
 
+    $pay_status     = $pageview->GetPayStatus();
+    $pay_status_str = $pay_status->GetString();
+
+    $my_nonce     = $pageview->GetNonce();
+    $my_nonce_str = $my_nonce->GetString();
+
+    if($nonce_str == $my_nonce_str)
+    {
+        if($pay_status_str == "UNPAID")
+        {
+            /* Waiting for payment */
+            $response_data = array(
+                'pay_status' => 'WAIT'
+            );
+        }
+        elseif($pay_status_str == "PAID")
+        {
+            $response_data = array(
+                'pay_status' => 'OK'
+            );
+        }
+        else
+        {
+            /* Cheque payment invalid */
+            $response_data = array(
+                'pay_status' => 'INVALID'
+            );
+        }
+    }
+    else
+    {
+        /* Received invalid nonce */
+        $response_data = array(
+            'pay_status' => 'ERROR',
+            'message'    => 'Invalid nonce'
+        );
+    }
+
+    echo json_encode($response_data);
     die();
 }
 

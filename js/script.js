@@ -27,7 +27,8 @@ jQuery(document).ready(function($)
 	{
 		var data = {
 			action: 'bcf_payperpage_process_ajax_pay_status',
-			post_id: bcf_demo_script_handler_vars.post_id_ref
+			ref: bcf_demo_script_handler_vars.post_id_ref,
+			nonce : bcf_demo_script_handler_vars.nonce
 		}
 
 		$.getJSON(bcf_demo_script_handler_vars.url_to_my_site, data, function(resp, status)
@@ -52,7 +53,7 @@ jQuery(document).ready(function($)
 				}
 				else
 				{
-					text = "ERROR: Strange json response.{" + resp.pay_status + "}";
+					text = "ERROR: Unexpected response.<br>Message from server:<br>Result=" + resp.pay_status + "<br>Message=" + resp.message;
 				}
 
 				error_counter=0;
@@ -100,13 +101,23 @@ jQuery(document).ready(function($)
 
 		var data = {
 			action: 'bcf_payperpage_load_rest_of_content',
-			post_id: bcf_demo_script_handler_vars.post_id_ref
+			ref: bcf_demo_script_handler_vars.post_id_ref,
+			nonce : bcf_demo_script_handler_vars.nonce
 		}
 
-        $.post(bcf_demo_script_handler_vars.url_to_my_site, data, function(resp)
+		$.post(bcf_demo_script_handler_vars.url_to_my_site, data, function(resp, status)
 		{
-			$('div#bcf_remaining_content').html(resp);
-		});
+			if(status == "success") {
+				if(resp.result == "OK"){
+					//decoded_text = window.atob(resp.message);
+					$('div#bcf_remaining_content').html(resp.message);
+				}else{
+					$('p#bcf_payment_status').html("ERROR uploading text. Message from server:"  + resp.message);
+				}
+			}else {
+				$('p#bcf_payment_status').html("ERROR. Payment is OK, but time-out reading text. Please retry loading page.");
+			}
+		},'json');
 	}
 
 });

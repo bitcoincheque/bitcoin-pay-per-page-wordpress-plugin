@@ -38,6 +38,16 @@ class PageViewManagerClass extends DatabaseInterfaceClass
 
     }
 
+    private function MakeNonce()
+    {
+        $r1     = rand(1, PHP_INT_MAX - 1);
+        $r2     = rand(1, PHP_INT_MAX - 1);
+        $r      = $r1 / $r2;
+        $str    = strval($r);
+        $nonce  = str_replace('.', '', $str);
+        return $nonce;
+    }
+
     private function GetUserIdFromCookie($cookie_no)
     {
         $user_id = null;
@@ -118,7 +128,7 @@ class PageViewManagerClass extends DatabaseInterfaceClass
 
     public function RegisterNewPageView($post_id, $price)
     {
-        $pageview_id_val = null;
+        $pageview_data = array();
 
         if(SanitizeUnsignedInteger($post_id) and SanitizeAmount($price))
         {
@@ -146,6 +156,9 @@ class PageViewManagerClass extends DatabaseInterfaceClass
 
             if(is_null($pageview))
             {
+                $nonce_str = $this->MakeNonce();
+                $nonce = new TextTypeClass($nonce_str);
+
                 $datetime = $this->DB_GetCurrentTimeStamp();
 
                 $pageview = new PageView_Class();
@@ -153,17 +166,22 @@ class PageViewManagerClass extends DatabaseInterfaceClass
                 $pageview->SetUserId($user_id);
                 $pageview->SetPostId($post_id);
                 $pageview->SetPrice($price);
+                $pageview->SetNonce($nonce);
 
-                $pageview_id_val = $this->DB_WriteRecord($pageview);
+                $pageview_data['ref'] = $this->DB_WriteRecord($pageview);
+                $pageview_data['nonce'] = $nonce_str;
             }
             else
             {
                 $pageview_id     = $pageview->GetPageViewId();
-                $pageview_id_val = $pageview_id->GetInt();
+                $nonce     = $pageview->GetNonce();
+
+                $pageview_data['ref'] = $pageview_id->GetInt();
+                $pageview_data['nonce'] = $nonce->GetString();
             }
         }
 
-        return $pageview_id_val;
+        return $pageview_data;
     }
 
     public function GetPaymentInfo($ref)
