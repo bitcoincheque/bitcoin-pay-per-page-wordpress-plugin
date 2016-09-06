@@ -573,6 +573,15 @@ function AjaxGetPaymentData()
     die();
 }
 
+function add_meta_data()
+{
+    $options = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
+    $ajax_handler = $options['ajax_handler'];
+    $url_request_handler = site_url() . $ajax_handler;
+
+    echo '<link rel="MoneyAddress" href="' . $url_request_handler . '">' . PHP_EOL;
+}
+
 function Init()
 {
     $src = plugin_dir_url( __FILE__ ) . 'js/script.js';
@@ -1056,6 +1065,7 @@ add_action('wp_ajax_bcf_payperpage_process_ajax_pay_status',                'BCF
 add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_pay_status',         'BCF_PayPerPage\ProcessAjaxPayStatus');
 
 /* Add handlers */
+add_action('wp_head', 'BCF_PayPerPage\add_meta_data');
 add_action('init', 'BCF_PayPerPage\Init');
 add_action('admin_menu', 'BCF_PayPerPage\AdminMenu');
 
