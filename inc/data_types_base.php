@@ -598,6 +598,14 @@ class ValueTypeClass extends BaseTypeClass
                     $str .= ' uBTC';
                 }
             }
+            elseif($currency == 'TestBTC' )
+            {
+                $str = FormatedLongCurrency($value, 8, $decimal_mark);
+                if($include_currency_text)
+                {
+                    $str .= ' TestBTC';
+                }
+            }
             else
             {
                 $str = 'Error: Unknown currency';

@@ -544,7 +544,7 @@ function AjaxGetPaymentData()
             'request_no'        => 1,
             'ref'               => $ref,
             'amount'            => $price->GetString(),
-            'currency'          => 'BTC',
+            'currency'          => 'TestBTC',
             'paylink'           => site_url() . $ajax_handler,
             'receiver_name'     => $receiver_name,
             'receiver_address'  => $receiver_address,
