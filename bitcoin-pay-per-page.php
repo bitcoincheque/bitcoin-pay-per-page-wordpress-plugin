@@ -152,7 +152,7 @@ function ValidateCheque($cheque, $hash)
 
     $data = array(
         'body' => array(
-            'action'        => 'validate_payment_cheque',
+            'action'        => 'claim_payment_cheque',
             'cheque_no'     => $cheque['cheque_id'],
             'access_code'   => $cheque['access_code'],
             'hash'          => $hash
@@ -537,7 +537,7 @@ function AjaxGetPaymentData()
         $price = $pageview->GetPrice();
         $post_id = $pageview->GetPostId();
 
-        $description = 'Payment for page ' . get_the_title($post_id->GetInt());
+        $memo = 'Payment for page ' . get_the_title($post_id->GetInt());
 
         $data = array(
             'ver'               => 1,
@@ -552,10 +552,10 @@ function AjaxGetPaymentData()
             'receiver_email'    => $receiver_email,
             'business_no'       => $business_no,
             'reg_country'       => $registration_country,
-            'receiver_wallet'   => $receiver_wallet,
+            'lock'              => $receiver_wallet,
             'min_expire_sec'    => $min_expire_sec,
             'max_escrow_sec'    => $max_escrow_sec,
-            'description'       => $description
+            'memo'              => $memo
         );
 
         $payment_file_base64 = new PaymentDataFile();
