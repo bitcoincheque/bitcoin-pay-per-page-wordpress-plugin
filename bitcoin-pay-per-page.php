@@ -572,6 +572,32 @@ function AjaxGetPaymentData()
 
     die();
 }
+function PaymentInterface_Ping()
+{
+    $response_data = array(
+        'result'    => 'OK',
+        'name'      => get_bloginfo()
+    );
+
+    echo json_encode($response_data);
+    die();
+}
+
+function PaymentInterface_GetTrustedBanks()
+{
+    $trusted_bank_list = array(
+        'https://bitcoindemobank.com',
+        'banken.no'
+    );
+
+    $response_data = array(
+        'result'        => 'OK',
+        'trusted_banks' => $trusted_bank_list
+    );
+
+    echo json_encode($response_data);
+    die();
+}
 
 function add_meta_data()
 {
@@ -1063,6 +1089,14 @@ add_action('wp_ajax_nopriv_send_payment_cheque',                            'BCF
 
 add_action('wp_ajax_bcf_payperpage_process_ajax_pay_status',                'BCF_PayPerPage\ProcessAjaxPayStatus');
 add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_pay_status',         'BCF_PayPerPage\ProcessAjaxPayStatus');
+
+add_action('wp_ajax_ping', 'BCF_PayPerPage\PaymentInterface_Ping');
+add_action('wp_ajax_nopriv_ping', 'BCF_PayPerPage\PaymentInterface_Ping');
+
+add_action('wp_ajax_get_trusted_banks', 'BCF_PayPerPage\PaymentInterface_GetTrustedBanks');
+add_action('wp_ajax_nopriv_get_trusted_banks', 'BCF_PayPerPage\PaymentInterface_GetTrustedBanks');
+
+
 
 /* Add handlers */
 add_action('wp_head', 'BCF_PayPerPage\add_meta_data');
