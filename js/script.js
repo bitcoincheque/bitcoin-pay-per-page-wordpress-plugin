@@ -110,7 +110,6 @@ jQuery(document).ready(function($)
 			if(status == "success") {
 				if(resp.result == "OK"){
 					$('div#pppc_fade_content').remove();
-					//decoded_text = window.atob(resp.message);
 					$('div#bcf_remaining_content').html(resp.message);
 				}else{
 					$('p#bcf_payment_status').html("ERROR uploading text. Message from server:"  + resp.message);
