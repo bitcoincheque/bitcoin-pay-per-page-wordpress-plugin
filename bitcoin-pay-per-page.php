@@ -585,9 +585,11 @@ function PaymentInterface_Ping()
 
 function PaymentInterface_GetTrustedBanks()
 {
+    $options = get_option(BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS);
+    $bank_url = $options['bank_url'];
+
     $trusted_bank_list = array(
-        'https://bitcoindemobank.com',
-        'banken.no'
+        $bank_url
     );
 
     $response_data = array(
