@@ -691,7 +691,7 @@ function Init()
 function AdminPage()
 {
     echo '<div class="wrap">';
-    echo '<h2>Pay-Per-Page Plugin Admin Settings</h2>';
+    echo '<h2>Pay-Per-Page-Click Payment Settings</h2>';
     echo '<hr>';
 
     echo '<form action="options.php" method="post">';
