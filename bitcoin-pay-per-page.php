@@ -53,6 +53,8 @@ define ('BCF_PAYPAGE_ADVANCED_OPTIONS',         'bcf_payperpage_advanced_options
 
 define ('BCF_PAYPAGE_TEXT_FADE_OPTION',         'bcf_paypage_text_fade_option');
 
+define ('BCF_PAYPAGE_MEMBERSHIP_OPTION', 'bcf_paypage_member_signup_option');
+
 define ('BCF_PAYPAGE_REQUIRE_PAYMENT_TAG', '[require_payment]');
 
 
@@ -220,61 +222,23 @@ function GetPaymentRequest($ref)
     return $payment_url;
 }
 
-
-function FilterContent( $content )
+function GetFreeContentHtmlPart($content, $position)
 {
-    $modified_content = '';
+    $free_content = '';
 
-    $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
 
-    if($position)
+    $fade_options = get_option(BCF_PAYPAGE_TEXT_FADE_OPTION);
+
+    if(isset($fade_options['fade_enable']) and $fade_options['fade_enable'] == '1')
     {
-        $pageview_manager = new PageViewManagerClass();
+        $free_content .= '<div id="pppc_free_content" style="position:relative;">';
+    }
 
-        $post_id_val = get_the_ID();
-        $post_id     = new UnsigedIntegerTypeClass($post_id_val);
+    $free_content .= substr($content, 0, $position);
 
-        if($pageview_manager->HasUserPaidForThisPage($post_id))
-        {
-            $modified_content .= str_replace(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG, '', $content);
-        }
-        else
-        {
-            $options         = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
-            $price_int       = intval($options['default_price']);
-            $BTC_denominator = $options['btc_unit'];
-            $price           = new ValueTypeClass($price_int);
-
-            $ref = $pageview_manager->RegisterNewPageView($post_id, $price);
-
-            $options      = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
-            $ajax_handler = $options['ajax_handler'];
-
-            $url_to_my_site = site_url() . $ajax_handler;
-
-            $translation_array = array(
-                'url_to_my_site' => $url_to_my_site,
-                'post_id_ref'    => intval($ref['ref']),
-                'nonce'          => $ref['nonce']
-            );
-            wp_localize_script('bcf_payperpage_script_handler', 'pppc_script_handler_vars', $translation_array);
-
-            $style_url = plugins_url() . '/bitcoin-pay-per-page-wordpress-plugin/css/pppc_style.css';
-
-            wp_enqueue_style('pppc_style', $style_url);
-
-            $fade_options = get_option(BCF_PAYPAGE_TEXT_FADE_OPTION);
-
-            if(isset($fade_options['fade_enable']) and $fade_options['fade_enable'] == '1')
-            {
-                $modified_content .= '<div id="pppc_free_content" style="position:relative;">';
-            }
-
-            $modified_content .= substr($content, 0, $position);
-
-            if(isset($fade_options['fade_enable']) and $fade_options['fade_enable'] == '1')
-            {
-                $modified_content .= '<div id="pppc_fade_content" style="
+    if(isset($fade_options['fade_enable']) and $fade_options['fade_enable'] == '1')
+    {
+        $free_content .= '<div id="pppc_fade_content" style="
                     position: absolute;
                     bottom: 0em;
                     width:100%;
@@ -299,23 +263,187 @@ function FilterContent( $content )
                             rgba(255, 255, 255, 0) 0%,
                             ' . $fade_options['fade_bg_col'] . ' 100%
                     );"></div>';
-                $modified_content .= '</div>';
+        $free_content .= '</div>';
+    }
+
+    return $free_content;
+}
+
+function GetLoginFormHtml()
+{
+    $login_form = '<div id="bcf_pppc_login_form">';
+    $login_form .= '<h2>Login or register</h2>';
+    $login_form .= 'Membership required to read the rest of the page. Please log-in or register for membership.';
+
+    $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
+
+    $login_form .= '<form method="post" name="bcf_pppc_login_reg_form" class="loginForm" >';
+    $login_form .= '<table class="bcf_pppc_table_forms" width="100%"><tr>';
+    $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">User name:</lable></td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_username" type="text" class="bcf_pppc_text_input" value="" name="username" /></td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Password:</lable></td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="password" class="bcf_pppc_text_input" value="" name="password" /></td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_login" type="button" value="Log-in" class="bcf_pppc_button" />  <input type="submit" value="Register" class="bcf_pppc_button" /></td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_forms"><a href="/">Forgotten user name or password?</a></td>';
+    $login_form .= '</tr></table>';
+    $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
+    $login_form .= '</form>';
+
+    $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
+    $login_form .= '<p id="bcf_payment_status"></p>';
+    $login_form .= '</div>';
+
+    return $login_form;
+}
+
+function GetLoginPaymentFromHtml($price, $ref)
+{
+    $payment_form = '<div id="bcf_remaining_content">';
+
+    $payment_form .= '<p><b>To read the rest of the article, please pay ' . $price . ' to this address:</b></p>';
+    $payment_form .= '<p>';
+    $payment_form .= GetPaymentRequest($ref);
+    $payment_form .= "</p>";
+
+    $payment_form .= '<p id="bcf_payment_status"></p>';
+    $payment_form .= '<p id="bcf_payment_debug"></p>';
+
+    $payment_form .= '</div>';
+
+    return $payment_form;
+}
+
+function GetProtectedContentPlaceholder()
+{
+    $protected_content = '<div id=bcf_remaining_content></div>';
+    return $protected_content;
+}
+
+
+function FilterContent( $content )
+{
+    $modified_content = '';
+
+    $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
+
+    if($position)
+    {
+        $payment_options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
+
+        $must_login_first = false;
+        $payment_required = false;
+
+        $draw_free_content = false;
+        $draw_login_form = false;
+        $draw_payment_form = false;
+        $draw_protected_content_placeholder = false;
+        $draw_all_content = false;
+
+        $add_ajax_handling = false;
+        $ajax_ref = 0;
+
+        $pageview_manager = new PageViewManagerClass();
+        $post_id_val = get_the_ID();
+        $post_id     = new UnsigedIntegerTypeClass($post_id_val);
+        $has_paid = $pageview_manager->HasUserPaidForThisPage($post_id);
+
+        $member_options = get_option(BCF_PAYPAGE_MEMBERSHIP_OPTION);
+        if(isset($member_options['must_be_member']) and $member_options['must_be_member'] == '1')
+        {
+            if(!is_user_logged_in())
+            {
+                $must_login_first = true;
             }
-
-            $modified_content .= '<div id="bcf_remaining_content">';
-
-            $modified_content .= '<p><b>To read the rest of the article, please pay ' . $price->GetFormattedCurrencyString($BTC_denominator, true) . ' to this address:</b></p>';
-            $modified_content .= '<p>';
-            $modified_content .= GetPaymentRequest($ref['ref']);
-            $modified_content .= "</p>";
-
-            $modified_content .= '<p id="bcf_payment_status"></p>';
-            $modified_content .= '<p id="bcf_payment_debug"></p>';
-
-            $modified_content .= '</div>';
-
-            update_option(BCF_PAYPAGE_OPTION_SALES_COUNTER, 0);
         }
+
+        if(isset($payment_options['enable_payment']) and $payment_options['enable_payment'] == '1')
+        {
+            $payment_required = true;
+        }
+
+
+        if($must_login_first)
+        {
+            $draw_free_content = true;
+            $draw_login_form = true;
+            $draw_protected_content_placeholder = true;
+        }
+        else
+        {
+            if($payment_required)
+            {
+                if($has_paid)
+                {
+                    $draw_all_content = true;
+                }
+                else
+                {
+                    $draw_free_content                  = true;
+                    $draw_payment_form                  = true;
+                    $draw_protected_content_placeholder = true;
+                }
+            }
+            else
+            {
+                $draw_all_content = true;
+            }
+        }
+
+        if($draw_free_content)
+        {
+            $modified_content .= GetFreeContentHtmlPart($content, $position);
+        }
+
+        if($draw_login_form)
+        {
+            $modified_content .= GetLoginFormHtml($content);
+
+            $add_ajax_handling = true;
+
+            // TODO: Fix this backdoor
+            $ajax_ref = array();
+            $ajax_ref['ref'] = '83354';
+            $ajax_ref['nonce'] = '746654';
+            $ajax_ref['postid'] = get_the_ID();
+        }
+
+        if($draw_payment_form)
+        {
+            $price_int       = intval($payment_options['default_price']);
+            $BTC_denominator = $payment_options['btc_unit'];
+            $price           = new ValueTypeClass($price_int);
+
+            $price_str = $price->GetFormattedCurrencyString($BTC_denominator, true);
+
+            $ajax_ref = $pageview_manager->RegisterNewPageView($post_id, $price);
+
+            $modified_content .= GetLoginPaymentFromHtml($price_str, $ajax_ref['ref']);
+
+            $add_ajax_handling = true;
+        }
+
+        if($draw_protected_content_placeholder)
+        {
+            $modified_content .= GetProtectedContentPlaceholder();
+        }
+
+
+        if($draw_all_content)
+        {
+            $modified_content .= str_replace(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG, '', $content);
+        }
+
+        if($add_ajax_handling)
+        {
+            AddAjaxHandlerInScript($ajax_ref);
+        }
+
+        update_option(BCF_PAYPAGE_OPTION_SALES_COUNTER, 0);
     }
 
     if($modified_content == '')
@@ -328,10 +456,72 @@ function FilterContent( $content )
     }
 }
 
+function AddAjaxHandlerInScript($ref)
+{
+    $options      = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
+    $ajax_handler = $options['ajax_handler'];
+
+    $url_to_my_site = site_url() . $ajax_handler;
+
+    $translation_array = array(
+        'url_to_my_site' => $url_to_my_site,
+        'post_id_ref'    => intval($ref['ref']),
+        'nonce'          => $ref['nonce'],
+        'postid'         => $ref['postid']
+    );
+    wp_localize_script('bcf_payperpage_script_handler', 'pppc_script_handler_vars', $translation_array);
+
+    $style_url = plugins_url() . '/bitcoin-pay-per-page-wordpress-plugin/css/pppc_style.css';
+
+    wp_enqueue_style('pppc_style', $style_url);
+}
+
+function AjaxDoLogin()
+{
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    /*
+    $response_data = array(
+        'result'    => 'OK',
+        'message'   => ''
+    );
+    echo json_encode($response_data);
+    die();
+    */
+
+    $creds = array(
+        'user_login'    => $username,
+        'user_password' => $password,
+        'remember'      => true
+    );
+
+    $user = wp_signon( $creds, false );
+
+    if(is_wp_error($user))
+    {
+        $response_data = array(
+            'result'    => 'ERROR',
+            'message'   => 'Error log-in.'
+        );
+    }
+    else
+    {
+        $response_data = array(
+            'result'    => 'OK',
+            'message'   => ''
+        );
+    }
+
+    echo json_encode($response_data);
+    die();
+}
+
 function LoadRestOfContent()
 {
     $pageview_ref_int = SafeReadPostInt('ref');
     $nonce_str = SafeReadPostString('nonce');
+    $post_id_val = SafeReadPostString('post_id');
 
     if(is_null($pageview_ref_int))
     {
@@ -353,6 +543,28 @@ function LoadRestOfContent()
         die();
     }
 
+    // TODO Fix this backdoor
+    if($pageview_ref_int == 83354 and $nonce_str == '746654')
+    {
+        $post    = get_post($post_id_val);
+        $content = $post->post_content;
+
+        $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG) + strlen(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
+
+        $content = substr($content, $position);
+
+        $content_remaining = str_replace("\r\n", '<p>', $content);
+        //$content_remaining = base64_encode($content_remaining);
+
+        $response_data = array(
+            'result'    => 'OK',
+            'message'   => $content_remaining
+        );
+
+        echo json_encode($response_data);
+        die();
+    }
+
     $pageview_manager = new PageViewManagerClass();
     $pageview         = $pageview_manager->GetPaymentInfo($pageview_ref_int);
 
@@ -365,8 +577,8 @@ function LoadRestOfContent()
     if($pay_status_str != 'PAID')
     {
         $response_data = array(
-            'result'    => 'ERROR',
-            'message'   => 'ERROR: Page has not been paid.'
+            'result'  => 'ERROR',
+            'message' => 'ERROR: Page has not been paid.'
         );
         echo json_encode($response_data);
         die();
@@ -375,8 +587,8 @@ function LoadRestOfContent()
     if($nonce_str != $my_nonce_str)
     {
         $response_data = array(
-            'result'    => 'ERROR',
-            'message'   => 'ERROR: Invalid nonce.'
+            'result'  => 'ERROR',
+            'message' => 'ERROR: Invalid nonce.'
         );
         echo json_encode($response_data);
         die();
@@ -766,6 +978,22 @@ function AdminLayoutDesign()
     echo '</div>';
 }
 
+function AdminMembership()
+{
+    echo '<div class="wrap">';
+    echo '<h2>Pay-Per-Page-Click Member Sign-up</h2>';
+    echo '<p>Settings for member registration and e-mail verification.</p>';
+    echo '<hr>';
+
+    echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPAGE_MEMBERSHIP_OPTION);
+    echo do_settings_sections('settings_section_membership_settings');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+
+    echo '</div>';
+}
+
 function AdminPaymentStatus()
 {
     echo '<div class="wrap">';
@@ -773,6 +1001,13 @@ function AdminPaymentStatus()
     echo '<hr>';
 
     echo '</div>';
+}
+
+function AdminDrawSettingsEnablePayment()
+{
+    $options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
+    $selected = $options['enable_payment'];
+    echo '<input name="' . BCF_PAYPAGE_PAYMENT_OPTIONS . '[enable_payment]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
 
 function AdminDrawSettingsDefaultPrice()
@@ -926,6 +1161,20 @@ function AdminDrawSettingsFadeBackgroundCol()
     echo '<input name="' . BCF_PAYPAGE_TEXT_FADE_OPTION . '[fade_bg_col]" type="text" value="' . $selected . '" />';
 }
 
+function AdminDrawSettingsRequireMembership()
+{
+    $options = get_option(BCF_PAYPAGE_MEMBERSHIP_OPTION);
+    $selected = $options['must_be_member'];
+    echo '<input name="' . BCF_PAYPAGE_MEMBERSHIP_OPTION . '[must_be_member]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
+}
+
+function AdminDrawSettingsVerifyEmail()
+{
+    $options = get_option(BCF_PAYPAGE_MEMBERSHIP_OPTION);
+    $selected = $options['verify_email'];
+    echo '<input name="' . BCF_PAYPAGE_MEMBERSHIP_OPTION . '[verify_email]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
+}
+
 
 function AdminDrawPaymentSettingsHelpText()
 {
@@ -969,6 +1218,10 @@ function AdminDrawSettingsHelpTextFading()
     echo '<p>In case you have a colored content background, you need to set the Fade Background Color.</p>';
 }
 
+function AdminDrawSettingsHelpMemberSignUp()
+{
+    echo '<p>Here you can configure the membership options.</p>';
+}
 
 
 function AdminMenu()
@@ -988,6 +1241,13 @@ function AdminMenu()
         'Price settings',
         'BCF_PayPerPage\AdminDrawPaymentSettingsHelpText',
         'settings_section_payment_option'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_enable_payment',
+        'Enable payment:',
+        '\BCF_PayPerPage\AdminDrawSettingsEnablePayment',
+        'settings_section_payment_option',
+        'settings_section_payment_option_tag'
     );
     add_settings_field(
         'bcf_payperpage_settings_price',
@@ -1143,7 +1403,7 @@ function AdminMenu()
     add_settings_section(
         'settings_section_text_fading_options_tag',
         'Text fading',
-        'BCF_PayPerPage\AdminDrawSettingsHelpAdvancedSettings',
+        'BCF_PayPerPage\AdminDrawSettingsHelpTextFading',
         'settings_section_text_fading_settings'
     );
     add_settings_field(
@@ -1168,9 +1428,33 @@ function AdminMenu()
         'settings_section_text_fading_options_tag'
     );
 
+    /* Settings sections for Member Sign-up */
+    register_setting(BCF_PAYPAGE_MEMBERSHIP_OPTION, BCF_PAYPAGE_MEMBERSHIP_OPTION);
+
+    add_settings_section(
+        'settings_section_membership_options_tag',
+        'Membership registration',
+        'BCF_PayPerPage\AdminDrawSettingsHelpMemberSignUp',
+        'settings_section_membership_settings'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_membership_required',
+        'Require membership sign-up before payments:',
+        '\BCF_PayPerPage\AdminDrawSettingsRequireMembership',
+        'settings_section_membership_settings',
+        'settings_section_membership_options_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_verify_email',
+        'Require e-mail verification:',
+        '\BCF_PayPerPage\AdminDrawSettingsVerifyEmail',
+        'settings_section_membership_settings',
+        'settings_section_membership_options_tag'
+    );
 
     add_menu_page('pppc-admin-slug', 'Pay Per Page', 'manage_options', 'pppc-admin-menu-slug', 'BCF_PayPerPage\AdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Layout Design', 'Layout Design', 'manage_options', 'pppc-admin-layout-design-slug', 'BCF_PayPerPage\AdminLayoutDesign');
+    add_submenu_page('pppc-admin-menu-slug', 'Membership', 'Membership', 'manage_options', 'pppc-admin-member-signup-slug', 'BCF_PayPerPage\AdminMembership');
     add_submenu_page('pppc-admin-menu-slug', 'Payment Status', 'Payment Status', 'manage_options', 'pppc-admin-payment-status-slug', 'BCF_PayPerPage\AdminPaymentStatus');
 }
 
@@ -1179,6 +1463,7 @@ function ActivatePlugin()
     add_option( BCF_PAYPAGE_OPTION_COOCKIE_COUNTER, 0 );
 
     add_option (BCF_PAYPAGE_PAYMENT_OPTIONS, array(
+            'enable_payment' => 'checked',
             'default_price' => '100000',
             'btc_unit' => 'mBTC'
     ));
@@ -1217,6 +1502,11 @@ function ActivatePlugin()
         'fade_enable' => 'checked',
         'fade_height' => '20em',
         'fade_bg_col' => '#ffffff',
+    ));
+
+    add_option (BCF_PAYPAGE_MEMBERSHIP_OPTION, array(
+        'fade_enable' => 'must_be_member',
+        'fade_height' => 'verify_email'
     ));
 
     DB_CreateOrUpdateDatabaseTables();
@@ -1261,6 +1551,9 @@ function remove_payments()
 }
 
 /* Add AJAX handlers */
+add_action('wp_ajax_bcf_pppc_do_login',                                     'BCF_PayPerPage\AjaxDoLogin');
+add_action('wp_ajax_nopriv_bcf_pppc_do_login',                              'BCF_PayPerPage\AjaxDoLogin');
+
 add_action('wp_ajax_bcf_payperpage_process_ajax_get_payment_data',          'BCF_PayPerPage\AjaxGetPaymentData');
 add_action('wp_ajax_nopriv_bcf_payperpage_process_ajax_get_payment_data',   'BCF_PayPerPage\AjaxGetPaymentData');
 

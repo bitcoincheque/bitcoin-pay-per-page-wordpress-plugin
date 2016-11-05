@@ -23,6 +23,49 @@ jQuery(document).ready(function($)
 			ok = false;
 		});
 
+	$('#bcf_pppc_do_login').click(
+		function()
+		{
+			var error_in_text = false;
+			var username = $('#bcf_pppc_username').val();
+			var password = $('#bcf_pppc_password').val();
+
+			if(username == '')
+			{
+				$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Username missing.</span></p>');
+				error_in_text = true;
+			}
+
+			if(password == '')
+			{
+				$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Password missing.</span></p>');
+				error_in_text = true;
+			}
+
+			if(error_in_text == false) {
+				$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_info">Logging in...</span></p>');
+
+				var data = {
+					action: 'bcf_pppc_do_login',
+					username: username,
+					password: password,
+					nonce: pppc_script_handler_vars.nonce
+				};
+
+				$.post(pppc_script_handler_vars.url_to_my_site, data, function (resp, status) {
+					if (status == "success") {
+						if (resp.result == "OK") {
+							pppc_load_remaining_content();
+						} else {
+							$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Wrong username or password.</span></p>');
+						}
+					} else {
+						$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Site error. Contact server admin.</span></p>');
+					}
+				}, 'json');
+			}
+		});
+
 	function pppc_update_payment_status()
 	{
 		var data = {
@@ -97,12 +140,13 @@ jQuery(document).ready(function($)
 
 	function pppc_load_remaining_content()
 	{
-		$('p#bcf_payment_status').html("Loading...");
+		$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_info">Loading content...</span></p>');
 
 		var data = {
 			action: 'bcf_payperpage_load_rest_of_content',
 			ref: pppc_script_handler_vars.post_id_ref,
-			nonce : pppc_script_handler_vars.nonce
+			nonce : pppc_script_handler_vars.nonce,
+			post_id : pppc_script_handler_vars.postid
 		}
 
 		$.post(pppc_script_handler_vars.url_to_my_site, data, function(resp, status)
@@ -110,6 +154,7 @@ jQuery(document).ready(function($)
 			if(status == "success") {
 				if(resp.result == "OK"){
 					$('div#pppc_fade_content').remove();
+					$('div#bcf_pppc_login_form').remove();
 					$('div#bcf_remaining_content').html(resp.message);
 				}else{
 					$('p#bcf_payment_status').html("ERROR uploading text. Message from server:"  + resp.message);
