@@ -47,8 +47,10 @@ define ('BCF_PAYPAGE_PAYMENT_OPTIONS',          'bcf_payperpage_payment_options'
 define ('BCF_PAYPAGE_WALLET_OPTIONS',           'bcf_payperpage_wallet_options');
 define ('BCF_PAYPAGE_RECEIVER_OPTIONS',         'bcf_payperpage_receiver_options');
 define ('BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS', 'bcf_payperpage_recommended_bank_options');
+define ('BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS',    'bcf_payperpage_trusted_banks_options');
 define ('BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS', 'bcf_payperpage_cheque_condition_options');
 define ('BCF_PAYPAGE_ADVANCED_OPTIONS',         'bcf_payperpage_advanced_options');
+
 
 define ('BCF_PAYPAGE_REQUIRE_PAYMENT_TAG', '[require_payment]');
 
@@ -585,12 +587,16 @@ function PaymentInterface_Ping()
 
 function PaymentInterface_GetTrustedBanks()
 {
+
     $options = get_option(BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS);
     $bank_url = $options['bank_url'];
 
     $trusted_bank_list = array(
         $bank_url
     );
+    $options = get_option(BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS);
+    $trusted_banks_url = $options['trusted_banks_url'];
+    $trusted_bank_list = explode("\n", $trusted_banks_url);
 
     $response_data = array(
         'result'        => 'OK',
@@ -671,6 +677,14 @@ function AdminPage()
     echo '<form action="options.php" method="post">';
     echo settings_fields(BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS);
     echo do_settings_sections('settings_section_recommended_bank');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+
+    echo '<br><hr>';
+
+    echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS);
+    echo do_settings_sections('settings_section_trusted_banks');
     echo '<input type="submit" name="Submit" value="Save Options" />';
     echo '</form>';
 
@@ -808,6 +822,14 @@ function AdminDrawSettingsRecommendedBankHelp()
     echo '<textarea rows="4" cols="50" name="' . BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS . '[help_text]" type="text">'.$selected.'</textarea>';
 }
 
+function AdminDrawSettingsTrustedBanksList()
+{
+    $options = get_option(BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS);
+    $selected = $options['trusted_banks_url'];
+    echo '<textarea rows="5" cols="50" name="' . BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS . '[trusted_banks_url]" type="text">'.$selected.'</textarea>';
+}
+
+
 function AdminDrawSettingsAjaxHandler()
 {
     $options = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
@@ -837,6 +859,12 @@ function AdminDrawSettingsHelpRecommendedBank()
     echo 'In case the user has no Banking App installed, he will be directed to this bank where he can sign uf for an account and download an Banking App.';
 }
 
+function AdminDrawSettingsHelpTrustedBanks()
+{
+    echo 'List all banks we trust and can accept cheques from.';
+}
+
+
 function AdminDrawSettingsChequeHelp()
 {
     echo 'Your required Bitcoin Cheque conditions. If your conditions is for tight, the user may no accept it.<br>Minimum collection time recommanded is 24 hour.<br>Maximum recommended escrow time is 24 hour';
@@ -854,6 +882,7 @@ function AdminMenu()
     register_setting(BCF_PAYPAGE_WALLET_OPTIONS, BCF_PAYPAGE_WALLET_OPTIONS);
     register_setting(BCF_PAYPAGE_RECEIVER_OPTIONS, BCF_PAYPAGE_RECEIVER_OPTIONS);
     register_setting(BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS, BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS);
+    register_setting(BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS, BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS);
     register_setting(BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS, BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS);
     register_setting(BCF_PAYPAGE_ADVANCED_OPTIONS, BCF_PAYPAGE_ADVANCED_OPTIONS);
 
@@ -984,6 +1013,20 @@ function AdminMenu()
     );
 
     add_settings_section(
+        'settings_section_trusted_banks_options_tag',
+        'Trusted Banks',
+        'BCF_PayPerPage\AdminDrawSettingsHelpTrustedBanks',
+        'settings_section_trusted_banks'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_help_text',
+        'List of trusted banks (one per line):',
+        '\BCF_PayPerPage\AdminDrawSettingsTrustedBanksList',
+        'settings_section_trusted_banks',
+        'settings_section_trusted_banks_options_tag'
+    );
+
+    add_settings_section(
         'settings_section_advanced_options_tag',
         'Advanced Settings',
         'BCF_PayPerPage\AdminDrawSettingsHelpAdvancedSettings',
@@ -1033,6 +1076,9 @@ function ActivatePlugin()
         'help_text'=> 'No Banking App has been installed in your browser. Get one here.'
     ));
 
+    add_option (BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS, array(
+        'trusted_banks_url' => ''
+    ));
     add_option (BCF_PAYPAGE_ADVANCED_OPTIONS, array(
         'ajax_handler' => '/wp-admin/admin-ajax.php'
     ));
