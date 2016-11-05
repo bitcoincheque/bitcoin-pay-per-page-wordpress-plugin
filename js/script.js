@@ -109,6 +109,7 @@ jQuery(document).ready(function($)
 		{
 			if(status == "success") {
 				if(resp.result == "OK"){
+					$('div#pppc_fade_content').remove();
 					//decoded_text = window.atob(resp.message);
 					$('div#bcf_remaining_content').html(resp.message);
 				}else{

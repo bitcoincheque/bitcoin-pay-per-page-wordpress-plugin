@@ -51,6 +51,7 @@ define ('BCF_PAYPAGE_TRUSTED_BANKS_OPTIONS',    'bcf_payperpage_trusted_banks_op
 define ('BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS', 'bcf_payperpage_cheque_condition_options');
 define ('BCF_PAYPAGE_ADVANCED_OPTIONS',         'bcf_payperpage_advanced_options');
 
+define ('BCF_PAYPAGE_TEXT_FADE_OPTION',         'bcf_paypage_text_fade_option');
 
 define ('BCF_PAYPAGE_REQUIRE_PAYMENT_TAG', '[require_payment]');
 
@@ -222,59 +223,109 @@ function GetPaymentRequest($ref)
 
 function FilterContent( $content )
 {
-    $position = strpos ($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
+    $modified_content = '';
+
+    $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
 
     if($position)
     {
         $pageview_manager = new PageViewManagerClass();
 
         $post_id_val = get_the_ID();
-        $post_id = new UnsigedIntegerTypeClass($post_id_val);
+        $post_id     = new UnsigedIntegerTypeClass($post_id_val);
 
         if($pageview_manager->HasUserPaidForThisPage($post_id))
         {
-            $content = str_replace(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG, '', $content);
+            $modified_content .= str_replace(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG, '', $content);
         }
         else
         {
-            $options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
-            $price_int = intval($options['default_price']);
+            $options         = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
+            $price_int       = intval($options['default_price']);
             $BTC_denominator = $options['btc_unit'];
-            $price = new ValueTypeClass($price_int);
+            $price           = new ValueTypeClass($price_int);
 
             $ref = $pageview_manager->RegisterNewPageView($post_id, $price);
 
-            $options = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
+            $options      = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
             $ajax_handler = $options['ajax_handler'];
 
             $url_to_my_site = site_url() . $ajax_handler;
 
             $translation_array = array(
-                'url_to_my_site'    => $url_to_my_site,
-                'post_id_ref'       => intval($ref['ref']),
-                'nonce'             => $ref['nonce']
+                'url_to_my_site' => $url_to_my_site,
+                'post_id_ref'    => intval($ref['ref']),
+                'nonce'          => $ref['nonce']
             );
             wp_localize_script('bcf_payperpage_script_handler', 'pppc_script_handler_vars', $translation_array);
 
-            $content = substr ($content , 0 , $position);
+            $style_url = plugins_url() . '/bitcoin-pay-per-page-wordpress-plugin/css/pppc_style.css';
 
-            $content .= '<div id="bcf_remaining_content">';
+            wp_enqueue_style('pppc_style', $style_url);
 
-            $content .= '<br><b>To read the rest of the article, please pay ' . $price->GetFormattedCurrencyString($BTC_denominator, true) . ' to this address:</b>';
-            $content .= '<br>';
-            $content .= GetPaymentRequest($ref['ref']);
-            $content .= "<br>";
+            $fade_options = get_option(BCF_PAYPAGE_TEXT_FADE_OPTION);
 
-            $content .= '<p id="bcf_payment_status"></p>';
-            $content .= '<p id="bcf_payment_debug"></p>';
+            if(isset($fade_options['fade_enable']) and $fade_options['fade_enable'] == '1')
+            {
+                $modified_content .= '<div id="pppc_free_content" style="position:relative;">';
+            }
 
-            $content .= '</div>';
+            $modified_content .= substr($content, 0, $position);
+
+            if(isset($fade_options['fade_enable']) and $fade_options['fade_enable'] == '1')
+            {
+                $modified_content .= '<div id="pppc_fade_content" style="
+                    position: absolute;
+                    bottom: 0em;
+                    width:100%;
+                    height: ' . $fade_options['fade_height'] . ';
+                    background: -webkit-linear-gradient(
+                            rgba(255, 255, 255, 0) 0%,
+                            ' . $fade_options['fade_bg_col'] . ' 100%
+                    );
+                    background-image: -moz-linear-gradient(
+                            rgba(255, 255, 255, 0) 0%,
+                            ' . $fade_options['fade_bg_col'] . ' 100%
+                    );
+                    background-image: -o-linear-gradient(
+                            rgba(255, 255, 255, 0) 0%,
+                            ' . $fade_options['fade_bg_col'] . ' 100%
+                    );
+                    background-image: linear-gradient(
+                            rgba(255, 255, 255, 0) 0%,
+                            ' . $fade_options['fade_bg_col'] . ' 100%
+                    );
+                    background-image: -ms-linear-gradient(
+                            rgba(255, 255, 255, 0) 0%,
+                            ' . $fade_options['fade_bg_col'] . ' 100%
+                    );"></div>';
+                $modified_content .= '</div>';
+            }
+
+            $modified_content .= '<div id="bcf_remaining_content">';
+
+            $modified_content .= '<p><b>To read the rest of the article, please pay ' . $price->GetFormattedCurrencyString($BTC_denominator, true) . ' to this address:</b></p>';
+            $modified_content .= '<p>';
+            $modified_content .= GetPaymentRequest($ref['ref']);
+            $modified_content .= "</p>";
+
+            $modified_content .= '<p id="bcf_payment_status"></p>';
+            $modified_content .= '<p id="bcf_payment_debug"></p>';
+
+            $modified_content .= '</div>';
 
             update_option(BCF_PAYPAGE_OPTION_SALES_COUNTER, 0);
         }
     }
 
-    return $content;
+    if($modified_content == '')
+    {
+        return $content;
+    }
+    else
+    {
+        return $modified_content;
+    }
 }
 
 function LoadRestOfContent()
@@ -699,6 +750,22 @@ function AdminPage()
     echo '</div>';
 }
 
+function AdminLayoutDesign()
+{
+    echo '<div class="wrap">';
+    echo '<h2>Pay-Per-Page-Click Layout design</h2>';
+    echo '<p>Adjust text and layout for payment request information.</p>';
+    echo '<hr>';
+
+    echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPAGE_TEXT_FADE_OPTION);
+    echo do_settings_sections('settings_section_text_fading_settings');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+
+    echo '</div>';
+}
+
 function AdminPaymentStatus()
 {
     echo '<div class="wrap">';
@@ -838,6 +905,27 @@ function AdminDrawSettingsAjaxHandler()
     echo $inp;
 }
 
+function AdminDrawSettingsFadeEnable()
+{
+    $options = get_option(BCF_PAYPAGE_TEXT_FADE_OPTION);
+    $selected = $options['fade_enable'];
+    echo '<input name="' . BCF_PAYPAGE_TEXT_FADE_OPTION . '[fade_enable]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
+}
+
+function AdminDrawSettingsFadeHeight()
+{
+    $options = get_option(BCF_PAYPAGE_TEXT_FADE_OPTION);
+    $selected = $options['fade_height'];
+    echo '<input name="' . BCF_PAYPAGE_TEXT_FADE_OPTION . '[fade_height]" type="text" value="' . $selected . '" />';
+}
+
+function AdminDrawSettingsFadeBackgroundCol()
+{
+    $options = get_option(BCF_PAYPAGE_TEXT_FADE_OPTION);
+    $selected = $options['fade_bg_col'];
+    echo '<input name="' . BCF_PAYPAGE_TEXT_FADE_OPTION . '[fade_bg_col]" type="text" value="' . $selected . '" />';
+}
+
 
 function AdminDrawPaymentSettingsHelpText()
 {
@@ -875,9 +963,18 @@ function AdminDrawSettingsHelpAdvancedSettings()
     echo 'If you have a special configured Wordpress site, you may need to change the link to the AJAX handler.';
 }
 
+function AdminDrawSettingsHelpTextFading()
+{
+    echo '<p>Here you can configure the protected text to fade out. This will indicate that more is expected.</p>';
+    echo '<p>In case you have a colored content background, you need to set the Fade Background Color.</p>';
+}
+
+
 
 function AdminMenu()
 {
+    /* Settings sections for Payment Settings */
+
     register_setting(BCF_PAYPAGE_PAYMENT_OPTIONS, BCF_PAYPAGE_PAYMENT_OPTIONS);
     register_setting(BCF_PAYPAGE_WALLET_OPTIONS, BCF_PAYPAGE_WALLET_OPTIONS);
     register_setting(BCF_PAYPAGE_RECEIVER_OPTIONS, BCF_PAYPAGE_RECEIVER_OPTIONS);
@@ -1040,8 +1137,41 @@ function AdminMenu()
         'settings_section_advanced_options_tag'
     );
 
-    add_menu_page('Pay-Per-Page Menu', 'Pay Per Page', 'manage_options', __FILE__, 'BCF_PayPerPage\AdminPage');
-    add_submenu_page(__FILE__, 'Payment Status', 'Payment Status', 'manage_options', __FILE__.'about', 'BCF_PayPerPage\AdminPaymentStatus');
+    /* Settings sections for Layout Design */
+    register_setting(BCF_PAYPAGE_TEXT_FADE_OPTION, BCF_PAYPAGE_TEXT_FADE_OPTION);
+
+    add_settings_section(
+        'settings_section_text_fading_options_tag',
+        'Text fading',
+        'BCF_PayPerPage\AdminDrawSettingsHelpAdvancedSettings',
+        'settings_section_text_fading_settings'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_fade_enable',
+        'Enable text end fading:',
+        '\BCF_PayPerPage\AdminDrawSettingsFadeEnable',
+        'settings_section_text_fading_settings',
+        'settings_section_text_fading_options_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_fade_height',
+        'Fading heigth:',
+        '\BCF_PayPerPage\AdminDrawSettingsFadeHeight',
+        'settings_section_text_fading_settings',
+        'settings_section_text_fading_options_tag'
+    );
+    add_settings_field(
+        'bcf_payperpage_settings_fade_bg_col',
+        'Bacground color:',
+        '\BCF_PayPerPage\AdminDrawSettingsFadeBackgroundCol',
+        'settings_section_text_fading_settings',
+        'settings_section_text_fading_options_tag'
+    );
+
+
+    add_menu_page('pppc-admin-slug', 'Pay Per Page', 'manage_options', 'pppc-admin-menu-slug', 'BCF_PayPerPage\AdminPage');
+    add_submenu_page('pppc-admin-menu-slug', 'Layout Design', 'Layout Design', 'manage_options', 'pppc-admin-layout-design-slug', 'BCF_PayPerPage\AdminLayoutDesign');
+    add_submenu_page('pppc-admin-menu-slug', 'Payment Status', 'Payment Status', 'manage_options', 'pppc-admin-payment-status-slug', 'BCF_PayPerPage\AdminPaymentStatus');
 }
 
 function ActivatePlugin()
@@ -1083,6 +1213,11 @@ function ActivatePlugin()
         'ajax_handler' => '/wp-admin/admin-ajax.php'
     ));
 
+    add_option (BCF_PAYPAGE_TEXT_FADE_OPTION, array(
+        'fade_enable' => 'checked',
+        'fade_height' => '20em',
+        'fade_bg_col' => '#ffffff',
+    ));
 
     DB_CreateOrUpdateDatabaseTables();
 }
