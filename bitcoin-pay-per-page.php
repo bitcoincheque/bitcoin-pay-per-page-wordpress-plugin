@@ -271,15 +271,14 @@ function GetFreeContentHtmlPart($content, $position)
 
 function GetLoginFormHtml()
 {
-    $login_form = '<div id="bcf_pppc_login_form">';
-    $login_form .= '<h2>Login or register</h2>';
+    $login_form = '<h2>Login or register</h2>';
     $login_form .= 'Membership required to read the rest of the page. Please log-in or register for membership.';
 
     $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
 
-    $login_form .= '<form method="post" name="bcf_pppc_login_reg_form" class="loginForm" >';
+    $login_form .= '<form>';
     $login_form .= '<table class="bcf_pppc_table_forms" width="100%"><tr>';
-    $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">User name:</lable></td>';
+    $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Username:</lable></td>';
     $login_form .= '</tr><tr>';
     $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_username" type="text" class="bcf_pppc_text_input" value="" name="username" /></td>';
     $login_form .= '</tr><tr>';
@@ -287,16 +286,66 @@ function GetLoginFormHtml()
     $login_form .= '</tr><tr>';
     $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="password" class="bcf_pppc_text_input" value="" name="password" /></td>';
     $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_login" type="button" value="Log-in" class="bcf_pppc_button" />  <input type="submit" value="Register" class="bcf_pppc_button" /></td>';
+    $login_form .= '<td class="bcf_pppc_table_cell_form">';
+    $login_form .= '<input id="bcf_pppc_do_login" type="button" value="Log-in" class="bcf_pppc_button" />&nbsp;&nbsp;';
+    $login_form .= '<input id="bcf_pppc_do_register" type="button" value="Register" class="bcf_pppc_button" />';
+    $login_form .= '</td>';
     $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_forms"><a href="/">Forgotten user name or password?</a></td>';
+    $login_form .= '<td class="bcf_pppc_table_forms"><a href="/">Forgotten username or password?</a></td>';
     $login_form .= '</tr></table>';
     $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
     $login_form .= '</form>';
 
     $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
     $login_form .= '<p id="bcf_payment_status"></p>';
-    $login_form .= '</div>';
+
+    return $login_form;
+}
+
+function GetRegisterPassvordFormHtml()
+{
+    $login_form = '<h2>Register e-mail address</h2>';
+    $login_form .= 'Enter your e-mail address and verify it. You will receive a verification link.';
+
+    $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
+
+    $login_form .= '<form method="post" name="bcf_pppc_login_reg_form" class="loginForm" >';
+    $login_form .= '<table class="bcf_pppc_table_forms" width="100%"><tr>';
+    $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">E-mail address:</lable></td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_email" type="text" class="bcf_pppc_text_input" value="" name="email" /></td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_register_email" type="button" value="Register" class="bcf_pppc_button" /> </td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_forms"><a id="bcf_pppc_do_return_login">Return to login</a></td>';
+    $login_form .= '</tr></table>';
+    $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
+    $login_form .= '</form>';
+
+    $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
+    $login_form .= '<p id="bcf_payment_status"></p>';
+
+    return $login_form;
+}
+
+function GetVerifyEmailFormHtml()
+{
+    $login_form = '<h2>Check your e-mail</h2>';
+    $login_form .= 'A verification e-mail has been sent to you. Please check your e-mail.';
+
+    $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
+
+    $login_form .= '<form method="post" name="bcf_pppc_login_reg_form" class="loginForm" >';
+    $login_form .= '<table class="bcf_pppc_table_forms" width="100%"><tr>';
+    $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_resend_email" type="button" value="Resend e-mail" class="bcf_pppc_button" /> </td>';
+    $login_form .= '</tr><tr>';
+    $login_form .= '<td class="bcf_pppc_table_forms"><a id="bcf_pppc_do_return_login">Return to login</a></td>';
+    $login_form .= '</tr></table>';
+    $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
+    $login_form .= '</form>';
+
+    $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
+    $login_form .= '<p id="bcf_payment_status"></p>';
 
     return $login_form;
 }
@@ -401,7 +450,9 @@ function FilterContent( $content )
 
         if($draw_login_form)
         {
-            $modified_content .= GetLoginFormHtml($content);
+            $modified_content .= '<div id="bcf_pppc_login_form">';
+            $modified_content .= GetLoginFormHtml();
+            $modified_content .= '</div>';
 
             $add_ajax_handling = true;
 
@@ -478,38 +529,79 @@ function AddAjaxHandlerInScript($ref)
 
 function AjaxDoLogin()
 {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $event = $_POST['event'];
 
-    /*
-    $response_data = array(
-        'result'    => 'OK',
-        'message'   => ''
-    );
-    echo json_encode($response_data);
-    die();
-    */
-
-    $creds = array(
-        'user_login'    => $username,
-        'user_password' => $password,
-        'remember'      => true
-    );
-
-    $user = wp_signon( $creds, false );
-
-    if(is_wp_error($user))
+    if($event == 'login')
     {
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+
+        $creds = array(
+            'user_login'    => $username,
+            'user_password' => $password,
+            'remember'      => true
+        );
+
+        $user = wp_signon( $creds, false );
+
+        if(is_wp_error($user))
+        {
+            $response_data = array(
+                'result'    => 'ERROR',
+                'message'   => 'Error log-in.'
+            );
+        }
+        else
+        {
+            $response_data = array(
+                'result'    => 'OK',
+                'type'    => 'content_data',
+                'message'   => ''
+            );
+        }
+    }
+    else if($event == 'register')
+    {
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+
         $response_data = array(
-            'result'    => 'ERROR',
-            'message'   => 'Error log-in.'
+            'result'  => 'OK',
+            'type'    => 'login_forms',
+            'form'    => GetRegisterPassvordFormHtml(),
+            'message' => ''
         );
     }
-    else
+    else if($event == 'register_email')
+    {
+        $email = $_POST['email'];
+
+        $response_data = array(
+            'result'  => 'OK',
+            'type'    => 'login_forms',
+            'form'    => GetVerifyEmailFormHtml(),
+            'message' => ''
+        );
+    }
+    else if($event == 'register_resend_email')
+    {
+        $email = $_POST['email'];
+
+        $register_form = GetRegisterPassvordFormHtml();
+        $response_data = array(
+            'result'  => 'OK',
+            'type'    => 'login_forms',
+            'form'    => $register_form,
+            'message' => ''
+        );
+    }
+    else if($event == 'return_login')
     {
         $response_data = array(
-            'result'    => 'OK',
-            'message'   => ''
+            'result'  => 'OK',
+            'type'    => 'login_forms',
+            'form'    => GetLoginFormHtml(),
+            'message' => ''
         );
     }
 

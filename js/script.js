@@ -10,61 +10,152 @@ var processing_text = "";
 
 jQuery(document).ready(function($)
 {
-	$( 'a#bcf_paylink1' ).click(
-		function()
-		{
+    function GetCheckInputTextFormData(selector, error_message) {
+        var text = $(selector).val();
+        if(text == '') {
+            $(selector).css('border', '1px solid red');
+            SetStatusMessage('error', error_message);
+        }
+        return text;
+    }
+
+    function SetStatusMessage(color_code, message){
+        var span_class = 'bcf_pppc_status_info';
+        switch (color_code)
+        {
+            case 'error':
+                span_class = 'bcf_pppc_status_error';
+                break;
+        }
+
+        $('p#bcf_payment_status').html('<p><span class="' + span_class + '">' + message + '</span></p>');
+    }
+
+    function load_register_form(data){
+        $.post(pppc_script_handler_vars.url_to_my_site, data, function (resp, status) {
+            if (status == "success") {
+                if (resp.result == "OK") {
+                    if(resp.type == 'login_forms') {
+                        $('div#bcf_pppc_login_form').html(resp.form);
+                    }else if(resp.type == 'content_data') {
+                        pppc_load_remaining_content();
+                    }else{
+                        $('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Register OK, wrong type</span></p>');
+                    }
+                } else {
+                    $('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Error register.</span></p>');
+                }
+            } else {
+                $('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Site error. Contact server admin.</span></p>');
+            }
+        }, 'json');
+    }
+
+    $(document).on('click', '#bcf_pppc_do_login', function() {
+        var username = GetCheckInputTextFormData('#bcf_pppc_username', 'Username missing.');
+        var password = GetCheckInputTextFormData('#bcf_pppc_password', 'Password missing.');
+
+        if (username == '' && password == '') {
+            SetStatusMessage('error','Username and password missing');
+        }
+
+        if (username != '' && password != '') {
+            SetStatusMessage('info', 'Logging in...');
+
+            var data = {
+                action: 'bcf_pppc_do_login',
+                event: 'login',
+                username: username,
+                password: password,
+                nonce: pppc_script_handler_vars.nonce
+            };
+
+            load_register_form(data);
+
+            $.post(pppc_script_handler_vars.url_to_my_site, data, function (resp, status) {
+                if (status == "success") {
+                    if (resp.result == "OK") {
+                        pppc_load_remaining_content();
+                    } else {
+                        SetStatusMessage('error', 'Wrong username or password.');
+                    }
+                } else {
+                    SetStatusMessage('error', 'Site error. Contact server admin.');
+                }
+            }, 'json');
+        }
+    });
+
+    $(document).on('click', '#bcf_pppc_do_register', function() {
+        var username = GetCheckInputTextFormData('#bcf_pppc_username', 'Username missing.');
+        var password = GetCheckInputTextFormData('#bcf_pppc_password', 'Password missing.');
+
+        if (username == '' && password == '') {
+            SetStatusMessage('error','You must select a username and password to register');
+        }
+
+        if (username != '' && password != '') {
+            var data = {
+                action: 'bcf_pppc_do_login',
+                event: 'register',
+                username: username,
+                password: password,
+                nonce: pppc_script_handler_vars.nonce
+            };
+
+            SetStatusMessage('info', 'Register...');
+
+            load_register_form(data);
+        }
+    });
+
+    $(document).on('click', '#bcf_pppc_do_register_email', function() {
+        var email = GetCheckInputTextFormData('#bcf_pppc_email', 'E-mail address missing.');
+
+        if(email != '') {
+            var data = {
+                action: 'bcf_pppc_do_login',
+                event: 'register_email',
+                email: email,
+                nonce: pppc_script_handler_vars.nonce
+            };
+
+            SetStatusMessage('info', 'Register and sending you verification e-mail...');
+
+            load_register_form(data);
+        }
+    });
+
+    $(document).on('click', '#bcf_pppc_do_return_login' , function(){
+        var data = {
+            action: 'bcf_pppc_do_login',
+            event: 'return_login',
+            nonce: pppc_script_handler_vars.nonce
+        };
+        load_register_form(data);
+    });
+
+    $(document).on('click', '#bcf_pppc_do_resend_email' , function(){
+        var data = {
+            action: 'bcf_pppc_do_login',
+            event: 'register_resend_email',
+            nonce: pppc_script_handler_vars.nonce
+        };
+        load_register_form(data);
+    });
+
+    $( 'a#bcf_paylink1' ).click(
+        function()
+        {
             processing_text = "Processing";
 
             window.setTimeout(pppc_update_payment_status, 500);
-			$('p#bcf_payment_status').html(processing_text);
+            SetStatusMessage('info', processing_text);
 
-			timeout = 0;
-			error_counter = 0;
-			ok = false;
-		});
-
-	$('#bcf_pppc_do_login').click(
-		function()
-		{
-			var error_in_text = false;
-			var username = $('#bcf_pppc_username').val();
-			var password = $('#bcf_pppc_password').val();
-
-			if(username == '')
-			{
-				$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Username missing.</span></p>');
-				error_in_text = true;
-			}
-
-			if(password == '')
-			{
-				$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Password missing.</span></p>');
-				error_in_text = true;
-			}
-
-			if(error_in_text == false) {
-				$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_info">Logging in...</span></p>');
-
-				var data = {
-					action: 'bcf_pppc_do_login',
-					username: username,
-					password: password,
-					nonce: pppc_script_handler_vars.nonce
-				};
-
-				$.post(pppc_script_handler_vars.url_to_my_site, data, function (resp, status) {
-					if (status == "success") {
-						if (resp.result == "OK") {
-							pppc_load_remaining_content();
-						} else {
-							$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Wrong username or password.</span></p>');
-						}
-					} else {
-						$('p#bcf_payment_status').html('<p><span class="bcf_pppc_status_error">Site error. Contact server admin.</span></p>');
-					}
-				}, 'json');
-			}
-		});
+            timeout = 0;
+            error_counter = 0;
+            ok = false;
+        });
 
 	function pppc_update_payment_status()
 	{
