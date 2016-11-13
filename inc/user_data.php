@@ -26,7 +26,6 @@ namespace BCF_PayPerPage;
 require_once('data_collection.php');
 require_once('data_types.php');
 
-define ('BCF_PAYPERPAGE_USER_DATA_CLASS_NAME', __NAMESPACE__ . '\UserDataClass');
 
 class UserDataClass extends DataCollectionClass
 {

@@ -396,73 +396,8 @@ class DataCollectionClass extends DatabaseInterfaceClass
         return $result;
     }
 
-    public function GetCreateMysqlTableText()
+    public function CreateDatabaseTable()
     {
-        $line_break = "\r\n";
-        global $wpdb;
-        $table_name = $wpdb->prefix . $this::DB_TABLE_NAME;
-
-        $sql        = "CREATE TABLE `" . $table_name . "` ("  . $line_break;
-
-        $sql_columns = "";
-        foreach($this->MetaData as $key => $attributes)
-        {
-            $class = '\\' . __NAMESPACE__ . '\\' . $attributes['class_type'];
-            $container = new $class(null);
-            $type = $container->GetDataType();
-            $mysql_type = $container->GetDataMySqlType();
-            $minsize = $container->GetDataTypeMin();
-            $maxsize = $container->GetDataTypeMax();
-
-            if($sql_columns != "")
-            {
-                $sql_columns .= "," . $line_break;
-            }
-
-            $sql_columns .= "\t";
-
-            if($type == 'integer')
-            {
-                $sql_columns .= "`" . $key . "` " . $mysql_type;
-
-                if($minsize >= 0)
-                {
-                    $sql_columns .= " UNSIGNED";
-                }
-
-                $sql_columns .= " NOT NULL";
-            }
-            elseif($type == 'string')
-            {
-                $sql_columns .= "`". $key ."` " . $mysql_type;
-
-                if($mysql_type == 'VARCHAR')
-                {
-                    $sql_columns .= "(". $maxsize .")";
-                }
-                $sql_columns .= " NULL DEFAULT NULL";
-            }
-            else
-            {
-                die();
-            }
-
-            if($attributes['db_primary_key'])
-            {
-                $sql_columns .= " AUTO_INCREMENT";
-                $primary_key = $key;
-            }
-
-        }
-
-        $sql .= $sql_columns;
-        $sql .= "," . $line_break . "\tPRIMARY KEY (`" . $primary_key . "`)";
-        $sql .= $line_break . ")"  . $line_break;
-        $sql .= "COLLATE='latin1_swedish_ci'" . $line_break;
-        $sql .= "ENGINE=InnoDB" . $line_break;
-        $sql .= "AUTO_INCREMENT=3" . $line_break;
-        $sql .= ";" . $line_break;
-
-        return $sql;
+        $this->CreateOrUpdateDatabaseTable();
     }
 }
