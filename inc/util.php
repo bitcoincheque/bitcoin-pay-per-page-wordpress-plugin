@@ -23,6 +23,118 @@
 
 namespace BCF_PayPerPage;
 
+function SanitizeInputText($text)
+{
+    if (preg_match('/^[A-Za-z0-9 .,;:+=?_~\/\-!@#\$%\^&\*\(\)]+$/', $text))
+    {
+        return strval($text);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SanitizeInputInteger($text)
+{
+    if (preg_match('/^[1-9][0-9]{0,15}$/', $text))
+    {
+        $value = intval($text);
+    }
+    else
+    {
+        $value = null;
+    }
+
+    return $value;
+}
+
+function SanitizeInputBool($text)
+{
+    if (preg_match('/^[01]$/', $text))
+    {
+        $value = ($text=='0');
+    }
+    else
+    {
+        $value = null;
+    }
+
+    return $value;
+}
+
+function SafeReadGetString($key)
+{
+    if(!empty($_GET[$key]))
+    {
+        return SanitizeInputText($_REQUEST[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SafeReadGetInt($key)
+{
+    if(!empty($_GET[$key]))
+    {
+        return SanitizeInputInteger($_REQUEST[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SafeReadGetBool($key)
+{
+    if(!empty($_GET[$key]))
+    {
+        return SanitizeInputBool($_POST[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SafeReadPostString($key)
+{
+    if(!empty($_POST[$key]))
+    {
+        return SanitizeInputText($_POST[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SafeReadPostInt($key)
+{
+    if(!empty($_POST[$key]))
+    {
+        return SanitizeInputInteger($_POST[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
+function SafeReadPostBool($key)
+{
+    if(!empty($_POST[$key]))
+    {
+        return SanitizeInputBool($_POST[$key]);
+    }
+    else
+    {
+        return null;
+    }
+}
+
 function SanitizePositiveIntegerOrZero($value)
 {
     if(gettype($value) == 'integer'){
