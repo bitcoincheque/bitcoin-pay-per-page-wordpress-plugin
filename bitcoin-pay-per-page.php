@@ -152,6 +152,23 @@ function GetPaymentRequest($ref)
     return $payment_url;
 }
 
+function GetLoginPaymentFromHtml($price, $ref)
+{
+    $payment_form = '<div id="bcf_remaining_content">';
+
+    $payment_form .= '<p><b>To read the rest of the article, please pay ' . $price . ' to this address:</b></p>';
+    $payment_form .= '<p>';
+    $payment_form .= GetPaymentRequest($ref);
+    $payment_form .= "</p>";
+
+    $payment_form .= '<p id="bcf_payment_status"></p>';
+    $payment_form .= '<p id="bcf_payment_debug"></p>';
+
+    $payment_form .= '</div>';
+
+    return $payment_form;
+}
+
 function GetFreeContentHtmlPart($content, $position)
 {
     $free_content = '';
