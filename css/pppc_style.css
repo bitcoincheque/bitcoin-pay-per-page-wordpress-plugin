@@ -30,6 +30,16 @@
     font-family: Helvetica, Arial, sans-serif;
 }
 
+.bcf_pppc_remark {
+    text-align: left;
+    vertical-align: middle;
+    padding: 15px 10px 10px 0px;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+
 input.bcf_pppc_button{
     background-color: #4D90FE !important;
     background-image: none !important;

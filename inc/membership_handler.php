@@ -229,24 +229,32 @@ class RegistrationHandlerClass
 
     public function CreateNewUser()
     {
+        $result = false;
+
         $username = $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
-        $email =  $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
 
-        $temp_password = wp_hash_password(MembershipRandomString());
+        if(validate_username($username))
+        {
+            $email = $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
 
-        $wp_user_id = wp_create_user($username, $temp_password, $email);
+            $temp_password = wp_hash_password(MembershipRandomString());
 
-        if( ! is_wp_error($wp_user_id)){
-            $password_hash =  $this->registration_data->GetDataString(MembershipRegistrationDataClass::PASSWORD);
-            $this->wp_set_hassed_password($password_hash,$wp_user_id);
+            $wp_user_id = wp_create_user($username, $temp_password, $email);
 
-            $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_USER_CREATED);
-            $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
-            $this->registration_data->SaveData();
-            return true;
-        }else{
-            return false;
+            if( ! is_wp_error($wp_user_id))
+            {
+                $password_hash = $this->registration_data->GetDataString(MembershipRegistrationDataClass::PASSWORD);
+                $this->wp_set_hassed_password($password_hash, $wp_user_id);
+
+                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_USER_CREATED);
+                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
+                $this->registration_data->SaveData();
+
+                $result = true;
+            }
         }
+
+        return $result;
     }
 
     private function wp_set_hassed_password( $password_hashed, $user_id )
@@ -256,7 +264,7 @@ class RegistrationHandlerClass
         wp_cache_delete($user_id, 'users');
     }
 
-    public function LogInUser($remember=false)
+    public function LogInRegisteredUser($remember=false)
     {
         $username = $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
 
@@ -276,9 +284,15 @@ class RegistrationHandlerClass
         }
     }
 
+
     public function GetRegId()
     {
         return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::ID);
+    }
+
+    public function GetRegistrationState()
+    {
+        return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::STATE);
     }
 
     public function GetUsername()

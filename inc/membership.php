@@ -11,13 +11,172 @@ namespace BCF_PayPerPage;
 
 define ('BCF_PAYPAGE_REGISTRATION_COOKIE_NAME', 'payperpage_registration');
 
-require_once('membership_interface.php');
+define ('REG_AJAX_ACTION', 'pppc_membership_event');
+
+require_once ('membership_interface.php');
+require_once ('util.php');
 
 
 function MembershipInit()
 {
     MembershipInstallCookie();
 
+    $action = SafeReadPostString('action');
+
+    if($action == REG_AJAX_ACTION)
+    {
+        switch(SafeReadPostString(REG_EVENT))
+        {
+            case REG_EVENT_LOGIN:
+                $username = SafeReadPostString(REG_USERNAME);
+                $password = SafeReadPostString(REG_PASSWORD);
+                $remember = SafeReadPostInt(REG_REMEMBER);
+
+                MembershipLogInUser($username, $password, $remember);
+                break;
+
+            case REG_EVENT_LOGOUT:
+                MembershipLogOutUser();
+                break;
+        }
+    }
+
+    wp_logout_url( home_url());
+}
+
+function MembershipLogin()
+{
+    // TODO: Fix this backdoor
+    $ajax_ref = array();
+    $ajax_ref['ref'] = '83354';
+    $ajax_ref['nonce'] = '746654';
+    $ajax_ref['postid'] = get_the_ID();
+
+    MembershipPrepareAjaxAndStyle($ajax_ref);
+
+    $register_interface = new RegistrationInterfaceClass();
+
+    $texts = array();
+    $texts['error_message'] = SafeReadPostString(REG_ERROR_MSG);
+
+    return $register_interface->CreateLoginForm($texts);
+}
+
+function ProfileForm()
+{
+    $texts = array();
+
+    if(is_user_logged_in())
+    {
+        $action = SafeReadPostString('action');
+        $event = SafeReadPostString(REG_EVENT);
+        $firstname = SafeReadPostString(REG_FIRSTNAME);
+        $lastname = SafeReadPostString(REG_LASTNAME);
+        $password = SafeReadPostString(REG_PASSWORD);
+        $password2 = SafeReadPostString(REG_CONFIRM_PW);
+        $email = SafeReadPostString(REG_EMAIL);
+
+        if($action == REG_AJAX_ACTION and $event == REG_EVENT_UPDATE_PROFILE)
+        {
+            $user_id = get_current_user_id();
+
+            if($password != $password2)
+            {
+                $password = null;
+            }
+
+            $userdata = array(
+                'ID' => $user_id,
+                'first_name' => $firstname,
+                'last_name' => $lastname,
+                'user_pass' => $password,
+                'user_email' => $email
+            );
+
+            $user_id = wp_update_user($userdata);
+
+            if ( is_wp_error( $user_id ) ) {
+                $texts[TEXT_FIELD_ERROR_MSG] = 'Error updating profile data.';
+            } else {
+                $texts[TEXT_FIELD_SUCCESS_MSG] = 'Profile data successfully updated.';
+            }
+        }
+
+    }
+
+    // TODO: Fix this backdoor
+    $ajax_ref = array();
+    $ajax_ref['ref'] = '83354';
+    $ajax_ref['nonce'] = '746654';
+    $ajax_ref['postid'] = get_the_ID();
+    MembershipPrepareAjaxAndStyle($ajax_ref);
+
+    $register_interface = new RegistrationInterfaceClass();
+
+    return $register_interface->CreateProfileForm($texts);
+}
+
+function PasswordResetForm()
+{
+    // TODO: Fix this backdoor
+    $ajax_ref = array();
+    $ajax_ref['ref'] = '83354';
+    $ajax_ref['nonce'] = '746654';
+    $ajax_ref['postid'] = get_the_ID();
+    MembershipPrepareAjaxAndStyle($ajax_ref);
+
+    $register_interface = new RegistrationInterfaceClass();
+
+    return $register_interface->CreatePasswordResetForm();
+}
+
+function MembershipLogInUser($username, $password, $remember)
+{
+    $creds = array(
+        'user_login'    => $username,
+        'user_password' => $password,
+        'remember'      => $remember
+    );
+
+    $user = wp_signon($creds, false);
+
+    if( ! is_wp_error($user))
+    {
+        $user_id = $user->ID;
+        wp_set_current_user($user_id, $username);
+        wp_set_auth_cookie($user_id);
+        do_action('wp_login', $username);
+    }
+    else
+    {
+        $_POST[REG_ERROR_MSG] = 'Error. Invalid username or password.';
+    }
+}
+
+function MembershipLogOutUser()
+{
+    wp_logout();
+    wp_set_current_user(0);
+}
+
+function MembershipPrepareAjaxAndStyle($ref)
+{
+    $options      = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
+    $ajax_handler = $options['ajax_handler'];
+
+    $url_to_my_site = site_url() . $ajax_handler;
+
+    $translation_array = array(
+        'url_to_my_site' => $url_to_my_site,
+        'post_id_ref'    => intval($ref['ref']),
+        'nonce'          => $ref['nonce'],
+        'postid'         => $ref['postid']
+    );
+    wp_localize_script('bcf_payperpage_script_handler', 'pppc_script_handler_vars', $translation_array);
+
+    $style_url = plugins_url() . '/bitcoin-pay-per-page-wordpress-plugin/css/pppc_style.css';
+
+    wp_enqueue_style('pppc_style', $style_url);
 }
 
 function MembershipInstallCookie()

@@ -333,7 +333,8 @@ function FilterContent( $content )
                 $modified_content .= $register_result[REG_RESP_FORM];
             }
             else{
-                $modified_content .= $register_interface->CreatePostContentForm('login', $nonce, $post_id);
+                $texts = array();
+                $modified_content .= $register_interface->CreatePostContentForm($texts, $nonce, $post_id);
             }
             $modified_content .= '</div>';
 
@@ -374,7 +375,7 @@ function FilterContent( $content )
 
         if($add_ajax_handling)
         {
-            AddAjaxHandlerInScript($ajax_ref);
+            MembershipPrepareAjaxAndStyle($ajax_ref);
         }
 
         update_option(BCF_PAYPAGE_OPTION_SALES_COUNTER, 0);
@@ -388,26 +389,6 @@ function FilterContent( $content )
     {
         return $modified_content;
     }
-}
-
-function AddAjaxHandlerInScript($ref)
-{
-    $options      = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
-    $ajax_handler = $options['ajax_handler'];
-
-    $url_to_my_site = site_url() . $ajax_handler;
-
-    $translation_array = array(
-        'url_to_my_site' => $url_to_my_site,
-        'post_id_ref'    => intval($ref['ref']),
-        'nonce'          => $ref['nonce'],
-        'postid'         => $ref['postid']
-    );
-    wp_localize_script('bcf_payperpage_script_handler', 'pppc_script_handler_vars', $translation_array);
-
-    $style_url = plugins_url() . '/bitcoin-pay-per-page-wordpress-plugin/css/pppc_style.css';
-
-    wp_enqueue_style('pppc_style', $style_url);
 }
 
 function AjaxDoLogin()
@@ -1511,6 +1492,9 @@ add_filter( 'the_content', 'BCF_PayPerPage\FilterContent');
 /* Add shortcodes */
 add_shortcode( 'testingpage', 'BCF_PayPerPage\testingpage' );
 add_shortcode( 'remove_payments', 'BCF_PayPerPage\remove_payments' );
+add_shortcode( 'pppc_login', 'BCF_PayPerPage\MembershipLogin' );
+add_shortcode('pppc_profile', 'BCF_PayPerPage\ProfileForm');
+add_shortcode('pppc_reset_password', 'BCF_PayPerPage\PasswordResetForm');
 
 register_activation_hook(__FILE__, 'BCF_PayPerPage\ActivatePlugin');
 register_deactivation_hook(__FILE__, 'BCF_PayPerPage\DeactivatePlugin');

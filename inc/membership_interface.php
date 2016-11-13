@@ -1,6 +1,6 @@
 <?php
 /**
- * Membership registration and log-in library. User interface 
+ * Membership registration and log-in library. User interface
  * class with forms ansd AJAX handlers.
  * Original written to demonstrate the usage of Bitcoin Cheques.
  *
@@ -31,18 +31,25 @@ define('REG_ID',                    'rid');
 define('REG_NONCE',                 'nonce');
 define('REG_EVENT',                 'event');
 define('REG_USERNAME',              'username');
+define('REG_FIRSTNAME',             'firstname');
+define('REG_LASTNAME',              'lastname');
+define('REG_DISPLAY_NAME',          'dispname');
 define('REG_PASSWORD',              'password');
+define('REG_CONFIRM_PW',            'confirmpw');
 define('REG_REMEMBER',              'remmember');
 define('REG_EMAIL',                 'email');
 define('REG_POST_ID',               'post_id');
+define('REG_ERROR_MSG',             'error_message');
 
 // Event field values:
 define('REG_EVENT_LOGIN',           'login');
+define('REG_EVENT_LOGOUT',          'logout');
 define('REG_EVENT_REGISTER',        'register');
 define('REG_EVENT_RESEND_EMAIL',    'resend_register');
 define('REG_EVENT_REGISTER_EMAIL',  'register_email');
 define('REG_EVENT_GOTO_LOGIN',      'goto_login');
 define('REG_EVENT_CONFIRM_EMAIL',   'confirm_email');
+define('REG_EVENT_UPDATE_PROFILE',  'update_profile');
 
 // Response field constants:
 define('REG_RESP_RESULT',           'result');      // Mandatory field
@@ -62,6 +69,14 @@ define('REG_RESP_ACTION_LOAD_FORM', 'load_form');
 define('REG_RESP_STATUS_LOGGED_IN', 'logged_in');
 define('REG_RESP_STATUS_LOGGED_OUT','logged_out');
 
+// Form text fields:
+define('TEXT_FIELD_HEADER',         'header');
+define('TEXT_FIELD_DESCRIPTION',    'description');
+define('TEXT_FIELD_GREEN_MSG',      'green_msg');
+define('TEXT_FIELD_RED_MSG',        'red_msg');
+define('TEXT_FIELD_ERROR_MSG',      'error_message');
+define('TEXT_FIELD_SUCCESS_MSG',    'success_message');
+
 // Status line color classes
 define('GREEN_MESSAGE_CLASS',       'bcf_pppc_status_good');
 define('RED_MESSAGE_CLASS',         'bcf_pppc_status_error');
@@ -75,20 +90,54 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     }
 
-    public function CreateForm($type, $nonce)
+    public function CreateLoginForm($texts)
     {
-        $form = $this->GetLoginFormHtml();
+        $current_user = wp_get_current_user();
+        if ( 0 == $current_user->ID ) {
+            $form = $this->GetSimpleLoginFormHtml($texts);
+        } else {
+            $form = $this->GetSimpleLogoutFormHtml($texts);
+        }
+
         return $form;
     }
 
-    public function CreatePostContentForm($type, $nonce, $post_id)
+    public function CreateProfileForm($texts)
     {
-        $form = $this->GetLoginFormHtml($post_id);
+        $current_user = wp_get_current_user();
+        if ( 0 == $current_user->ID )
+        {
+            $form = $this->GetSimpleLoginFormHtml($texts);
+        }
+        else
+        {
+            $form = $this->CreateProfileFormHtml($texts);
+        }
+
+        return $form;
+    }
+
+    public function CreatePasswordResetForm($texts)
+    {
+        $current_user = wp_get_current_user();
+        if ( 0 == $current_user->ID ) {
+            $form = $this->GetSimpleLoginFormHtml($texts);
+        } else {
+            $form = '<p>You are now logged-in as ' . $current_user->user_login . '.</p>';
+        }
+
+        return $form;
+    }
+
+    public function CreatePostContentForm($texts, $nonce, $post_id)
+    {
+        $form = $this->GetLoginFormHtml($texts, $post_id);
         return $form;
     }
 
     public function EventHandler($input_data,  $post_id=null)
     {
+        $texts = array();
         $ok = false;
         $action = null;
         $form = null;
@@ -139,7 +188,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                                 {
                                     if($this->CreateNewUser())
                                     {
-                                        if($this->LogInUser())
+                                        if($this->LogInRegisteredUser())
                                         {
                                             $ok     = true;
                                             $status = REG_RESP_STATUS_LOGGED_IN;
@@ -150,7 +199,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                                 {
                                     $ok = true;
                                     $action = REG_RESP_ACTION_LOAD_FORM;
-                                    $form = $this->GetRegisterEmailFormHtml($input_data[REG_POST_ID], null, 'Email address already taken. Please select another email address.');
+                                    $form = $this->GetRegisterEmailFormHtml($texts, $input_data[REG_POST_ID], null, 'Email address already taken. Please select another email address.');
                                 }
                             }
                             else
@@ -162,7 +211,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                         {
                             $ok = true;
                             $action = REG_RESP_ACTION_LOAD_FORM;
-                            $form = $this->GetRegisterEmailFormHtml($input_data[REG_POST_ID]);
+                            $form = $this->GetRegisterEmailFormHtml($texts, $input_data[REG_POST_ID]);
                         }
                     }else{
                         $msg = 'Invalid username or password';
@@ -179,7 +228,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                     {
                         $ok = true;
                         $action = REG_RESP_ACTION_LOAD_FORM;
-                        $form = $this->GetVerifyEmailFormHtml($input_data[REG_POST_ID]);
+                        $form = $this->GetVerifyEmailFormHtml($texts, $input_data[REG_POST_ID]);
                     }
                     else
                     {
@@ -196,13 +245,13 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
             case REG_EVENT_RESEND_EMAIL:
                 $ok = true;
                 $action = REG_RESP_ACTION_LOAD_FORM;
-                $form = $this->GetRegisterEmailFormHtml($input_data[REG_POST_ID]);
+                $form = $this->GetRegisterEmailFormHtml($texts, $input_data[REG_POST_ID]);
                 break;
 
             case REG_EVENT_GOTO_LOGIN:
                 $ok = true;
                 $action = REG_RESP_ACTION_LOAD_FORM;
-                $form = $this->GetLoginFormHtml();
+                $form = $this->GetLoginFormHtml($texts);
                 break;
 
             case REG_EVENT_CONFIRM_EMAIL:
@@ -210,67 +259,89 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                 $my_cookie = $this->GetCookie();
                 $same_browser = ($visitors_cookie == $my_cookie);
 
+                $continue_registration = false;
+
                 switch($this->ConfirmEmail($input_data[REG_NONCE]))
                 {
                     case RegistrationHandlerClass::RESULT_OK:
-                        if($this->HasAllRequiredInfo() and $same_browser)
-                        {
-                            if(!$this->UserExist())
-                            {
-                                if(!$this->EmailExist())
-                                {
-                                    if($this->CreateNewUser())
-                                    {
-                                        $action = REG_RESP_ACTION_LOAD_FORM;
-                                        $form   = $this->GetLoginFormHtml($post_id, 'E-mail address confirmed created. You can now Log-in.');
-                                    }
-                                    else
-                                    {
-                                        $action = REG_RESP_ACTION_LOAD_FORM;
-                                        $form   = $this->GetRegisterEmailFormHtml($post_id, null, 'Error creating new user. You can retry...');
-                                    }
-
-                                }
-                                else
-                                {
-                                    $action = REG_RESP_ACTION_LOAD_FORM;
-                                    $form   = $this->GetRegisterEmailFormHtml($post_id, null, 'Email address already taken. Please select another email address.');
-                                }
-                            }
-                            else
-                            {
-                                $action = REG_RESP_ACTION_LOAD_FORM;
-                                $form   = $this->GetLoginFormHtml($post_id, null, 'Username already taken. Please select another username.');
-                            }
-                        }
-                        else
-                        {
-                            $action = REG_RESP_ACTION_LOAD_FORM;
-                            $form   = $this->GetLoginFormHtml($post_id, 'E-mail verified. Select your username and password.');
-                        }
+                        $continue_registration = true;
                         break;
 
                     case RegistrationHandlerClass::RESULT_NONCE_ERROR:
                         $ok     = true;
                         $action = REG_RESP_ACTION_LOAD_FORM;
-                        $form   = $this->GetLoginFormHtml($post_id, null, 'E-mail verification link error. Log-in or retry register.');
+                        $texts[TEXT_FIELD_ERROR_MSG] = 'E-mail verification link error. Log-in or retry register.';
+                        $form   = $this->GetLoginFormHtml($texts, $post_id);
                         break;
                     case RegistrationHandlerClass::RESULT_CONFIRM_INVALID:
                         break;
                     case RegistrationHandlerClass::RESULT_ERROR_UNDEFINED:
                         break;
                     case RegistrationHandlerClass::RESULT_CONFIRM_IS_DONE:
-                        $ok     = true;
-                        $action = REG_RESP_ACTION_LOAD_FORM;
-                        $form   = $this->GetLoginFormHtml($post_id, 'This e-mail has already been verified. Your can now log-in using your user name and password.');
+                        $state = $this->GetRegistrationState();
+                        if($state == MembershipRegistrationDataClass::STATE_USER_CREATED)
+                        {
+                            $ok                              = true;
+                            $action                          = REG_RESP_ACTION_LOAD_FORM;
+                            $texts[ TEXT_FIELD_SUCCESS_MSG ] = 'This e-mail has already been verified. Your can now log-in using your user name and password.';
+                            $form                            = $this->GetLoginFormHtml($texts, $post_id);
+                        }
+                        else if($state == MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED)
+                        {
+                            $continue_registration = true;
+                        }
                         break;
                     case RegistrationHandlerClass::RESULT_USER_EXIST:
                         $ok     = true;
                         $action = REG_RESP_ACTION_LOAD_FORM;
-                        $form   = $this->GetLoginFormHtml($post_id, 'This e-mail has been confirmed and user registration has been completed. You can now log-in.');
+                        $texts[TEXT_FIELD_GREEN_MSG] = 'This e-mail has been confirmed and user registration has been completed. You can now log-in.';
+                        $form   = $this->GetLoginFormHtml($texts, $post_id);
                         break;
                     default:
                         die();
+                }
+
+                if($continue_registration)
+                {
+                    if($this->HasAllRequiredInfo() and $same_browser)
+                    {
+                        if( ! $this->UserExist())
+                        {
+                            if( ! $this->EmailExist())
+                            {
+                                if($this->CreateNewUser())
+                                {
+                                    $action                        = REG_RESP_ACTION_LOAD_FORM;
+                                    $texts[ TEXT_FIELD_GREEN_MSG ] = 'E-mail address confirmed and user account created. You can now log in.';
+                                    $form                          = $this->GetLoginFormHtml($texts, $post_id);
+                                }
+                                else
+                                {
+                                    $action                      = REG_RESP_ACTION_LOAD_FORM;
+                                    $texts[ TEXT_FIELD_RED_MSG ] = 'Error creating new user. You can retry...';
+                                    $form                        = $this->GetRegisterEmailFormHtml($texts, $post_id);
+                                }
+                            }
+                            else
+                            {
+                                $action                      = REG_RESP_ACTION_LOAD_FORM;
+                                $texts[ TEXT_FIELD_RED_MSG ] = 'Email address already taken. Please select another email address.';
+                                $form                        = $this->GetRegisterEmailFormHtml($texts, $post_id);
+                            }
+                        }
+                        else
+                        {
+                            $action                      = REG_RESP_ACTION_LOAD_FORM;
+                            $texts[ TEXT_FIELD_RED_MSG ] = 'Username already taken. Please select another username.';
+                            $form                        = $this->GetLoginFormHtml($texts, $post_id);
+                        }
+                    }
+                    else
+                    {
+                        $action                          = REG_RESP_ACTION_LOAD_FORM;
+                        $texts[ TEXT_FIELD_SUCCESS_MSG ] = 'E-mail verified. Select your username and password.';
+                        $form                            = $this->GetLoginFormHtml($texts, $post_id);
+                    }
                 }
                 break;
         }
@@ -310,57 +381,94 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         }
     }
 
-    private function FormatFormTopPart($header, $description, $good_msg=null, $bad_msg=null)
+    private function FormatFormTopPart($texts, $form_code)
     {
-        $login_form = '<h2>Login or register</h2>';
-        $login_form .= '<p>' . $description . '</p>';
+        $login_form = '';
 
-        if($good_msg)
+        if($texts[TEXT_FIELD_HEADER])
         {
-            $login_form .=  $this->FormatMessageHtml($good_msg, GREEN_MESSAGE_CLASS);
+            $login_form .= '<h2>'.$texts[TEXT_FIELD_HEADER].'</h2>';
         }
 
-        if($bad_msg)
+        if($texts[TEXT_FIELD_DESCRIPTION])
         {
-            $login_form .=  $this->FormatMessageHtml($bad_msg, RED_MESSAGE_CLASS);
+            $login_form .= '<p>' . $texts[TEXT_FIELD_DESCRIPTION] . '</p>';
+        }
+
+        if($texts['green_msg'])
+        {
+            $login_form .=  $this->FormatMessageHtml($texts['green_msg'], GREEN_MESSAGE_CLASS);
+        }
+
+        if($texts['red_msg'])
+        {
+            $login_form .=  $this->FormatMessageHtml($texts['red_msg'], RED_MESSAGE_CLASS);
         }
 
         $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
 
-        $login_form .= '<form>';
+        $login_form .= '<form';
+        if($form_code){
+            $login_form .= ' ' . $form_code;
+        }
+        $login_form .= '>';
+
         $login_form .= '<table class="bcf_pppc_table_forms" width="100%">';
 
         return $login_form;
     }
 
-    private function FormatFormEndPart($post_id=null, $message=null, $color_code=null)
+    private function FormatFormEndPart($texts, $hidden_fields, $post_id)
     {
         $reg_id = $this->GetRegId();
-        $msg_html = $this->FormatMessageHtml($message, $color_code);
 
         $login_form = '</table>';
-        $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
         $login_form .= '<input id="bcf_pppc_reg_id" type="hidden" name="id" value="' . $reg_id . '" />';
         if($post_id)
         {
             $login_form .= '<input id="bcf_pppc_post_id" type="hidden" name="post_id" value="' . $post_id . '" />';
         }
+        if($hidden_fields)
+        {
+            foreach($hidden_fields as $name => $value)
+            {
+                $login_form .= '<input type="hidden" name="'.$name.'" value="'.$value.'" />';
+            }
+        }
         $login_form .= '</form>';
 
         $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
+
+        $msg_html = '';
+        if($texts['error_message'])
+        {
+            $msg_html .= $this->FormatMessageHtml($texts['error_message'], RED_MESSAGE_CLASS);
+        }
+
+        if($texts['success_message'])
+        {
+            if($msg_html){
+                $msg_html .= '<b>';
+            }
+            $msg_html = $this->FormatMessageHtml($texts['success_message'], GREEN_MESSAGE_CLASS);
+        }
+
+
         $login_form .= '<p id="bcf_payment_status">'.$msg_html.'</p>';
 
         return $login_form;
     }
 
-    public function GetLoginFormHtml($post_id=null, $good_msg=null, $bad_msg=null, $status_msg=null, $status_color=null)
+    public function GetSimpleLoginFormHtml($texts=array())
     {
-        $login_form = $this->FormatFormTopPart(
-            'Login or register',
-            'Membership required to read the rest of the page. Please log-in or register for membership.',
-            $good_msg,
-            $bad_msg
+        $form_code = 'method="post"';
+        $hidden_fields = array(
+            'action' => REG_AJAX_ACTION,
+            REG_EVENT => REG_EVENT_LOGIN
         );
+        $post_id= null;
+
+        $login_form = $this->FormatFormTopPart($texts, $form_code);
 
         $login_form .= '<tr>';
         $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Username:</lable></td>';
@@ -372,26 +480,89 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="password" class="bcf_pppc_text_input" value="" name="password" /></td>';
         $login_form .= '</tr><tr>';
         $login_form .= '<td class="bcf_pppc_table_cell_form">';
-        $login_form .= '<input id="bcf_pppc_do_login" type="button" value="Log-in" class="bcf_pppc_button" />&nbsp;&nbsp;';
+        $login_form .= '<input type="submit" value="Log in" class="bcf_pppc_button" />';
+        $login_form .= '</td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms">';
+        $login_form .= '<a href="/">Forgotten username or password?</a><br>';
+        $login_form .= '<a href="/">Register</a>';
+        $login_form .= '</td>';
+        $login_form .= '</tr>';
+
+        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
+
+        return $login_form;
+    }
+
+    public function GetSimpleLogoutFormHtml($texts=array())
+    {
+        $form_code = 'method="post"';
+        $hidden_fields = array(
+            'action' => REG_AJAX_ACTION,
+            REG_EVENT => REG_EVENT_LOGOUT
+        );
+        $post_id= null;
+
+        $current_user = wp_get_current_user();
+
+        $login_form = $this->FormatFormTopPart($texts, $form_code);
+
+        $login_form .= '<tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><p>You are now logged in.</p><p>Username: ' . $current_user->user_login . '</p></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form">';
+        $login_form .= '<input type="submit" value="Log out" class="bcf_pppc_button" />';
+        $login_form .= '</td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms">';
+        $login_form .= '<a href="/">Update your profile</a><br>';
+        $login_form .= '</td>';
+        $login_form .= '</tr>';
+
+        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
+
+        return $login_form;
+    }
+
+    public function GetLoginFormHtml($texts=array(), $post_id=null)
+    {
+        $form_code = '';
+        $hidden_fields = null;
+        $texts[TEXT_FIELD_HEADER] = 'Login or register';
+        $texts[TEXT_FIELD_DESCRIPTION] = 'Membership required to read the rest of the page. Please log in or register for membership.';
+
+        $login_form = $this->FormatFormTopPart($texts, $form_code);
+
+        $login_form .= '<tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Username:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_username" type="text" class="bcf_pppc_text_input" value="" name="username" /></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Password:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="password" class="bcf_pppc_text_input" value="" name="password" /></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form">';
+        $login_form .= '<input id="bcf_pppc_do_login" type="button" value="Log in" class="bcf_pppc_button" />&nbsp;&nbsp;';
         $login_form .= '<input id="bcf_pppc_do_register" type="button" value="Register" class="bcf_pppc_button" />';
         $login_form .= '</td>';
         $login_form .= '</tr><tr>';
         $login_form .= '<td class="bcf_pppc_table_forms"><a href="/">Forgotten username or password?</a></td>';
         $login_form .= '</tr>';
 
-        $login_form .= $this->FormatFormEndPart($post_id, $status_msg, $status_color);
+        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
 
         return $login_form;
     }
 
-    public function GetRegisterEmailFormHtml($post_id, $good_msg=null, $bad_msg=null, $status_msg=null, $status_color=null)
+    public function GetRegisterEmailFormHtml($texts=array(), $post_id)
     {
-        $login_form = $this->FormatFormTopPart(
-            'Register e-mail address',
-            'Enter your e-mail address and verify it. You will receive a verification link.',
-            $good_msg,
-            $bad_msg
-        );
+        $form_code = '';
+        $hidden_fields = null;
+        $texts[TEXT_FIELD_HEADER] = 'Register e-mail address';
+        $texts[TEXT_FIELD_DESCRIPTION] = 'Enter your e-mail address and verify it. You will receive a verification link.';
+
+        $login_form = $this->FormatFormTopPart($texts, $form_code);
 
         $login_form .= '<tr>';
         $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">E-mail address:</lable></td>';
@@ -403,32 +574,20 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $login_form .= '<td class="bcf_pppc_table_forms"><a id="bcf_pppc_do_return_login">Return to login</a></td>';
         $login_form .= '</tr>';
 
-        $login_form .= $this->FormatFormEndPart($post_id, $status_msg, $status_color);
-/*
-        $login_form .= '</tr></table>';
-        $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
-        $login_form .= '<input id="bcf_pppc_reg_id" type="hidden" name="id" value="' . $reg_id . '" />';
-        if($post_id)
-        {
-            $login_form .= '<input id="bcf_pppc_post_id" type="hidden" name="post_id" value="' . $post_id . '" />';
-        }
-        $login_form .= '</form>';
-
-        $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
-        $login_form .= '<p id="bcf_payment_status">'.$msg_html.'</p>';
-*/
+        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
 
         return $login_form;
     }
 
-    public function GetVerifyEmailFormHtml($post_id, $good_msg=null, $bad_msg=null, $status_msg=null, $status_color=null)
+    public function GetVerifyEmailFormHtml($texts=array())
     {
-        $login_form = $this->FormatFormTopPart(
-            'Check your e-mail',
-            'A verification e-mail has been sent to you. Please check your e-mail.',
-            $good_msg,
-            $bad_msg
-        );
+        $form_code = '';
+        $hidden_fields = null;
+        $texts[TEXT_FIELD_HEADER] = 'Check your e-mail';
+        $texts[TEXT_FIELD_GREEN_MSG] = 'A verification e-mail has been sent to you. Please check your e-mail.';
+        $post_id= null;
+
+        $login_form = $this->FormatFormTopPart($texts, $form_code);
 
         $login_form .= '<tr>';
         $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_resend_email" type="button" value="Resend e-mail" class="bcf_pppc_button" /> </td>';
@@ -436,30 +595,61 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $login_form .= '<td class="bcf_pppc_table_forms"><a id="bcf_pppc_do_return_login">Return to login</a></td>';
         $login_form .= '</tr>';
 
-        $login_form .= $this->FormatFormEndPart($post_id, $status_msg, $status_color);
-
-        /*
-        $login_form .= '</tr></table>';
-        $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
-        $login_form .= '<input id="bcf_pppc_reg_id" type="hidden" name="id" value="' . $reg_id . '" />';
-        if($post_id)
-        {
-            $login_form .= '<input id="bcf_pppc_post_id" type="hidden" name="post_id" value="' . $post_id . '" />';
-        }
-        $login_form .= '</form>';
-
-        $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
-        $login_form .= '<p id="bcf_payment_status">'.$msg_html.'</p>';
-        */
+        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
 
         return $login_form;
     }
 
+    public function CreateProfileFormHtml($texts=array())
     {
+        $form_code = 'method="post"';
+        $hidden_fields = array(
+            'action' => REG_AJAX_ACTION,
+            REG_EVENT => REG_EVENT_UPDATE_PROFILE
+        );
+        $post_id= null;
 
+        $current_user = wp_get_current_user();
 
+        $login_form = $this->FormatFormTopPart($texts, $form_code);
 
+        $login_form .= '<tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Login username:</lable><br><lable class="bcf_pppc_remark">(Username can not be changed.)</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_firstname" type="text" class="bcf_pppc_text_input" value="' . $current_user->user_login . '" readonly="readonly" /></td>';
+        $login_form .= '</tr><tr>';
 
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Firstname:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_firstname" type="text" class="bcf_pppc_text_input" value="' . $current_user->first_name . '" name="'.REG_FIRSTNAME.'" /></td>';
+        $login_form .= '</tr><tr>';
 
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Lastname:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_lastname" type="text" class="bcf_pppc_text_input" value="' . $current_user->last_name . '" name="'.REG_LASTNAME.'" /></td>';
+        $login_form .= '</tr><tr>';
+
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">E-mail:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_email" type="text" class="bcf_pppc_text_input" value="' . $current_user->user_email . '" name="'.REG_EMAIL.'" /></td>';
+        $login_form .= '</tr><tr>';
+
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Password:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="text" class="bcf_pppc_text_input" value="" name="'.REG_PASSWORD.'" /></td>';
+        $login_form .= '</tr><tr>';
+
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Confirm password:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_confirm_pw" type="text" class="bcf_pppc_text_input" value="" name="'.REG_CONFIRM_PW.'" /></td>';
+        $login_form .= '</tr><tr>';
+
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_update_profile" type="submit" value="Update" class="bcf_pppc_button" /> </td>';
+        $login_form .= '</tr><tr>';
+
+        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
+
+        return $login_form;
+    }
 
 }
