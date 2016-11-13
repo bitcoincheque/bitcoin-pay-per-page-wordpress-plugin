@@ -1,6 +1,6 @@
 <?php
 /**
- * Generic base class for data records.
+ * Generic data collection base-class for holding database records.
  * Original written to demonstrate the usage of Bitcoin Cheques.
  *
  * Copyright (C) 2016 Arild Hegvik and Bitcoin Cheque Foundation.
@@ -24,7 +24,7 @@
 namespace BCF_PayPerPage;
 
 
-class DataBaseClass extends DatabaseInterfaceClass
+class DataCollectionClass extends DatabaseInterfaceClass
 {
     public $DataObjects = array();
 

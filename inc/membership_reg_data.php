@@ -24,12 +24,15 @@
 
 namespace BCF_PayPerPage;
 
-require_once('data_collection_base_class.php');
+
+require_once('data_collection.php');
 require_once('data_types.php');
+
 
 define ('BCF_PAYPERPAGE_REGISTRATION_CLASS_NAME', __NAMESPACE__ . '\RegistrationDataClass');
 
-class MembershipRegistrationDataClass extends DataBaseClass
+
+class MembershipRegistrationDataClass extends DataCollectionClass
 {
     /* Database table name: */
     const DB_TABLE_NAME = 'bcf_payperpage_registration';
