@@ -308,6 +308,10 @@ class UnsigedIntegerTypeClass extends BaseTypeClass
         parent::__construct($default_value, $primary_key, $this->MetaData);
     }
 
+    public function SetDataFromInt($data_int)
+    {
+        return parent::SetData($data_int);
+    }
     public function SetDataFromString($data_str)
     {
         $data = intval($data_str);

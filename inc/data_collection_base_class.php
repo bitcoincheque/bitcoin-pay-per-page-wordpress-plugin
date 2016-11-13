@@ -48,6 +48,134 @@ class DataBaseClass extends DatabaseInterfaceClass
         }
     }
 
+    public function SetDataString($key, $str)
+    {
+        $result = false;
+
+        if($this->SanitizeKey($key))
+        {
+            $meta_data = $this->MetaData[$key];
+
+            $class_name = __NAMESPACE__ . '\\' . $meta_data['class_type'];
+
+            $data_object = new $class_name(null);
+
+            if($data_object)
+            {
+                if($data_object->SetDataFromString($str))
+                {
+                    $result = $this->SetData($key, $data_object);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function GetDataString($key)
+    {
+        $result = null;
+
+        if($this->SanitizeKey($key))
+        {
+            $data_obj = $this->GetDataObjects($key);
+
+            $result = $data_obj->GetString();
+        }
+
+        return $result;
+    }
+
+    public function SetDataInt($key, $value)
+    {
+        $result = false;
+
+        if($this->SanitizeKey($key))
+        {
+            $meta_data = $this->MetaData[$key];
+
+            $class_name = __NAMESPACE__ . '\\' . $meta_data['class_type'];
+
+            $data_object = new $class_name(null);
+
+            if($data_object)
+            {
+                if($data_object->SetDataFromInt($value))
+                {
+                    $result = $this->SetData($key, $data_object);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function AddDataInt($key, $factor)
+    {
+        $result = false;
+
+        if($this->SanitizeKey($key))
+        {
+            $data_object = $this->GetDataObjects($key);
+
+            if($data_object)
+            {
+                $value = $data_object->GetInt();
+
+                $value = $value + $factor;
+
+                if($data_object->SetDataFromInt($value))
+                {
+                    $result = $this->SetData($key, $data_object);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function GetDataInt($key)
+    {
+        $result = null;
+
+        if($this->SanitizeKey($key))
+        {
+            $data_obj = $this->GetDataObjects($key);
+
+            $result = $data_obj->GetInt();
+        }
+
+        return $result;
+    }
+
+    public function SetData($key, $data_object)
+    {
+        $result = false;
+
+        if($this->SanitizeKey($key))
+        {
+            $meta_data = $this->MetaData[$key];
+
+            if(gettype($data_object) == 'object')
+            {
+                if(get_class($data_object) == __NAMESPACE__ . '\\' . $meta_data['class_type'])
+                {
+                    if($data_object->Sanitize())
+                    {
+                        $result = $this->SetDataObject($key, $data_object);
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function GetData($key)
+    {
+        return $this->GetDataObjects($key);
+    }
+
     public function SanitizeData()
     {
         foreach($this->MetaData as $key => $attributes)
@@ -174,6 +302,28 @@ class DataBaseClass extends DatabaseInterfaceClass
         return $arr;
     }
 
+    public function GetPrimaryKeyName()
+    {
+        $primary_key_name = '';
+
+        foreach($this->MetaData as $key => $attributes)
+        {
+            $is_primary_key = $attributes['db_primary_key'];
+            if ($is_primary_key==true)
+            {
+                if($primary_key_name != '')
+                {
+                    /* Self-fest: Can only have one primary key */
+                    die();
+                }
+
+                $primary_key_name = $key;
+            }
+        }
+
+        return $primary_key_name;
+    }
+
     public function GetDataArray($public_data_only=false)
     {
         $data_array = array();
@@ -198,6 +348,52 @@ class DataBaseClass extends DatabaseInterfaceClass
         }
 
         return $data_array;
+    }
+
+    public function SaveData()
+    {
+        $id = -1;
+
+        $table_name =  $this::DB_TABLE_NAME;
+        $data_array = $this->GetDataArray();
+
+        $primary_key_name = $this->GetPrimaryKeyName();
+        $primary_key_obj = $this->GetData($primary_key_name);
+        if($primary_key_obj->HasValidData())
+        {
+            /* Can only update a record if it exist in database. */
+            $id = $this->UpdateRecord($table_name, $data_array, $primary_key_name);
+        }
+        else
+        {
+            /* Can only create a record if it has no primary key. */
+            $id = $this->WriteRecord($table_name, $data_array);
+
+            if($id > 0)
+            {
+                $this->SetDataInt($primary_key_name, $id);
+            }
+
+        }
+
+        return $id;
+    }
+
+    public function LoadData($reg_id)
+    {
+        $result = false;
+        $table_name =  $this::DB_TABLE_NAME;
+
+        $primary_key = $this->GetPrimaryKeyName();
+
+        $record_list = $this->DB_GetRecordListByFieldValue($table_name, $primary_key, $reg_id);
+
+        if(count($record_list) == 1)
+        {
+            $result = $this->SetDataFromDbRecord($record_list[0]);
+        }
+
+        return $result;
     }
 
     public function GetCreateMysqlTableText()

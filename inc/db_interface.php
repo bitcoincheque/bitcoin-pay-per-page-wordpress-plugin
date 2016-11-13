@@ -188,6 +188,26 @@ class DatabaseInterfaceClass
         return $id_value;
     }
 
+    protected function WriteRecord($table_name, $data_array)
+    {
+        $id_value = 0;
+        global $wpdb;
+
+        $prefixed_table_name = $wpdb->prefix . $table_name;
+
+        if(!empty($data_array))
+        {
+            $wpdb->insert( $prefixed_table_name, $data_array );
+
+            if ( ! $wpdb->last_error )
+            {
+                $id_value = $wpdb->insert_id;
+            }
+        }
+
+        return $id_value;
+    }
+
     protected function DB_UpdateRecord($data_collection)
     {
         $result = false;
@@ -211,6 +231,32 @@ class DatabaseInterfaceClass
 
         return $result;
     }
+
+    protected function UpdateRecord($table_name, $data_array, $primary_key_name)
+    {
+        $result = false;
+        global $wpdb;
+
+        $prefixed_table_name = $wpdb->prefix . $table_name;
+
+        if(!empty($data_array) and $primary_key_name != '')
+        {
+            if(!empty($data_array[$primary_key_name]) and  $data_array[$primary_key_name] != '')
+            {
+                $primary_key_array[ $primary_key_name ] = $data_array[ $primary_key_name ];
+
+                $wpdb->update($prefixed_table_name, $data_array, $primary_key_array);
+
+                if( ! $wpdb->last_error)
+                {
+                    $result = true;
+                }
+            }
+        }
+
+        return $result;
+    }
+
     
     protected function DB_GetPageViewData($pageview_id)
     {
