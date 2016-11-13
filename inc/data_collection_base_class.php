@@ -24,7 +24,7 @@
 namespace BCF_PayPerPage;
 
 
-class DataBaseClass
+class DataBaseClass extends DatabaseInterfaceClass
 {
     public $DataObjects = array();
 
