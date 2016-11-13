@@ -37,6 +37,7 @@ namespace BCF_PayPerPage;
 require_once ('inc/pageview_manager.php');
 require_once ('inc/payment-browser-header.php');
 require_once ('inc/payment_data_codec.php');
+require_once('inc/membership.php');
 
 
 define ('BCF_PAYPAGE_OPTION_REQ_COUNTER',       'bcf_paypage_option_req_counter');
@@ -198,104 +199,6 @@ function GetFreeContentHtmlPart($content, $position)
     return $free_content;
 }
 
-function GetLoginFormHtml()
-{
-    $login_form = '<h2>Login or register</h2>';
-    $login_form .= 'Membership required to read the rest of the page. Please log-in or register for membership.';
-
-    $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
-
-    $login_form .= '<form>';
-    $login_form .= '<table class="bcf_pppc_table_forms" width="100%"><tr>';
-    $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Username:</lable></td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_username" type="text" class="bcf_pppc_text_input" value="" name="username" /></td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Password:</lable></td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="password" class="bcf_pppc_text_input" value="" name="password" /></td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_cell_form">';
-    $login_form .= '<input id="bcf_pppc_do_login" type="button" value="Log-in" class="bcf_pppc_button" />&nbsp;&nbsp;';
-    $login_form .= '<input id="bcf_pppc_do_register" type="button" value="Register" class="bcf_pppc_button" />';
-    $login_form .= '</td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_forms"><a href="/">Forgotten username or password?</a></td>';
-    $login_form .= '</tr></table>';
-    $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
-    $login_form .= '</form>';
-
-    $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
-    $login_form .= '<p id="bcf_payment_status"></p>';
-
-    return $login_form;
-}
-
-function GetRegisterPassvordFormHtml()
-{
-    $login_form = '<h2>Register e-mail address</h2>';
-    $login_form .= 'Enter your e-mail address and verify it. You will receive a verification link.';
-
-    $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
-
-    $login_form .= '<form method="post" name="bcf_pppc_login_reg_form" class="loginForm" >';
-    $login_form .= '<table class="bcf_pppc_table_forms" width="100%"><tr>';
-    $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">E-mail address:</lable></td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_email" type="text" class="bcf_pppc_text_input" value="" name="email" /></td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_register_email" type="button" value="Register" class="bcf_pppc_button" /> </td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_forms"><a id="bcf_pppc_do_return_login">Return to login</a></td>';
-    $login_form .= '</tr></table>';
-    $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
-    $login_form .= '</form>';
-
-    $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
-    $login_form .= '<p id="bcf_payment_status"></p>';
-
-    return $login_form;
-}
-
-function GetVerifyEmailFormHtml()
-{
-    $login_form = '<h2>Check your e-mail</h2>';
-    $login_form .= 'A verification e-mail has been sent to you. Please check your e-mail.';
-
-    $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
-
-    $login_form .= '<form method="post" name="bcf_pppc_login_reg_form" class="loginForm" >';
-    $login_form .= '<table class="bcf_pppc_table_forms" width="100%"><tr>';
-    $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_resend_email" type="button" value="Resend e-mail" class="bcf_pppc_button" /> </td>';
-    $login_form .= '</tr><tr>';
-    $login_form .= '<td class="bcf_pppc_table_forms"><a id="bcf_pppc_do_return_login">Return to login</a></td>';
-    $login_form .= '</tr></table>';
-    $login_form .= '<input type="hidden" name="action" value="bcf_pppc_do_login" />';
-    $login_form .= '</form>';
-
-    $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
-    $login_form .= '<p id="bcf_payment_status"></p>';
-
-    return $login_form;
-}
-
-function GetLoginPaymentFromHtml($price, $ref)
-{
-    $payment_form = '<div id="bcf_remaining_content">';
-
-    $payment_form .= '<p><b>To read the rest of the article, please pay ' . $price . ' to this address:</b></p>';
-    $payment_form .= '<p>';
-    $payment_form .= GetPaymentRequest($ref);
-    $payment_form .= "</p>";
-
-    $payment_form .= '<p id="bcf_payment_status"></p>';
-    $payment_form .= '<p id="bcf_payment_debug"></p>';
-
-    $payment_form .= '</div>';
-
-    return $payment_form;
-}
-
 function GetProtectedContentPlaceholder()
 {
     $protected_content = '<div id=bcf_remaining_content></div>';
@@ -305,6 +208,21 @@ function GetProtectedContentPlaceholder()
 
 function FilterContent( $content )
 {
+    $register_result = null;
+
+    $post_id_val = get_the_ID();
+
+    $input_data[ REG_EVENT ] = SafeReadGetString(REG_EVENT);
+    if($input_data[ REG_EVENT ] == REG_EVENT_CONFIRM_EMAIL)
+    {
+        $reg_id                    = SafeReadGetInt(REG_ID);
+        $input_data[ REG_NONCE ]   = SafeReadGetString(REG_NONCE);
+        $input_data[ REG_POST_ID ] = SafeReadGetInt(REG_POST_ID);
+
+        $register_interface = new RegistrationInterfaceClass($reg_id);
+        $register_result = $register_interface->EventHandler($input_data, $post_id_val);
+    }
+
     $modified_content = '';
 
     $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
@@ -315,6 +233,7 @@ function FilterContent( $content )
 
         $must_login_first = false;
         $payment_required = false;
+        $registration_open = false;
 
         $draw_free_content = false;
         $draw_login_form = false;
@@ -326,7 +245,6 @@ function FilterContent( $content )
         $ajax_ref = 0;
 
         $pageview_manager = new PageViewManagerClass();
-        $post_id_val = get_the_ID();
         $post_id     = new UnsigedIntegerTypeClass($post_id_val);
         $has_paid = $pageview_manager->HasUserPaidForThisPage($post_id);
 
@@ -344,6 +262,14 @@ function FilterContent( $content )
             $payment_required = true;
         }
 
+        if(!empty($register_result[REG_RESP_ACTION]))
+        {
+            if($register_result[REG_RESP_ACTION] == REG_RESP_ACTION_LOAD_FORM)
+            {
+                /* A registration form is active and needs more attention */
+                $registration_open = true;
+            }
+        }
 
         if($must_login_first)
         {
@@ -379,8 +305,19 @@ function FilterContent( $content )
 
         if($draw_login_form)
         {
+            $register_interface = new RegistrationInterfaceClass();
+
+            $nonce =  '746654';
+
             $modified_content .= '<div id="bcf_pppc_login_form">';
-            $modified_content .= GetLoginFormHtml();
+            $post_id = get_the_ID();
+            if($registration_open)
+            {
+                $modified_content .= $register_result[REG_RESP_FORM];
+            }
+            else{
+                $modified_content .= $register_interface->CreatePostContentForm('login', $nonce, $post_id);
+            }
             $modified_content .= '</div>';
 
             $add_ajax_handling = true;
@@ -388,7 +325,7 @@ function FilterContent( $content )
             // TODO: Fix this backdoor
             $ajax_ref = array();
             $ajax_ref['ref'] = '83354';
-            $ajax_ref['nonce'] = '746654';
+            $ajax_ref['nonce'] = $nonce;
             $ajax_ref['postid'] = get_the_ID();
         }
 
@@ -458,80 +395,21 @@ function AddAjaxHandlerInScript($ref)
 
 function AjaxDoLogin()
 {
-    $event = $_POST['event'];
+    $reg_id                     = SafeReadPostInt(REG_ID);
+    $nonce                      = SafeReadPostString(REG_NONCE);
+    $input_data[REG_EVENT]      = SafeReadPostString(REG_EVENT);
+    $input_data[REG_USERNAME]   = SafeReadPostString(REG_USERNAME);
+    $input_data[REG_PASSWORD]   = SafeReadPostString(REG_PASSWORD);
+    $input_data[REG_EMAIL]      = SafeReadPostString(REG_EMAIL);
+    $input_data[REG_POST_ID]    = SafeReadPostInt(REG_POST_ID);
+    $input_data[REG_REMEMBER]   = SafeReadPostBool(REG_REMEMBER);
 
-    if($event == 'login')
+    $register_interface = new RegistrationInterfaceClass($reg_id, $nonce);
+    $response_data = $register_interface->EventHandler($input_data);
+
+    if($response_data[REG_RESP_STATUS] == REG_RESP_STATUS_LOGGED_IN)
     {
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-
-        $creds = array(
-            'user_login'    => $username,
-            'user_password' => $password,
-            'remember'      => true
-        );
-
-        $user = wp_signon( $creds, false );
-
-        if(is_wp_error($user))
-        {
-            $response_data = array(
-                'result'    => 'ERROR',
-                'message'   => 'Error log-in.'
-            );
-        }
-        else
-        {
-            $response_data = array(
-                'result'    => 'OK',
-                'type'    => 'content_data',
-                'message'   => ''
-            );
-        }
-    }
-    else if($event == 'register')
-    {
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-
-        $response_data = array(
-            'result'  => 'OK',
-            'type'    => 'login_forms',
-            'form'    => GetRegisterPassvordFormHtml(),
-            'message' => ''
-        );
-    }
-    else if($event == 'register_email')
-    {
-        $email = $_POST['email'];
-
-        $response_data = array(
-            'result'  => 'OK',
-            'type'    => 'login_forms',
-            'form'    => GetVerifyEmailFormHtml(),
-            'message' => ''
-        );
-    }
-    else if($event == 'register_resend_email')
-    {
-        $email = $_POST['email'];
-
-        $register_form = GetRegisterPassvordFormHtml();
-        $response_data = array(
-            'result'  => 'OK',
-            'type'    => 'login_forms',
-            'form'    => $register_form,
-            'message' => ''
-        );
-    }
-    else if($event == 'return_login')
-    {
-        $response_data = array(
-            'result'  => 'OK',
-            'type'    => 'login_forms',
-            'form'    => GetLoginFormHtml(),
-            'message' => ''
-        );
+        $response_data['action'] = 'load_remaining_content';
     }
 
     echo json_encode($response_data);
@@ -919,6 +797,8 @@ function Init()
             //echo 'Set coockie: ' . BCF_PAYPAGE_OPTION_COOKIE_NAME . ' = ' . $coockie_counter . ' (Expire ' . $seconds . ' sec.)';
         }
     }
+
+    MembershipInit();
 }
 
 function AdminPage()

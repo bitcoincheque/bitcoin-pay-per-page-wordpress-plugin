@@ -26,6 +26,7 @@ namespace BCF_PayPerPage;
 require_once ('page_view_data.php');
 require_once ('user_data.php');
 require_once('data_types_base.php');
+require_once('membership_reg_data.php');
 
 class DatabaseInterfaceClass
 {
@@ -478,5 +479,6 @@ function DB_CreateOrUpdateDatabaseTables()
 {
     DB_CreateOrUpdateDatabaseTable('\\' . BCF_PAYPERPAGE_PAGEVIEW_DATA_CLASS_NAME);
     DB_CreateOrUpdateDatabaseTable('\\' . BCF_PAYPERPAGE_USER_DATA_CLASS_NAME);
+    DB_CreateOrUpdateDatabaseTable('\\' . BCF_PAYPERPAGE_REGISTRATION_CLASS_NAME);
 }
 

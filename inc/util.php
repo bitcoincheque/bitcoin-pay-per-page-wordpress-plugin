@@ -188,3 +188,18 @@ function SanitizeTextAlpanumericSymbols($text)
     return true;
 
 }
+
+function SafeReadCookieString($cookie_name)
+{
+    if(isset($_COOKIE[$cookie_name]))
+    {
+        $cookie = SanitizeInputText($_COOKIE[ $cookie_name ]);
+    }
+    else
+    {
+        $cookie = null;
+
+    }
+
+    return $cookie;
+}
