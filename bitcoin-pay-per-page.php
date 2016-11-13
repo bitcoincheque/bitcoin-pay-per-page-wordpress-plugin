@@ -1410,7 +1410,13 @@ function ActivatePlugin()
         'fade_height' => 'verify_email'
     ));
 
-    DB_CreateOrUpdateDatabaseTables();
+    ActivateMembership();
+
+    $pageview_data = new PageView_Class();
+    $pageview_data->CreateDatabaseTable();
+
+    $user_data = new UserDataClass();
+    $user_data->CreateDatabaseTable();
 }
 
 
@@ -1422,6 +1428,8 @@ function DeactivatePlugin()
     delete_option( BCF_PAYPAGE_CHEQUE_CONDITION_OPTIONS );
     delete_option( BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS );
     delete_option( BCF_PAYPAGE_ADVANCED_OPTIONS );
+
+    DeactivateMembership();
 }
 
 

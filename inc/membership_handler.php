@@ -26,6 +26,7 @@ namespace BCF_PayPerPage;
 
 use BCF_Email\Email;
 
+require_once ('membership_reg_data.php');
 require_once ('email.php');
 
 class RegistrationHandlerClass

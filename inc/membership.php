@@ -49,3 +49,14 @@ function MembershipRandomString()
     $nonce  = str_replace('.', '', $str);
     return $nonce;
 }
+
+function ActivateMembership()
+{
+    $registration_data = new MembershipRegistrationDataClass();
+    $registration_data->CreateDatabaseTable();
+}
+
+function DeactivateMembership()
+{
+
+}
