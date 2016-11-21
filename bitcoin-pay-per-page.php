@@ -235,6 +235,7 @@ function FilterContent( $content )
         $reg_id                     = SafeReadGetInt(REG_ID);
         $nonce                      = SafeReadGetString(REG_NONCE);
         $input_data[ REG_POST_ID ]  = SafeReadGetInt(REG_POST_ID);
+        $input_data[ REG_SECRET ]   = SafeReadGetString(REG_SECRET);
 
         $register_interface = new RegistrationInterfaceClass($reg_id, $nonce);
         $register_result = $register_interface->EventHandler($input_data, $post_id_val);

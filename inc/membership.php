@@ -15,6 +15,8 @@ define ('BCF_PAYPAGE_REGISTRATION_COOKIE_NAME', 'payperpage_registration');
 define ('REG_AJAX_ACTION', 'pppc_membership_event');
 
 define ('NONCE_LENGTH', 10);
+define ('SECRET_LENGTH', 20);
+
 require_once ('membership_interface.php');
 require_once ('util.php');
 require_once ('email.php');
@@ -98,7 +100,6 @@ function ProfileForm()
                 $texts[TEXT_FIELD_SUCCESS_MSG] = 'Profile data successfully updated.';
             }
         }
-
     }
 
     MembershipPrepareAjaxAndStyle();
@@ -124,6 +125,7 @@ function PasswordResetForm()
         $reg_id                       = SafeReadGetInt(REG_ID);
         $nonce                        = SafeReadGetString(REG_NONCE);
         $input_data[REG_EVENT]        = SafeReadGetString(REG_EVENT);
+        $input_data[REG_SECRET]       = SafeReadGetString(REG_SECRET);
     }
 
     $register_interface = new RegistrationInterfaceClass($reg_id, $nonce);

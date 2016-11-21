@@ -45,6 +45,7 @@ class MembershipRegistrationDataClass extends DataCollectionClass
     const COOCKIE = 'coockie';
     const NONCE = 'nonce';
     const POST_ID = 'post_id';
+    const SECRET = 'secret';
 
     /* State values: */
     const STATE_EMAIL_UNCONFIRMED = 0;
@@ -116,7 +117,13 @@ class MembershipRegistrationDataClass extends DataCollectionClass
             'db_field_name' => self::POST_ID,
             'db_primary_key'=> false,
             'default_value' => null
-        )
+        ),
+        self::SECRET         => array(
+            'class_type'    => 'TextTypeClass',
+            'db_field_name' => self::SECRET,
+            'db_primary_key'=> false,
+            'default_value' => ''
+        ),
     );
 
     public function __construct()

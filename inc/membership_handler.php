@@ -33,10 +33,11 @@ class RegistrationHandlerClass
 {
     const RESULT_OK = 0;
     const RESULT_NONCE_ERROR = 1;
-    const RESULT_CONFIRM_INVALID = 2;
+    const RESULT_CONFIRM_INVALID_LINK = 2;
     const RESULT_ERROR_UNDEFINED = 3;
     const RESULT_CONFIRM_IS_DONE = 4;
     const RESULT_USER_EXIST = 5;
+    const RESULT_CONFIRM_EXPIRED_LINK = 6;
 
     private $registration_data = null;
     private $has_data = false;
@@ -115,6 +116,10 @@ class RegistrationHandlerClass
 
                 $nonce = MembershipRandomString(NONCE_LENGTH);
                 $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
+
+                $secret = MembershipRandomString(SECRET_LENGTH);
+                $this->registration_data->SetDataString(MembershipRegistrationDataClass::SECRET, $secret);
+
                 $reg_id = $this->registration_data->SaveData();
 
                 $retry_counter=0;
@@ -130,6 +135,13 @@ class RegistrationHandlerClass
                     $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
                 }
 
+                $secret = $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
+                if($secret == '')
+                {
+                    $secret = MembershipRandomString(SECRET_LENGTH);
+                    $this->registration_data->SetDataString(MembershipRegistrationDataClass::SECRET, $secret);
+                }
+
                 $this->registration_data->AddDataInt(MembershipRegistrationDataClass::RETRY_COUNTER, 1);
                 $this->registration_data->SaveData();
 
@@ -140,7 +152,7 @@ class RegistrationHandlerClass
 
             if($retry_counter < 5)
             {
-                $verification_link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_CONFIRM_EMAIL . '&' . REG_ID . '=' . $reg_id . '&' . REG_NONCE . '=' . $nonce;
+                $verification_link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_CONFIRM_EMAIL . '&' . REG_ID . '=' . $reg_id . '&' . REG_NONCE . '=' . $nonce . '&' . REG_SECRET . '=' . $secret;
 
                 if($post_id)
                 {
@@ -175,31 +187,39 @@ class RegistrationHandlerClass
         return $verification_email->Send();
     }
 
-    public function ConfirmEmail()
+    public function ConfirmEmail($secret)
     {
         $result =  self::RESULT_ERROR_UNDEFINED;
 
         if( $this->has_data == true)
         {
-            switch($this->registration_data->GetDataString(MembershipRegistrationDataClass::STATE))
+            $my_secret = $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
+            if($secret == $my_secret)
             {
-                case MembershipRegistrationDataClass::STATE_EMAIL_UNCONFIRMED:
-                    $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED);
-                    $this->registration_data->SaveData();
-                    $result = self::RESULT_OK;
-                    break;
-                case MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED:
-                    $result = self::RESULT_CONFIRM_IS_DONE;
-                    break;
-                case MembershipRegistrationDataClass::STATE_USER_CREATED:
-                    $result = self::RESULT_USER_EXIST;
-                    break;
-                default:
-                    $result = self::RESULT_CONFIRM_INVALID;
-                    break;
+                switch($this->registration_data->GetDataString(MembershipRegistrationDataClass::STATE))
+                {
+                    case MembershipRegistrationDataClass::STATE_EMAIL_UNCONFIRMED:
+                        $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED);
+                        $this->registration_data->SaveData();
+                        $result = self::RESULT_OK;
+                        break;
+                    case MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED:
+                        $result = self::RESULT_CONFIRM_IS_DONE;
+                        break;
+                    case MembershipRegistrationDataClass::STATE_USER_CREATED:
+                        $result = self::RESULT_USER_EXIST;
+                        break;
+                    default:
+                        $result = self::RESULT_ERROR_UNDEFINED;
+                        break;
+                }
+            }
+            else
+            {
+                $result = self::RESULT_CONFIRM_INVALID_LINK;
             }
         }else{
-            $result = self::RESULT_NONCE_ERROR;
+            $result = self::RESULT_CONFIRM_EXPIRED_LINK;
         }
 
         return $result;
@@ -208,13 +228,15 @@ class RegistrationHandlerClass
     protected function SendEmailResetLink($email, $wp_user_id)
     {
         $nonce = MembershipRandomString(NONCE_LENGTH);
+        $secret = MembershipRandomString(SECRET_LENGTH);
         $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
+        $this->registration_data->SetDataString(MembershipRegistrationDataClass::SECRET, $secret);
         $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT);
         $this->registration_data->SetDataString(MembershipRegistrationDataClass::EMAIL, $email);
         $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
         $reg_id = $this->registration_data->SaveData();
 
-        $link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_PASSWORD_LINK . '&' . REG_ID . '=' . $reg_id . '&' . REG_NONCE . '=' . $nonce . '&p=' . get_the_ID();
+        $link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_PASSWORD_LINK . '&' . REG_ID . '=' . $reg_id . '&' . REG_NONCE . '=' . $nonce . '&' . REG_SECRET . '=' . $secret . '&p=' . get_the_ID();
 
         $user_info = get_userdata($wp_user_id);
 
@@ -362,6 +384,11 @@ class RegistrationHandlerClass
     public function GetNonce()
     {
         return $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+    }
+
+    public function GetSecret()
+    {
+        return $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
     }
 
     public function GetRegistrationState()

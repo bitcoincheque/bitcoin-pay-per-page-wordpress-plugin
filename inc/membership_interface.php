@@ -40,6 +40,7 @@ define('REG_REMEMBER',              'remmember');
 define('REG_EMAIL',                 'email');
 define('REG_POST_ID',               'post_id');
 define('REG_ERROR_MSG',             'error_message');
+define('REG_SECRET',                'secret');
 
 // Event field values:
 define('REG_EVENT_LOGIN',           'login');
@@ -302,7 +303,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
                 $continue_registration = false;
 
-                switch($this->ConfirmEmail($input_data[REG_NONCE]))
+                switch($this->ConfirmEmail($input_data[REG_SECRET]))
                 {
                     case RegistrationHandlerClass::RESULT_OK:
                         $continue_registration = true;
@@ -314,7 +315,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                         $texts[TEXT_FIELD_ERROR_MSG] = 'E-mail verification link error. Log-in or retry register.';
                         $form   = $this->GetLoginFormHtml($texts, $post_id);
                         break;
-                    case RegistrationHandlerClass::RESULT_CONFIRM_INVALID:
+                    case RegistrationHandlerClass::RESULT_CONFIRM_INVALID_LINK:
                         break;
                     case RegistrationHandlerClass::RESULT_ERROR_UNDEFINED:
                         break;
@@ -424,15 +425,24 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                 $state = $this->GetRegistrationState();
                 if($state == MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT)
                 {
-                    $wp_user_id = $this->GetWpUserId();
-                    if($wp_user_id)
+                    if($input_data[REG_SECRET] === $this->GetSecret())
                     {
-                        $form = $this->GetChangePasswordFormHtml($texts, $wp_user_id);
+                        $wp_user_id = $this->GetWpUserId();
+                        if($wp_user_id)
+                        {
+                            $form = $this->GetChangePasswordFormHtml($texts, $wp_user_id);
+                        }
+                        else
+                        {
+                            $texts[ TEXT_FIELD_ERROR_MSG ] = 'No user linked to e-mail address.';
+                            $form                          = $this->GetResetPasswordFormHtml($texts);
+                        }
                     }
                     else
                     {
-                        $texts[ TEXT_FIELD_ERROR_MSG ] = 'No user linked to e-mail address.';
-                        $form                          = $this->GetResetPasswordFormHtml($texts);
+                        $texts[ TEXT_FIELD_RED_MSG ] = 'This password reset link is invalid. You can try send a new link or contact admin.';
+                        /* Create send e-mail to restore password form */
+                        $form = $this->GetResetPasswordFormHtml($texts);
                     }
                 }
                 elseif($state == MembershipRegistrationDataClass::STATE_RESET_PASSWD_DONE)
