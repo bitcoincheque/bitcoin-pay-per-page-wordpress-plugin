@@ -6,7 +6,10 @@
  * Time: 00:49
  */
 
+
 namespace BCF_PayPerPage;
+
+define ('BCF_PAYPAGE_MEMBERSHIP_OPTION', 'bcf_paypage_member_signup_option');
 
 use BCF_Email\Email;
 
@@ -18,6 +21,7 @@ define ('NONCE_LENGTH', 10);
 define ('SECRET_LENGTH', 20);
 
 require_once ('membership_interface.php');
+require_once ('membership_admin.php');
 require_once ('util.php');
 require_once ('email.php');
 
@@ -234,6 +238,11 @@ function MembershipRandomString($length)
 
 function ActivateMembershipPlugin()
 {
+    add_option (BCF_PAYPAGE_MEMBERSHIP_OPTION, array(
+        'fade_enable' => 'must_be_member',
+        'fade_height' => 'verify_email'
+    ));
+
     $registration_data = new MembershipRegistrationDataClass();
     $registration_data->CreateDatabaseTable();
 

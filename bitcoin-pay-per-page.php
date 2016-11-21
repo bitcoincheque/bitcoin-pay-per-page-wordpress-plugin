@@ -54,8 +54,6 @@ define ('BCF_PAYPAGE_ADVANCED_OPTIONS',         'bcf_payperpage_advanced_options
 
 define ('BCF_PAYPAGE_TEXT_FADE_OPTION',         'bcf_paypage_text_fade_option');
 
-define ('BCF_PAYPAGE_MEMBERSHIP_OPTION', 'bcf_paypage_member_signup_option');
-
 define ('BCF_PAYPAGE_REQUIRE_PAYMENT_TAG', '[require_payment]');
 
 
@@ -886,22 +884,6 @@ function AdminLayoutDesign()
     echo '</div>';
 }
 
-function AdminMembership()
-{
-    echo '<div class="wrap">';
-    echo '<h2>Pay-Per-Page-Click Member Sign-up</h2>';
-    echo '<p>Settings for member registration and e-mail verification.</p>';
-    echo '<hr>';
-
-    echo '<form action="options.php" method="post">';
-    echo settings_fields(BCF_PAYPAGE_MEMBERSHIP_OPTION);
-    echo do_settings_sections('settings_section_membership_settings');
-    echo '<input type="submit" name="Submit" value="Save Options" />';
-    echo '</form>';
-
-    echo '</div>';
-}
-
 function AdminPaymentStatus()
 {
     echo '<div class="wrap">';
@@ -1069,19 +1051,6 @@ function AdminDrawSettingsFadeBackgroundCol()
     echo '<input name="' . BCF_PAYPAGE_TEXT_FADE_OPTION . '[fade_bg_col]" type="text" value="' . $selected . '" />';
 }
 
-function AdminDrawSettingsRequireMembership()
-{
-    $options = get_option(BCF_PAYPAGE_MEMBERSHIP_OPTION);
-    $selected = $options['must_be_member'];
-    echo '<input name="' . BCF_PAYPAGE_MEMBERSHIP_OPTION . '[must_be_member]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
-}
-
-function AdminDrawSettingsVerifyEmail()
-{
-    $options = get_option(BCF_PAYPAGE_MEMBERSHIP_OPTION);
-    $selected = $options['verify_email'];
-    echo '<input name="' . BCF_PAYPAGE_MEMBERSHIP_OPTION . '[verify_email]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
-}
 
 
 function AdminDrawPaymentSettingsHelpText()
@@ -1125,12 +1094,6 @@ function AdminDrawSettingsHelpTextFading()
     echo '<p>Here you can configure the protected text to fade out. This will indicate that more is expected.</p>';
     echo '<p>In case you have a colored content background, you need to set the Fade Background Color.</p>';
 }
-
-function AdminDrawSettingsHelpMemberSignUp()
-{
-    echo '<p>Here you can configure the membership options.</p>';
-}
-
 
 function AdminMenu()
 {
@@ -1336,34 +1299,13 @@ function AdminMenu()
         'settings_section_text_fading_options_tag'
     );
 
-    /* Settings sections for Member Sign-up */
-    register_setting(BCF_PAYPAGE_MEMBERSHIP_OPTION, BCF_PAYPAGE_MEMBERSHIP_OPTION);
-
-    add_settings_section(
-        'settings_section_membership_options_tag',
-        'Membership registration',
-        'BCF_PayPerPage\AdminDrawSettingsHelpMemberSignUp',
-        'settings_section_membership_settings'
-    );
-    add_settings_field(
-        'bcf_payperpage_settings_membership_required',
-        'Require membership sign-up before payments:',
-        '\BCF_PayPerPage\AdminDrawSettingsRequireMembership',
-        'settings_section_membership_settings',
-        'settings_section_membership_options_tag'
-    );
-    add_settings_field(
-        'bcf_payperpage_settings_verify_email',
-        'Require e-mail verification:',
-        '\BCF_PayPerPage\AdminDrawSettingsVerifyEmail',
-        'settings_section_membership_settings',
-        'settings_section_membership_options_tag'
-    );
 
     add_menu_page('pppc-admin-slug', 'Pay Per Page', 'manage_options', 'pppc-admin-menu-slug', 'BCF_PayPerPage\AdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Layout Design', 'Layout Design', 'manage_options', 'pppc-admin-layout-design-slug', 'BCF_PayPerPage\AdminLayoutDesign');
     add_submenu_page('pppc-admin-menu-slug', 'Membership', 'Membership', 'manage_options', 'pppc-admin-member-signup-slug', 'BCF_PayPerPage\AdminMembership');
     add_submenu_page('pppc-admin-menu-slug', 'Payment Status', 'Payment Status', 'manage_options', 'pppc-admin-payment-status-slug', 'BCF_PayPerPage\AdminPaymentStatus');
+
+    MembershipAdminMenu();
 }
 
 function ActivatePlugin()
@@ -1410,11 +1352,6 @@ function ActivatePlugin()
         'fade_enable' => 'checked',
         'fade_height' => '20em',
         'fade_bg_col' => '#ffffff',
-    ));
-
-    add_option (BCF_PAYPAGE_MEMBERSHIP_OPTION, array(
-        'fade_enable' => 'must_be_member',
-        'fade_height' => 'verify_email'
     ));
 
     ActivateMembershipPlugin();
