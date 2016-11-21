@@ -14,6 +14,7 @@ define ('BCF_PAYPAGE_REGISTRATION_COOKIE_NAME', 'payperpage_registration');
 
 define ('REG_AJAX_ACTION', 'pppc_membership_event');
 
+define ('NONCE_LENGTH', 10);
 require_once ('membership_interface.php');
 require_once ('util.php');
 require_once ('email.php');
@@ -188,7 +189,7 @@ function MembershipInstallCookie()
 {
     if(!isset($_COOKIE[BCF_PAYPAGE_REGISTRATION_COOKIE_NAME]))
     {
-        $cookie = MembershipRandomString();
+        $cookie = MembershipRandomString(NONCE_LENGTH);
         $seconds = 30 * 24 * 3600;  // Cookie live for 30 days
         $expire = time() + $seconds;
 
@@ -204,14 +205,29 @@ function MembershipGetCookie()
     return SafeReadCookieString(BCF_PAYPAGE_REGISTRATION_COOKIE_NAME);
 }
 
-function MembershipRandomString()
+function MembershipRandomString($length)
 {
-    $r1     = rand(1, PHP_INT_MAX - 1);
-    $r2     = rand(1, PHP_INT_MAX - 1);
-    $r      = $r1 / $r2;
-    $str    = strval($r);
-    $nonce  = str_replace('.', '', $str);
-    return $nonce;
+    $str='';
+
+    for($i=0; $i<$length; $i++)
+    {
+        $x = mt_rand (0, 61);
+        if($x < 10)
+        {
+            $y = strval($x);
+        }
+        elseif($x < 36)
+        {
+            $y = chr(ord('a') + $x - 10);
+        }
+        else
+        {
+            $y = chr(ord('A') + $x - 36);
+        }
+        $str .= $y;
+    }
+
+    return $str;
 }
 
 function ActivateMembershipPlugin()

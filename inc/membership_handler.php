@@ -79,7 +79,7 @@ class RegistrationHandlerClass
 
         if($username != '' && $password != '')
         {
-            $nonce = MembershipRandomString();
+            $nonce = MembershipRandomString(NONCE_LENGTH);
             $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
             $password_hash = wp_hash_password($password);
             $this->registration_data->SetDataString(MembershipRegistrationDataClass::USERNAME, $username);
@@ -113,7 +113,7 @@ class RegistrationHandlerClass
                 $post_id = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::POST_ID);
                 $this->registration_data->SetDataString(MembershipRegistrationDataClass::POST_ID, $post_id);
 
-                $nonce = MembershipRandomString();
+                $nonce = MembershipRandomString(NONCE_LENGTH);
                 $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
                 $reg_id = $this->registration_data->SaveData();
 
@@ -126,7 +126,7 @@ class RegistrationHandlerClass
                 $nonce = $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
                 if($nonce == '')
                 {
-                    $nonce = MembershipRandomString();
+                    $nonce = MembershipRandomString(NONCE_LENGTH);
                     $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
                 }
 
@@ -207,7 +207,7 @@ class RegistrationHandlerClass
 
     protected function SendEmailResetLink($email, $wp_user_id)
     {
-        $nonce = MembershipRandomString() . MembershipRandomString();
+        $nonce = MembershipRandomString(NONCE_LENGTH);
         $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
         $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT);
         $this->registration_data->SetDataString(MembershipRegistrationDataClass::EMAIL, $email);
@@ -306,7 +306,7 @@ class RegistrationHandlerClass
         {
             $email = $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
 
-            $temp_password = wp_hash_password(MembershipRandomString());
+            $temp_password = wp_hash_password(MembershipRandomString(8));
 
             $wp_user_id = wp_create_user($username, $temp_password, $email);
 
