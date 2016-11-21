@@ -428,26 +428,6 @@ function LoadRestOfContent()
     $wp_nonce_str = SafeReadPostString('wp_nonce');
     $post_id_val = SafeReadPostString('post_id');
 
-    if(is_null($pageview_ref_int))
-    {
-        $response_data = array(
-            'result'    => 'ERROR',
-            'message'   => 'Page ref missing in text request.'
-        );
-        echo json_encode($response_data);
-        die();
-    }
-
-    if(is_null($wp_nonce_str))
-    {
-        $response_data = array(
-            'result'    => 'ERROR',
-            'message'   => 'Nonce missing in text request.'
-        );
-        echo json_encode($response_data);
-        die();
-    }
-
     $payment_options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
     if((!isset($payment_options['enable_payment'])) and $payment_options['enable_payment'] != '1')
     {
@@ -470,6 +450,26 @@ function LoadRestOfContent()
     }
     else
     {
+        if(is_null($pageview_ref_int))
+        {
+            $response_data = array(
+                'result'    => 'ERROR',
+                'message'   => 'Page ref missing in text request.'
+            );
+            echo json_encode($response_data);
+            die();
+        }
+
+        if(is_null($wp_nonce_str))
+        {
+            $response_data = array(
+                'result'    => 'ERROR',
+                'message'   => 'Nonce missing in text request.'
+            );
+            echo json_encode($response_data);
+            die();
+        }
+
         $pageview_manager = new PageViewManagerClass();
         $pageview         = $pageview_manager->GetPaymentInfo($pageview_ref_int);
 
