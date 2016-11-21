@@ -57,6 +57,7 @@ jQuery(document).ready(function($)
         var username = GetCheckInputTextFormData('#bcf_pppc_username', 'Username missing.');
         var password = GetCheckInputTextFormData('#bcf_pppc_password', 'Password missing.');
         var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
+        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
 
         if (username == '' && password == '') {
             SetStatusMessage('error','Username and password missing');
@@ -71,7 +72,9 @@ jQuery(document).ready(function($)
                 event: 'login',
                 username: username,
                 password: password,
-                nonce: pppc_script_handler_vars.nonce
+                post_id : pppc_script_handler_vars.postid,
+                nonce: nonce,
+                wp_nonce: pppc_script_handler_vars.wp_nonce
             };
 
             load_register_form(data);
@@ -83,6 +86,7 @@ jQuery(document).ready(function($)
         var password = GetCheckInputTextFormData('input#bcf_pppc_password', 'Password missing.');
         var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
         var post_id = GetCheckInputTextFormData('input#bcf_pppc_post_id', '');
+        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
 
         if (username == '' && password == '') {
             SetStatusMessage('error','You must select a username and password to register');
@@ -96,7 +100,8 @@ jQuery(document).ready(function($)
                 username: username,
                 password: password,
                 post_id: post_id,
-                nonce: pppc_script_handler_vars.nonce
+                nonce: nonce,
+                wp_nonce: pppc_script_handler_vars.wp_nonce
             };
 
             SetStatusMessage('info', 'Register...');
@@ -108,6 +113,7 @@ jQuery(document).ready(function($)
     $(document).on('click', '#bcf_pppc_do_register_email', function() {
         var email = GetCheckInputTextFormData('#bcf_pppc_email', 'E-mail address missing.');
         var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
+        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
 
         if(email != '') {
             var data = {
@@ -115,7 +121,8 @@ jQuery(document).ready(function($)
                 rid : reg_id,
                 event: 'register_email',
                 email: email,
-                nonce: pppc_script_handler_vars.nonce
+                nonce: nonce,
+                wp_nonce: pppc_script_handler_vars.wp_nonce
             };
 
             SetStatusMessage('info', 'Register and sending you verification e-mail...');
@@ -126,24 +133,28 @@ jQuery(document).ready(function($)
 
     $(document).on('click', '#bcf_pppc_do_return_login' , function(){
         var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
+        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
 
         var data = {
             action: 'bcf_pppc_do_login',
             rid : reg_id,
             event: 'goto_login',
-            nonce: pppc_script_handler_vars.nonce
+            nonce: nonce,
+            wp_nonce: pppc_script_handler_vars.wp_nonce
         };
         load_register_form(data);
     });
 
     $(document).on('click', '#bcf_pppc_do_resend_email' , function(){
         var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
+        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
 
         var data = {
             action: 'bcf_pppc_do_login',
             rid : reg_id,
             event: 'resend_register',
-            nonce: pppc_script_handler_vars.nonce
+            nonce: nonce,
+            wp_nonce: pppc_script_handler_vars.wp_nonce
         };
         load_register_form(data);
     });
@@ -166,7 +177,8 @@ jQuery(document).ready(function($)
 		var data = {
 			action: 'bcf_payperpage_process_ajax_pay_status',
 			ref: pppc_script_handler_vars.post_id_ref,
-			nonce : pppc_script_handler_vars.nonce
+            nonce: pppc_script_handler_vars.nonce,
+            wp_nonce: pppc_script_handler_vars.wp_nonce
 		}
 
 		$.post(pppc_script_handler_vars.url_to_my_site, data, function(resp, status)
@@ -240,7 +252,7 @@ jQuery(document).ready(function($)
 		var data = {
 			action: 'bcf_payperpage_load_rest_of_content',
 			ref: pppc_script_handler_vars.post_id_ref,
-			nonce : pppc_script_handler_vars.nonce,
+            wp_nonce: pppc_script_handler_vars.wp_nonce,
 			post_id : pppc_script_handler_vars.postid
 		}
 

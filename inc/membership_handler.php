@@ -42,15 +42,28 @@ class RegistrationHandlerClass
     private $has_data = false;
     private $error_message = '';
 
-    public function __construct($reg_id=null)
+    public function __construct($reg_id=null, $nonce=null)
     {
         $this->registration_data = new MembershipRegistrationDataClass();
 
         if($reg_id != null)
         {
-            if($this->registration_data->LoadData($reg_id))
+            if($nonce)
             {
-                $this->has_data = true;
+                if($this->registration_data->LoadData($reg_id))
+                {
+                    $my_nonce = $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+                    if($nonce === $my_nonce)
+                    {
+                        $this->has_data = true;
+                    }
+                    else
+                    {
+                        $this->registration_data = new MembershipRegistrationDataClass();
+                        $cookie = MembershipGetCookie();
+                        $this->registration_data->SetDataString(MembershipRegistrationDataClass::COOCKIE, $cookie);
+                    }
+                }
             }
         }
         else
@@ -66,6 +79,8 @@ class RegistrationHandlerClass
 
         if($username != '' && $password != '')
         {
+            $nonce = MembershipRandomString();
+            $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
             $password_hash = wp_hash_password($password);
             $this->registration_data->SetDataString(MembershipRegistrationDataClass::USERNAME, $username);
             $this->registration_data->SetDataString(MembershipRegistrationDataClass::PASSWORD, $password_hash);
@@ -158,16 +173,13 @@ class RegistrationHandlerClass
         $verification_email->SetBody($body);
 
         return $verification_email->Send();
-
     }
 
-    public function ConfirmEmail($confirm_nonce)
+    public function ConfirmEmail()
     {
         $result =  self::RESULT_ERROR_UNDEFINED;
 
-        $nonce = $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
-
-        if($nonce == $confirm_nonce)
+        if( $this->has_data == true)
         {
             switch($this->registration_data->GetDataString(MembershipRegistrationDataClass::STATE))
             {
@@ -191,6 +203,63 @@ class RegistrationHandlerClass
         }
 
         return $result;
+    }
+
+    protected function SendEmailResetLink($email, $wp_user_id)
+    {
+        $nonce = MembershipRandomString() . MembershipRandomString();
+        $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
+        $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT);
+        $this->registration_data->SetDataString(MembershipRegistrationDataClass::EMAIL, $email);
+        $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
+        $reg_id = $this->registration_data->SaveData();
+
+        $link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_PASSWORD_LINK . '&' . REG_ID . '=' . $reg_id . '&' . REG_NONCE . '=' . $nonce . '&p=' . get_the_ID();
+
+        $user_info = get_userdata($wp_user_id);
+
+        $body = '<p>This e-mail has been sent from ' . site_url() . ' as a response to user username and password recovery.</p>';
+        $body .= '<p>Your username: ' . $user_info->user_login . '</p>';
+        $body .= '<p>To change your password, use this link:</p>';
+        $body .= '<p><a href="' . $link . '">' . $link . '</a></p>';
+
+        $reset_email = new Email($email);
+        $reset_email->SetFromAddress('no_replay@hegvik.no');
+        $reset_email->SetSubject('Recover username and password');
+        $reset_email->SetBody($body);
+
+        return $reset_email->Send();
+    }
+
+    protected function UpdatePassword($password, $wp_user_id=null)
+    {
+        $result = false;
+        if($wp_user_id)
+        {
+            wp_set_password( $password, $wp_user_id );
+        }
+        else
+        {
+            $state = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::STATE);
+            if($state ==   MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT)
+            {
+                $wp_user_id = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::WP_USER_ID);
+                wp_set_password($password, $wp_user_id);
+
+                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_DONE);
+                $this->registration_data->SaveData();
+
+                $result = true;
+            }
+        }
+        return $result;
+    }
+
+    protected function HasResetPasswordOpen()
+    {
+        $state = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::STATE);
+
+        return ($state == MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT);
     }
 
     public function HasAllRequiredInfo()
@@ -244,7 +313,7 @@ class RegistrationHandlerClass
             if( ! is_wp_error($wp_user_id))
             {
                 $password_hash = $this->registration_data->GetDataString(MembershipRegistrationDataClass::PASSWORD);
-                $this->wp_set_hassed_password($password_hash, $wp_user_id);
+                $this->wp_set_hashed_password($password_hash, $wp_user_id);
 
                 $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_USER_CREATED);
                 $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
@@ -257,7 +326,7 @@ class RegistrationHandlerClass
         return $result;
     }
 
-    private function wp_set_hassed_password( $password_hashed, $user_id )
+    private function wp_set_hashed_password($password_hashed, $user_id )
     {
         global $wpdb;
         $wpdb->update($wpdb->users, array('user_pass' => $password_hashed, 'user_activation_key' => ''), array('ID' => $user_id) );
@@ -290,6 +359,11 @@ class RegistrationHandlerClass
         return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::ID);
     }
 
+    public function GetNonce()
+    {
+        return $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+    }
+
     public function GetRegistrationState()
     {
         return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::STATE);
@@ -308,6 +382,11 @@ class RegistrationHandlerClass
     public function GetEmail()
     {
         return $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
+    }
+
+    public function GetWpUserId()
+    {
+        return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::WP_USER_ID);
     }
 
     public function GetCookie()

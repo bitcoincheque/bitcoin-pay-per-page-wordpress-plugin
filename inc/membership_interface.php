@@ -50,6 +50,9 @@ define('REG_EVENT_REGISTER_EMAIL',  'register_email');
 define('REG_EVENT_GOTO_LOGIN',      'goto_login');
 define('REG_EVENT_CONFIRM_EMAIL',   'confirm_email');
 define('REG_EVENT_UPDATE_PROFILE',  'update_profile');
+define('REG_EVENT_CHANGE_PASSWORD', 'change_password');
+define('REG_EVENT_SEND_RESET_LINK', 'reset_password');
+define('REG_EVENT_PASSWORD_LINK',   'password_link');
 
 // Response field constants:
 define('REG_RESP_RESULT',           'result');      // Mandatory field
@@ -117,19 +120,56 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         return $form;
     }
 
-    public function CreatePasswordResetForm($texts)
+    public function CreatePasswordResetForm($input_data)
     {
-        $current_user = wp_get_current_user();
-        if ( 0 == $current_user->ID ) {
-            $form = $this->GetSimpleLoginFormHtml($texts);
-        } else {
-            $form = '<p>You are now logged-in as ' . $current_user->user_login . '.</p>';
+        if(is_user_logged_in())
+        {
+            $texts = array();
+            $wp_user_id = get_current_user_id();
+
+            if($input_data[REG_EVENT] == REG_EVENT_CHANGE_PASSWORD)
+            {
+                if($input_data[REG_PASSWORD] == '' and $input_data[REG_CONFIRM_PW] == '')
+                {
+                    $texts[TEXT_FIELD_ERROR_MSG] = 'Error. No password entered.';
+                }
+                else if($input_data[REG_PASSWORD] == '' or $input_data[REG_CONFIRM_PW] == '')
+                {
+                    $texts[TEXT_FIELD_ERROR_MSG] = 'Error. You must enter the the password in both inputs.';
+                }
+                else if($input_data[REG_PASSWORD] != '' and $input_data[REG_PASSWORD] == $input_data[REG_CONFIRM_PW])
+                {
+                    wp_set_password( $input_data[REG_PASSWORD], $wp_user_id );
+
+                    $texts[TEXT_FIELD_SUCCESS_MSG] = 'Password successfully updated.';
+                }
+                else
+                {
+                    $texts[TEXT_FIELD_ERROR_MSG] = 'Error. Entered passwords do not match.';
+                }
+
+            }
+            $form = $this->GetChangePasswordFormHtml($texts, $wp_user_id);
+        }
+        else
+        {
+            if($input_data[ REG_EVENT ])
+            {
+                $response_data = $this->EventHandler($input_data);
+                $form = $response_data[REG_RESP_FORM];
+
+            }
+            else
+            {
+                /* Create send e-mail to restore password form */
+                $form = $this->GetResetPasswordFormHtml();
+            }
         }
 
         return $form;
     }
 
-    public function CreatePostContentForm($texts, $nonce, $post_id)
+    public function CreatePostContentForm($texts, $post_id)
     {
         $form = $this->GetLoginFormHtml($texts, $post_id);
         return $form;
@@ -228,7 +268,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                     {
                         $ok = true;
                         $action = REG_RESP_ACTION_LOAD_FORM;
-                        $form = $this->GetVerifyEmailFormHtml($texts, $input_data[REG_POST_ID]);
+                        $texts[TEXT_FIELD_GREEN_MSG] = 'A verification e-mail has been sent to you. Please check your e-mail.';
+                        $form = $this->GetCheckYourEmailFormHtml($texts);
                     }
                     else
                     {
@@ -344,6 +385,113 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                     }
                 }
                 break;
+
+            case REG_EVENT_SEND_RESET_LINK:
+                if( ! $input_data[ REG_EMAIL ])
+                {
+                    $texts[ TEXT_FIELD_ERROR_MSG ] = 'You must enter your e-mail address.';
+                }
+                else
+                {
+                    $wp_user_id = email_exists($input_data[REG_EMAIL]);
+                    if($wp_user_id)
+                    {
+                        if($this->SendEmailResetLink($input_data[ REG_EMAIL ], $wp_user_id))
+                        {
+                            $texts[ TEXT_FIELD_GREEN_MSG ] = 'E-mail with username and password link is sent to ' . $input_data[ REG_EMAIL ];
+                            $form = $this->GetCheckYourEmailFormHtml($texts);
+
+                        }
+                        else
+                        {
+                            $texts[ TEXT_FIELD_ERROR_MSG ] = 'Error sending e-mail. Retry later or contact site admin if problem persists.';
+                        }
+                    }
+                    else
+                    {
+                        $texts[ TEXT_FIELD_ERROR_MSG ] = 'This e-mail has no user account.';
+                    }
+
+                    if(!$form)
+                    {
+                        $form = $this->GetResetPasswordFormHtml();
+                    }
+                }
+
+                break;
+
+            case REG_EVENT_PASSWORD_LINK:
+                $state = $this->GetRegistrationState();
+                if($state == MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT)
+                {
+                    $wp_user_id = $this->GetWpUserId();
+                    if($wp_user_id)
+                    {
+                        $form = $this->GetChangePasswordFormHtml($texts, $wp_user_id);
+                    }
+                    else
+                    {
+                        $texts[ TEXT_FIELD_ERROR_MSG ] = 'No user linked to e-mail address.';
+                        $form                          = $this->GetResetPasswordFormHtml($texts);
+                    }
+                }
+                elseif($state == MembershipRegistrationDataClass::STATE_RESET_PASSWD_DONE)
+                {
+                    $texts[ TEXT_FIELD_RED_MSG ] = 'This password reset link has been used. You must send a new email to reset pssword again.';
+                    $form                          = $this->GetResetPasswordFormHtml($texts);
+                }
+                elseif($state == MembershipRegistrationDataClass::STATE_RESET_PASSWD_TIMEOUT)
+                {
+                    $texts[ TEXT_FIELD_ERROR_MSG ] = 'This password reset link has expired.';
+                    $form                          = $this->GetResetPasswordFormHtml($texts);
+                }
+                else
+                {
+                    $texts[ TEXT_FIELD_ERROR_MSG ] = 'Error in password rest link. Retry or contact server admin.';
+                    $form                          = $this->GetResetPasswordFormHtml($texts);
+                }
+                break;
+
+            case REG_EVENT_CHANGE_PASSWORD:
+                if($input_data[REG_PASSWORD] == '' and $input_data[REG_CONFIRM_PW] == '')
+                {
+                    $texts[TEXT_FIELD_ERROR_MSG] = 'Error. No password entered.';
+                }
+                else if($input_data[REG_PASSWORD] == '' or $input_data[REG_CONFIRM_PW] == '')
+                {
+                    $texts[TEXT_FIELD_ERROR_MSG] = 'Error. You must enter the the password in both inputs.';
+                }
+                else if($input_data[REG_PASSWORD] != '' and $input_data[REG_PASSWORD] == $input_data[REG_CONFIRM_PW])
+                {
+                    if($this->HasResetPasswordOpen())
+                    {
+                        if($this->UpdatePassword($input_data[ REG_PASSWORD ]))
+                        {
+                            $texts[ TEXT_FIELD_SUCCESS_MSG ] = 'Password successfully updated.';
+                            $form = $this->GetLoginFormHtml($texts);
+                        }
+                        else
+                        {
+                            $texts[ TEXT_FIELD_RED_MSG ] = 'Error changing password.';
+                        }
+                    }
+                    else
+                    {
+                        $texts[ TEXT_FIELD_RED_MSG ] = 'This password reset link has been used. You must send a new email to reset pssword again.';
+                        $form                          = $this->GetResetPasswordFormHtml($texts);
+                    }
+                }
+                else
+                {
+                    $texts[TEXT_FIELD_ERROR_MSG] = 'Error. Entered passwords do not match.';
+                }
+
+                if(!$form)
+                {
+                    $wp_user_id = $this->GetWpUserId();
+                    $form = $this->GetChangePasswordFormHtml($texts, $wp_user_id);
+                }
+                break;
         }
 
         $response_data = array();
@@ -420,24 +568,33 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     private function FormatFormEndPart($texts, $hidden_fields, $post_id)
     {
-        $reg_id = $this->GetRegId();
-
-        $login_form = '</table>';
-        $login_form .= '<input id="bcf_pppc_reg_id" type="hidden" name="id" value="' . $reg_id . '" />';
+        $html = '</table>';
         if($post_id)
         {
-            $login_form .= '<input id="bcf_pppc_post_id" type="hidden" name="post_id" value="' . $post_id . '" />';
+            $html .= '<input id="bcf_pppc_post_id" type="hidden" name="post_id" value="' . $post_id . '" />';
         }
         if($hidden_fields)
         {
             foreach($hidden_fields as $name => $value)
             {
-                $login_form .= '<input type="hidden" name="'.$name.'" value="'.$value.'" />';
+                $html .= '<input type="hidden" name="'.$name.'" value="'.$value.'" />';
             }
         }
-        $login_form .= '</form>';
 
-        $login_form .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
+        $reg_id = $this->GetRegId();
+        if($reg_id)
+        {
+            $html .= '<input id="bcf_pppc_reg_id" type="hidden" name="' . REG_ID . '" value="' . $reg_id . '" />';
+        }
+
+        $nonce = $this->GetNonce();
+        if($reg_id)
+        {
+            $html .= '<input id="bcf_pppc_nonce" type="hidden" name="' . REG_NONCE . '" value="' . $nonce . '" />';
+        }
+
+        $html .= '</form>';
+        $html .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
 
         $msg_html = '';
         if($texts['error_message'])
@@ -454,9 +611,9 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         }
 
 
-        $login_form .= '<p id="bcf_payment_status">'.$msg_html.'</p>';
+        $html .= '<p id="bcf_payment_status">'.$msg_html.'</p>';
 
-        return $login_form;
+        return $html;
     }
 
     public function GetSimpleLoginFormHtml($texts=array())
@@ -468,30 +625,30 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         );
         $post_id= null;
 
-        $login_form = $this->FormatFormTopPart($texts, $form_code);
+        $html = $this->FormatFormTopPart($texts, $form_code);
 
-        $login_form .= '<tr>';
-        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Username:</lable></td>';
-        $login_form .= '</tr><tr>';
-        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_username" type="text" class="bcf_pppc_text_input" value="" name="username" /></td>';
-        $login_form .= '</tr><tr>';
-        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Password:</lable></td>';
-        $login_form .= '</tr><tr>';
-        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="password" class="bcf_pppc_text_input" value="" name="password" /></td>';
-        $login_form .= '</tr><tr>';
-        $login_form .= '<td class="bcf_pppc_table_cell_form">';
-        $login_form .= '<input type="submit" value="Log in" class="bcf_pppc_button" />';
-        $login_form .= '</td>';
-        $login_form .= '</tr><tr>';
-        $login_form .= '<td class="bcf_pppc_table_forms">';
-        $login_form .= '<a href="/">Forgotten username or password?</a><br>';
-        $login_form .= '<a href="/">Register</a>';
-        $login_form .= '</td>';
-        $login_form .= '</tr>';
+        $html .= '<tr>';
+        $html .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Username:</lable></td>';
+        $html .= '</tr><tr>';
+        $html .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_username" type="text" class="bcf_pppc_text_input" value="" name="username" /></td>';
+        $html .= '</tr><tr>';
+        $html .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Password:</lable></td>';
+        $html .= '</tr><tr>';
+        $html .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="password" class="bcf_pppc_text_input" value="" name="password" /></td>';
+        $html .= '</tr><tr>';
+        $html .= '<td class="bcf_pppc_table_cell_form">';
+        $html .= '<input type="submit" value="Log in" class="bcf_pppc_button" />';
+        $html .= '</td>';
+        $html .= '</tr><tr>';
+        $html .= '<td class="bcf_pppc_table_forms">';
+        $html .= '<a href="/">Forgotten username or password?</a><br>';
+        $html .= '<a href="/">Register</a>';
+        $html .= '</td>';
+        $html .= '</tr>';
 
-        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
+        $html .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
 
-        return $login_form;
+        return $html;
     }
 
     public function GetSimpleLogoutFormHtml($texts=array())
@@ -579,12 +736,11 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         return $login_form;
     }
 
-    public function GetVerifyEmailFormHtml($texts=array())
+    public function GetCheckYourEmailFormHtml($texts=array())
     {
         $form_code = '';
         $hidden_fields = null;
         $texts[TEXT_FIELD_HEADER] = 'Check your e-mail';
-        $texts[TEXT_FIELD_GREEN_MSG] = 'A verification e-mail has been sent to you. Please check your e-mail.';
         $post_id= null;
 
         $login_form = $this->FormatFormTopPart($texts, $form_code);
@@ -645,7 +801,68 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $login_form .= '</tr><tr>';
 
         $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_update_profile" type="submit" value="Update" class="bcf_pppc_button" /> </td>';
+        $login_form .= '</tr>';
+
+        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
+
+        return $login_form;
+    }
+
+    public function GetChangePasswordFormHtml($texts=array(), $wp_user_id)
+    {
+        $user_info = get_userdata($wp_user_id);
+
+        $form_code = 'method="post"';
+        $texts[TEXT_FIELD_DESCRIPTION] = 'Enter your new password.<br>Username: <strong>' . $user_info->user_login . '</strong>';
+
+        $hidden_fields = array(
+            'action' => REG_AJAX_ACTION,
+            REG_EVENT => REG_EVENT_CHANGE_PASSWORD
+        );
+        $post_id= null;
+
+        $login_form = $this->FormatFormTopPart($texts, $form_code);
+        $login_form .= '<tr>';
+
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Password:</lable></td>';
         $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_password" type="text" class="bcf_pppc_text_input" value="" name="'.REG_PASSWORD.'" /></td>';
+        $login_form .= '</tr><tr>';
+
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">Confirm password:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_confirm_pw" type="text" class="bcf_pppc_text_input" value="" name="'.REG_CONFIRM_PW.'" /></td>';
+        $login_form .= '</tr><tr>';
+
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_update_profile" type="submit" value="Update" class="bcf_pppc_button" /> </td>';
+        $login_form .= '</tr>';
+
+        $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
+
+        return $login_form;
+    }
+
+    public function GetResetPasswordFormHtml($texts=array())
+    {
+        $form_code = 'method="post"';
+        $hidden_fields = array(
+            'action' => REG_AJAX_ACTION,
+            REG_EVENT => REG_EVENT_SEND_RESET_LINK
+        );
+        $post_id= null;
+        $texts[TEXT_FIELD_DESCRIPTION] = 'Enter your e-mail address and we will send you a new password.';
+
+        $login_form = $this->FormatFormTopPart($texts, $form_code);
+
+        $login_form .= '<tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">E-mail address:</lable></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_email" type="text" class="bcf_pppc_text_input" value="" name="email" /></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_reset_password" type="submit" value="Send e-mail" class="bcf_pppc_button" /> </td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><a id="bcf_pppc_do_return_login">Return to login</a></td>';
+        $login_form .= '</tr>';
 
         $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
 

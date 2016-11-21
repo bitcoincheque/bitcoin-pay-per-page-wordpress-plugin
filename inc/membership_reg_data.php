@@ -50,6 +50,9 @@ class MembershipRegistrationDataClass extends DataCollectionClass
     const STATE_EMAIL_UNCONFIRMED = 0;
     const STATE_EMAIL_CONFIRMED = 1;
     const STATE_USER_CREATED = 2;
+    const STATE_RESET_PASSWD_EMAIL_SENT = 3;
+    const STATE_RESET_PASSWD_DONE = 4;
+    const STATE_RESET_PASSWD_TIMEOUT = 5;
 
     /* Metadata describing database fields and data properties: */
     protected $MetaData = array

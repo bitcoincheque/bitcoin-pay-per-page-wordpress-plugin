@@ -232,11 +232,11 @@ function FilterContent( $content )
     $input_data[ REG_EVENT ] = SafeReadGetString(REG_EVENT);
     if($input_data[ REG_EVENT ] == REG_EVENT_CONFIRM_EMAIL)
     {
-        $reg_id                    = SafeReadGetInt(REG_ID);
-        $input_data[ REG_NONCE ]   = SafeReadGetString(REG_NONCE);
-        $input_data[ REG_POST_ID ] = SafeReadGetInt(REG_POST_ID);
+        $reg_id                     = SafeReadGetInt(REG_ID);
+        $nonce                      = SafeReadGetString(REG_NONCE);
+        $input_data[ REG_POST_ID ]  = SafeReadGetInt(REG_POST_ID);
 
-        $register_interface = new RegistrationInterfaceClass($reg_id);
+        $register_interface = new RegistrationInterfaceClass($reg_id, $nonce);
         $register_result = $register_interface->EventHandler($input_data, $post_id_val);
     }
 
@@ -259,7 +259,7 @@ function FilterContent( $content )
         $draw_all_content = false;
 
         $add_ajax_handling = false;
-        $ajax_ref = 0;
+        $send_js_data = array();
 
         $pageview_manager = new PageViewManagerClass();
         $post_id     = new UnsigedIntegerTypeClass($post_id_val);
@@ -324,8 +324,6 @@ function FilterContent( $content )
         {
             $register_interface = new RegistrationInterfaceClass();
 
-            $nonce =  '746654';
-
             $modified_content .= '<div id="bcf_pppc_login_form">';
             $post_id = get_the_ID();
             if($registration_open)
@@ -334,17 +332,12 @@ function FilterContent( $content )
             }
             else{
                 $texts = array();
-                $modified_content .= $register_interface->CreatePostContentForm($texts, $nonce, $post_id);
+                $modified_content .= $register_interface->CreatePostContentForm($texts, $post_id);
             }
             $modified_content .= '</div>';
 
             $add_ajax_handling = true;
 
-            // TODO: Fix this backdoor
-            $ajax_ref = array();
-            $ajax_ref['ref'] = '83354';
-            $ajax_ref['nonce'] = $nonce;
-            $ajax_ref['postid'] = get_the_ID();
         }
 
         if($draw_payment_form)
@@ -355,9 +348,9 @@ function FilterContent( $content )
 
             $price_str = $price->GetFormattedCurrencyString($BTC_denominator, true);
 
-            $ajax_ref = $pageview_manager->RegisterNewPageView($post_id, $price);
+            $send_js_data = $pageview_manager->RegisterNewPageView($post_id, $price);
 
-            $modified_content .= GetLoginPaymentFromHtml($price_str, $ajax_ref['ref']);
+            $modified_content .= GetLoginPaymentFromHtml($price_str, $send_js_data['post_id_ref']);
 
             $add_ajax_handling = true;
         }
@@ -375,7 +368,15 @@ function FilterContent( $content )
 
         if($add_ajax_handling)
         {
-            MembershipPrepareAjaxAndStyle($ajax_ref);
+            if(!$payment_required)
+            {
+                $nonce_string = 'bcf_payperpage_load_rest_of_content-' . strval(get_the_ID());
+                $wp_nonce = wp_create_nonce($nonce_string);
+                $send_js_data['wp_nonce'] = $wp_nonce;
+                $send_js_data['postid'] = get_the_ID();
+            }
+
+            MembershipPrepareAjaxAndStyle($send_js_data);
         }
 
         update_option(BCF_PAYPAGE_OPTION_SALES_COUNTER, 0);
@@ -408,6 +409,12 @@ function AjaxDoLogin()
     if($response_data[REG_RESP_STATUS] == REG_RESP_STATUS_LOGGED_IN)
     {
         $response_data['action'] = 'load_remaining_content';
+
+        $nonce_string = 'bcf_payperpage_load_rest_of_content-' . strval($input_data[REG_POST_ID]);
+        $wp_nonce = wp_create_nonce($nonce_string);
+        $send_js_data['wp_nonce'] = $wp_nonce;
+        $send_js_data['postid'] = get_the_ID();
+        MembershipPrepareAjaxAndStyle($send_js_data);
     }
 
     echo json_encode($response_data);
@@ -417,7 +424,7 @@ function AjaxDoLogin()
 function LoadRestOfContent()
 {
     $pageview_ref_int = SafeReadPostInt('ref');
-    $nonce_str = SafeReadPostString('nonce');
+    $wp_nonce_str = SafeReadPostString('wp_nonce');
     $post_id_val = SafeReadPostString('post_id');
 
     if(is_null($pageview_ref_int))
@@ -430,7 +437,7 @@ function LoadRestOfContent()
         die();
     }
 
-    if(is_null($nonce_str))
+    if(is_null($wp_nonce_str))
     {
         $response_data = array(
             'result'    => 'ERROR',
@@ -440,8 +447,8 @@ function LoadRestOfContent()
         die();
     }
 
-    // TODO Fix this backdoor
-    if($pageview_ref_int == 83354 and $nonce_str == '746654')
+    $payment_options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
+    if((!isset($payment_options['enable_payment'])) and $payment_options['enable_payment'] != '1')
     {
         $post    = get_post($post_id_val);
         $content = $post->post_content;
@@ -451,96 +458,97 @@ function LoadRestOfContent()
         $content = substr($content, $position);
 
         $content_remaining = str_replace("\r\n", '<p>', $content);
-        //$content_remaining = base64_encode($content_remaining);
 
         $response_data = array(
-            'result'    => 'OK',
-            'message'   => $content_remaining
+            'result'  => 'OK',
+            'message' => $content_remaining
         );
 
         echo json_encode($response_data);
         die();
     }
-
-    $pageview_manager = new PageViewManagerClass();
-    $pageview         = $pageview_manager->GetPaymentInfo($pageview_ref_int);
-
-    $pay_status     = $pageview->GetPayStatus();
-    $pay_status_str = $pay_status->GetString();
-
-    $my_nonce     = $pageview->GetNonce();
-    $my_nonce_str = $my_nonce->GetString();
-
-    if($pay_status_str != 'PAID')
+    else
     {
-        $response_data = array(
-            'result'  => 'ERROR',
-            'message' => 'ERROR: Page has not been paid.'
-        );
-        echo json_encode($response_data);
-        die();
-    }
+        $pageview_manager = new PageViewManagerClass();
+        $pageview         = $pageview_manager->GetPaymentInfo($pageview_ref_int);
 
-    if($nonce_str != $my_nonce_str)
-    {
-        $response_data = array(
-            'result'  => 'ERROR',
-            'message' => 'ERROR: Invalid nonce.'
-        );
-        echo json_encode($response_data);
-        die();
-    }
+        $pay_status     = $pageview->GetPayStatus();
+        $pay_status_str = $pay_status->GetString();
 
-    if($pageview_ref_int >= 0)
-    {
-        $pageview_id = new PageViewIdTypeClass($pageview_ref_int);
+        $my_nonce     = $pageview->GetNonce();
+        $my_nonce_str = $my_nonce->GetString();
 
-        if( ! is_null($pageview_id))
+        if($pay_status_str != 'PAID')
         {
-            $pageview_manager = new PageViewManagerClass();
+            $response_data = array(
+                'result'  => 'ERROR',
+                'message' => 'ERROR: Page has not been paid.'
+            );
+            echo json_encode($response_data);
+            die();
+        }
 
-            $post_id = $pageview_manager->HasUserPaidForThisPageView($pageview_id);
+        if($wp_nonce_str != $my_nonce_str)
+        {
+            $response_data = array(
+                'result'  => 'ERROR',
+                'message' => 'ERROR: Invalid nonce.'
+            );
+            echo json_encode($response_data);
+            die();
+        }
 
-            if( ! is_null($post_id))
+        if($pageview_ref_int >= 0)
+        {
+            $pageview_id = new PageViewIdTypeClass($pageview_ref_int);
+
+            if( ! is_null($pageview_id))
             {
-                $post_id_val = $post_id->GetInt();
+                $pageview_manager = new PageViewManagerClass();
 
-                $post    = get_post($post_id_val);
-                $content = $post->post_content;
+                $post_id = $pageview_manager->HasUserPaidForThisPageView($pageview_id);
 
-                $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG) + strlen(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
+                if( ! is_null($post_id))
+                {
+                    $post_id_val = $post_id->GetInt();
 
-                $content = substr($content, $position);
+                    $post    = get_post($post_id_val);
+                    $content = $post->post_content;
 
-                $content_remaining = str_replace("\r\n", '<p>', $content);
-                //$content_remaining = base64_encode($content_remaining);
+                    $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG) + strlen(BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
 
-                $response_data = array(
-                    'result'    => 'OK',
-                    'message'   => $content_remaining
-                );
+                    $content = substr($content, $position);
 
-                echo json_encode($response_data);
-                die();
-            }
-            else
-            {
-                $response_data = array(
-                    'result'    => 'OK',
-                    'message'   => 'ERROR: No payment verified.'
-                );
-                echo json_encode($response_data);
-                die();
+                    $content_remaining = str_replace("\r\n", '<p>', $content);
+                    //$content_remaining = base64_encode($content_remaining);
+
+                    $response_data = array(
+                        'result'  => 'OK',
+                        'message' => $content_remaining
+                    );
+
+                    echo json_encode($response_data);
+                    die();
+                }
+                else
+                {
+                    $response_data = array(
+                        'result'  => 'OK',
+                        'message' => 'ERROR: No payment verified.'
+                    );
+                    echo json_encode($response_data);
+                    die();
+                }
             }
         }
-    }
 
-    $response_data = array(
-        'result'    => 'OK',
-        'message'   => 'ERROR: Undefined error.'
-    );
-    echo json_encode($response_data);
-    die();
+        $response_data = array(
+            'result'  => 'OK',
+            'message' => 'ERROR: Undefined error.'
+        );
+        echo json_encode($response_data);
+        die();
+    }
 }
 
 function ProcessAjaxPayStatus()
@@ -1408,7 +1416,7 @@ function ActivatePlugin()
         'fade_height' => 'verify_email'
     ));
 
-    ActivateMembership();
+    ActivateMembershipPlugin();
 
     $pageview_data = new PageView_Class();
     $pageview_data->CreateDatabaseTable();
@@ -1427,7 +1435,7 @@ function DeactivatePlugin()
     delete_option( BCF_PAYPAGE_RECOMMENDED_BANK_OPTIONS );
     delete_option( BCF_PAYPAGE_ADVANCED_OPTIONS );
 
-    DeactivateMembership();
+    DeactivateMembershipPlugin();
 }
 
 

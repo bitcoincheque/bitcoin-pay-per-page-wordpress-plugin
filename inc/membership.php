@@ -8,6 +8,7 @@
 
 namespace BCF_PayPerPage;
 
+use BCF_Email\Email;
 
 define ('BCF_PAYPAGE_REGISTRATION_COOKIE_NAME', 'payperpage_registration');
 
@@ -15,6 +16,7 @@ define ('REG_AJAX_ACTION', 'pppc_membership_event');
 
 require_once ('membership_interface.php');
 require_once ('util.php');
+require_once ('email.php');
 
 
 function MembershipInit()
@@ -46,13 +48,7 @@ function MembershipInit()
 
 function MembershipLogin()
 {
-    // TODO: Fix this backdoor
-    $ajax_ref = array();
-    $ajax_ref['ref'] = '83354';
-    $ajax_ref['nonce'] = '746654';
-    $ajax_ref['postid'] = get_the_ID();
-
-    MembershipPrepareAjaxAndStyle($ajax_ref);
+    MembershipPrepareAjaxAndStyle();
 
     $register_interface = new RegistrationInterfaceClass();
 
@@ -104,12 +100,7 @@ function ProfileForm()
 
     }
 
-    // TODO: Fix this backdoor
-    $ajax_ref = array();
-    $ajax_ref['ref'] = '83354';
-    $ajax_ref['nonce'] = '746654';
-    $ajax_ref['postid'] = get_the_ID();
-    MembershipPrepareAjaxAndStyle($ajax_ref);
+    MembershipPrepareAjaxAndStyle();
 
     $register_interface = new RegistrationInterfaceClass();
 
@@ -118,16 +109,27 @@ function ProfileForm()
 
 function PasswordResetForm()
 {
-    // TODO: Fix this backdoor
-    $ajax_ref = array();
-    $ajax_ref['ref'] = '83354';
-    $ajax_ref['nonce'] = '746654';
-    $ajax_ref['postid'] = get_the_ID();
-    MembershipPrepareAjaxAndStyle($ajax_ref);
+    $input_data[REG_EVENT]      = SafeReadPostString(REG_EVENT);
+    if($input_data[REG_EVENT])
+    {
+        $reg_id                       = SafeReadPostInt(REG_ID);
+        $nonce                        = SafeReadPostString(REG_NONCE);
+        $input_data[ REG_EMAIL ]      = SafeReadPostString(REG_EMAIL);
+        $input_data[ REG_PASSWORD ]   = SafeReadPostString(REG_PASSWORD);
+        $input_data[ REG_CONFIRM_PW ] = SafeReadPostString(REG_CONFIRM_PW);
+    }
+    else
+    {
+        $reg_id                       = SafeReadGetInt(REG_ID);
+        $nonce                        = SafeReadGetString(REG_NONCE);
+        $input_data[REG_EVENT]        = SafeReadGetString(REG_EVENT);
+    }
 
-    $register_interface = new RegistrationInterfaceClass();
+    $register_interface = new RegistrationInterfaceClass($reg_id, $nonce);
 
-    return $register_interface->CreatePasswordResetForm();
+    MembershipPrepareAjaxAndStyle();
+
+    return $register_interface->CreatePasswordResetForm($input_data);
 }
 
 function MembershipLogInUser($username, $password, $remember)
@@ -159,20 +161,23 @@ function MembershipLogOutUser()
     wp_set_current_user(0);
 }
 
-function MembershipPrepareAjaxAndStyle($ref)
+function MembershipPrepareAjaxAndStyle($send_js_data=array())
 {
     $options      = get_option(BCF_PAYPAGE_ADVANCED_OPTIONS);
     $ajax_handler = $options['ajax_handler'];
 
     $url_to_my_site = site_url() . $ajax_handler;
 
-    $translation_array = array(
-        'url_to_my_site' => $url_to_my_site,
-        'post_id_ref'    => intval($ref['ref']),
-        'nonce'          => $ref['nonce'],
-        'postid'         => $ref['postid']
+    $data_array = array(
+        'url_to_my_site' => $url_to_my_site
     );
-    wp_localize_script('bcf_payperpage_script_handler', 'pppc_script_handler_vars', $translation_array);
+
+    if($send_js_data)
+    {
+        $data_array = array_merge($data_array, $send_js_data);
+    }
+
+    wp_localize_script('bcf_payperpage_script_handler', 'pppc_script_handler_vars', $data_array);
 
     $style_url = plugins_url() . '/bitcoin-pay-per-page-wordpress-plugin/css/pppc_style.css';
 
@@ -209,13 +214,16 @@ function MembershipRandomString()
     return $nonce;
 }
 
-function ActivateMembership()
+function ActivateMembershipPlugin()
 {
     $registration_data = new MembershipRegistrationDataClass();
     $registration_data->CreateDatabaseTable();
+
+    $reset_data = new MembershipResetPasswdDataClass();
+    $reset_data->CreateDatabaseTable();
 }
 
-function DeactivateMembership()
+function DeactivateMembershipPlugin()
 {
 
 }

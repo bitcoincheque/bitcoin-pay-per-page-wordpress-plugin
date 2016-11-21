@@ -168,16 +168,16 @@ class PageViewManagerClass extends DatabaseInterfaceClass
                 $pageview->SetPrice($price);
                 $pageview->SetNonce($nonce);
 
-                $pageview_data['ref'] = $this->DB_WriteRecord($pageview);
-                $pageview_data['nonce'] = $nonce_str;
+                $pageview_data['post_id_ref'] = $this->DB_WriteRecord($pageview);
+                $pageview_data['wp_nonce'] = $nonce_str;
             }
             else
             {
                 $pageview_id     = $pageview->GetPageViewId();
                 $nonce     = $pageview->GetNonce();
 
-                $pageview_data['ref'] = $pageview_id->GetInt();
-                $pageview_data['nonce'] = $nonce->GetString();
+                $pageview_data['post_id_ref'] = $pageview_id->GetInt();
+                $pageview_data['wp_nonce'] = $nonce->GetString();
             }
         }
 
