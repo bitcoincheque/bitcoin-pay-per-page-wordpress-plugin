@@ -240,9 +240,6 @@ function ActivateMembershipPlugin()
 
     $registration_data = new MembershipRegistrationDataClass();
     $registration_data->CreateDatabaseTable();
-
-    $reset_data = new MembershipResetPasswdDataClass();
-    $reset_data->CreateDatabaseTable();
 }
 
 function DeactivateMembershipPlugin()
