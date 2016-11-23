@@ -161,10 +161,10 @@ def CreateAdminDrawPanelPageCode(data):
     txt += AddLine(1, 'echo \'<div class="wrap">\';')
     txt += AddLine(1, 'echo \'<h2>' + data['Header'] + '</h2>\';')
     txt += AddLine(1, 'echo \'<p>' + data['Description'] + '</p>\';')
-    txt += AddLine(1, 'echo \'<hr>\';')
     txt += LineFeed()
 
     for section in data['Sections']:
+        txt += AddLine(1, 'echo \'<hr>\';')
         txt += CreateAdminDrawPanelSectionCode(data, 1, section)
         txt += LineFeed()
 

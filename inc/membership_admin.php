@@ -81,14 +81,15 @@ function MembershipDrawAdminPage()
     echo '<div class="wrap">';
     echo '<h2>Pay-Per-Page-Click Member Sign-up</h2>';
     echo '<p>Settings for member registration and e-mail verification.</p>';
-    echo '<hr>';
 
+    echo '<hr>';
     echo '<form action="options.php" method="post">';
     echo settings_fields(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
     echo do_settings_sections('bcf_payperpage_membership_settings_section_page');
     echo '<input type="submit" name="Submit" value="Save Options" />';
     echo '</form>';
 
+    echo '<hr>';
     echo '<form action="options.php" method="post">';
     echo settings_fields(BCF_PAYPERPAGE_LINKING_OPTION);
     echo do_settings_sections('bcf_payperpage_linking_settings_section_page');
