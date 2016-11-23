@@ -8,6 +8,17 @@
 
 namespace BCF_PayPerPage;
 
+define ('BCF_PAYPAGE_MEMBERSHIP_OPTION', 'bcf_paypage_member_signup_option');
+
+function MembershipOptionDefault()
+{
+    add_option(
+        BCF_PAYPAGE_MEMBERSHIP_OPTION, array(
+            'fade_enable' => '0',
+            'fade_height' => '0'
+        )
+    );
+}
 
 function MembershipAdminMenu()
 {
@@ -71,3 +82,4 @@ function AdminDrawSettingsVerifyEmail()
     $selected = $options['verify_email'];
     echo '<input name="' . BCF_PAYPAGE_MEMBERSHIP_OPTION . '[verify_email]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
+

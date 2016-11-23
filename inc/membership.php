@@ -9,8 +9,6 @@
 
 namespace BCF_PayPerPage;
 
-define ('BCF_PAYPAGE_MEMBERSHIP_OPTION', 'bcf_paypage_member_signup_option');
-
 use BCF_Email\Email;
 
 define ('BCF_PAYPAGE_REGISTRATION_COOKIE_NAME', 'payperpage_registration');
@@ -238,10 +236,7 @@ function MembershipRandomString($length)
 
 function ActivateMembershipPlugin()
 {
-    add_option (BCF_PAYPAGE_MEMBERSHIP_OPTION, array(
-        'fade_enable' => 'must_be_member',
-        'fade_height' => 'verify_email'
-    ));
+    MembershipOptionDefault();
 
     $registration_data = new MembershipRegistrationDataClass();
     $registration_data->CreateDatabaseTable();
