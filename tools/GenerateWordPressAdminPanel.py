@@ -48,8 +48,7 @@ def FormatSettingsFieldCallBackFunctionName(data, section, field):
 
 
 def CreateRegisterSettingCode(data, tab, section):
-    txt = 'register_setting(' + FormatOptionName(data, section) + ', ' + FormatOptionName(data, section) + ');'
-    txt += AddLine(tab, txt)
+    txt = AddLine(tab, 'register_setting(' + FormatOptionName(data, section) + ', ' + FormatOptionName(data, section) + ');');
     return txt
 
 
