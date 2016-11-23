@@ -24,6 +24,32 @@
                     "Default": "0"
                 }
             ]
+        },
+        {
+            "Name" : "Linking",
+            "Title" : "Page linking",
+            "Description" : "Here you can configure links for pages containg various forms.",
+
+            "Fields" : [
+                {
+                    "Name" : "LoginPageLink",
+                    "Title" : "Login page",
+                    "Type" : "text",
+                    "Default" : "/login"
+                },
+                {
+                    "Name": "ProfilePageLink",
+                    "Title": "Profile page",
+                    "Type": "text",
+                    "Default": "/profile"
+                },
+                {
+                  "Name": "PasswordPageLink",
+                  "Title": "Reset Password page",
+                  "Type": "text",
+                  "Default": "/password"
+                }
+            ]
         }
     ]
 }
