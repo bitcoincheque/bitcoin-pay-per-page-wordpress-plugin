@@ -264,8 +264,8 @@ function FilterContent( $content )
         $post_id     = new UnsigedIntegerTypeClass($post_id_val);
         $has_paid = $pageview_manager->HasUserPaidForThisPage($post_id);
 
-        $member_options = get_option(BCF_PAYPAGE_MEMBERSHIP_OPTION);
-        if(isset($member_options['must_be_member']) and $member_options['must_be_member'] == '1')
+        $member_options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
+        if(isset($member_options['RequireMembership']) and $member_options['RequireMembership'] == '1')
         {
             if(!is_user_logged_in())
             {
@@ -1302,7 +1302,7 @@ function AdminMenu()
 
     add_menu_page('pppc-admin-slug', 'Pay Per Page', 'manage_options', 'pppc-admin-menu-slug', 'BCF_PayPerPage\AdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Layout Design', 'Layout Design', 'manage_options', 'pppc-admin-layout-design-slug', 'BCF_PayPerPage\AdminLayoutDesign');
-    add_submenu_page('pppc-admin-menu-slug', 'Membership', 'Membership', 'manage_options', 'pppc-admin-member-signup-slug', 'BCF_PayPerPage\AdminMembership');
+    add_submenu_page('pppc-admin-menu-slug', 'Membership', 'Membership', 'manage_options', 'pppc-admin-member-signup-slug', 'BCF_PayPerPage\MembershipDrawAdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Payment Status', 'Payment Status', 'manage_options', 'pppc-admin-payment-status-slug', 'BCF_PayPerPage\AdminPaymentStatus');
 
     MembershipAdminMenu();

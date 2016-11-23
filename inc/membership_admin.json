@@ -1,0 +1,29 @@
+{
+    "Namespace" : "BCF_PayPerPage",
+    "Name" : "Membership",
+    "Header" : "Pay-Per-Page-Click Member Sign-up",
+    "Description" : "Settings for member registration and e-mail verification.",
+
+    "Sections" : [
+        {
+            "Name" : "Membership",
+            "Title" : "Membership registration",
+            "Description" : "Here you can configure the membership options.",
+
+            "Fields" : [
+                {
+                    "Name" : "RequireMembership",
+                    "Title" : "Require membership sign-up before payments",
+                    "Type" : "checkbox",
+                    "Default" : "1"
+                },
+                {
+                    "Name": "RequireEmailConfirmation",
+                    "Title": "Require membership sign-up before payments",
+                    "Type": "checkbox",
+                    "Default": "0"
+                }
+            ]
+        }
+    ]
+}
