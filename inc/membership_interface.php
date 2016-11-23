@@ -628,6 +628,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetSimpleLoginFormHtml($texts=array())
     {
+        $link_options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
+
         $form_code = 'method="post"';
         $hidden_fields = array(
             'action' => REG_AJAX_ACTION,
@@ -651,7 +653,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $html .= '</td>';
         $html .= '</tr><tr>';
         $html .= '<td class="bcf_pppc_table_forms">';
-        $html .= '<a href="/">Forgotten username or password?</a><br>';
+        $html .= '<a href="' . $link_options['PasswordPageLink'] . '">Forgotten username or password?</a><br>';
         $html .= '<a href="/">Register</a>';
         $html .= '</td>';
         $html .= '</tr>';
@@ -663,6 +665,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetSimpleLogoutFormHtml($texts=array())
     {
+        $link_options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
+
         $form_code = 'method="post"';
         $hidden_fields = array(
             'action' => REG_AJAX_ACTION,
@@ -682,7 +686,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $login_form .= '</td>';
         $login_form .= '</tr><tr>';
         $login_form .= '<td class="bcf_pppc_table_forms">';
-        $login_form .= '<a href="/">Update your profile</a><br>';
+        $login_form .= '<a href="' . $link_options['ProfilePageLink'] . '">Update your profile</a><br>';
         $login_form .= '</td>';
         $login_form .= '</tr>';
 
@@ -693,6 +697,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetLoginFormHtml($texts=array(), $post_id=null)
     {
+        $link_options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
+
         $form_code = '';
         $hidden_fields = null;
         $texts[TEXT_FIELD_HEADER] = 'Login or register';
@@ -714,7 +720,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $login_form .= '<input id="bcf_pppc_do_register" type="button" value="Register" class="bcf_pppc_button" />';
         $login_form .= '</td>';
         $login_form .= '</tr><tr>';
-        $login_form .= '<td class="bcf_pppc_table_forms"><a href="/">Forgotten username or password?</a></td>';
+        $login_form .= '<td class="bcf_pppc_table_forms"><a href="' . $link_options['PasswordPageLink'] . '">Forgotten username or password?</a></td>';
         $login_form .= '</tr>';
 
         $login_form .= $this->FormatFormEndPart($texts, $hidden_fields, $post_id);
