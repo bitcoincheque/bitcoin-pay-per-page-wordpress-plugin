@@ -200,10 +200,16 @@ def CreateSectionFieldFunction(data):
             txt += AddLine(0, '{')
             txt += AddLine(1, '$options = get_option(' + FormatOptionName(data, section) + ');')
             txt += AddLine(1, '$selected = $options[\'' + field['Name'] + '\'];')
+
             if(field['Type'] == 'checkbox'):
                 txt += AddLine(1, 'echo \'<input name="\' . ' + FormatOptionName(data, section) + ' . \'[' + field['Name'] + ']" type="checkbox" value="1" \' . checked(1, $selected, false) . \' />\';')
+            elif (field['Type'] == 'text'):
+                txt += AddLine(1, 'echo \'<input name="\' . ' + FormatOptionName(data, section) + ' . \'[' + field['Name'] + ']" type="text" value="\' . $selected . \'" />\';')
             else:
-                exit()
+                print
+                print('ERROR missing generator for input type "' + field['Type'] + '"')
+                raise
+
             txt += AddLine(0, '}')
             txt += LineFeed()
     return txt
@@ -225,9 +231,11 @@ def GenerateAdminPanel(filename):
     output_txt = output_txt + CreateSectionHelpFunctions(data)
     output_txt = output_txt + CreateSectionFieldFunction(data)
 
+    print('Write to:' + target_file)
     f2 = open(target_file,'w')
     f2.write(output_txt)
     f2.close()
+    print('Done')
 
 
 GenerateAdminPanel('../inc/membership_admin')
