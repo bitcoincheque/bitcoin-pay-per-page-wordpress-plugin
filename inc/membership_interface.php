@@ -543,24 +543,24 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
     {
         $login_form = '';
 
-        if($texts[TEXT_FIELD_HEADER])
+        if(isset($texts[TEXT_FIELD_HEADER]) and $texts[TEXT_FIELD_HEADER])
         {
             $login_form .= '<h2>'.$texts[TEXT_FIELD_HEADER].'</h2>';
         }
 
-        if($texts[TEXT_FIELD_DESCRIPTION])
+        if(isset($texts[TEXT_FIELD_DESCRIPTION]) and $texts[TEXT_FIELD_DESCRIPTION])
         {
             $login_form .= '<p>' . $texts[TEXT_FIELD_DESCRIPTION] . '</p>';
         }
 
-        if($texts['green_msg'])
+        if(isset($texts[TEXT_FIELD_GREEN_MSG]) and $texts[TEXT_FIELD_GREEN_MSG])
         {
-            $login_form .=  $this->FormatMessageHtml($texts['green_msg'], GREEN_MESSAGE_CLASS);
+            $login_form .=  $this->FormatMessageHtml($texts[TEXT_FIELD_GREEN_MSG], GREEN_MESSAGE_CLASS);
         }
 
-        if($texts['red_msg'])
+        if(isset($texts[TEXT_FIELD_RED_MSG]) and $texts[TEXT_FIELD_RED_MSG])
         {
-            $login_form .=  $this->FormatMessageHtml($texts['red_msg'], RED_MESSAGE_CLASS);
+            $login_form .=  $this->FormatMessageHtml($texts[TEXT_FIELD_RED_MSG], RED_MESSAGE_CLASS);
         }
 
         $login_form .= '<table class="bcf_pppc_table_forms"><tr><td class="bcf_pppc_table_forms" width="400px">';
@@ -607,17 +607,17 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $html .= '</td><td class="bcf_pppc_table_forms"></td></tr></table>';
 
         $msg_html = '';
-        if($texts['error_message'])
+        if(isset($texts[TEXT_FIELD_ERROR_MSG]) and $texts[TEXT_FIELD_ERROR_MSG])
         {
-            $msg_html .= $this->FormatMessageHtml($texts['error_message'], RED_MESSAGE_CLASS);
+            $msg_html .= $this->FormatMessageHtml($texts[TEXT_FIELD_ERROR_MSG], RED_MESSAGE_CLASS);
         }
 
-        if($texts['success_message'])
+        if(isset($texts[TEXT_FIELD_SUCCESS_MSG]) and $texts[TEXT_FIELD_SUCCESS_MSG])
         {
             if($msg_html){
                 $msg_html .= '<b>';
             }
-            $msg_html = $this->FormatMessageHtml($texts['success_message'], GREEN_MESSAGE_CLASS);
+            $msg_html = $this->FormatMessageHtml($texts[TEXT_FIELD_SUCCESS_MSG], GREEN_MESSAGE_CLASS);
         }
 
 
