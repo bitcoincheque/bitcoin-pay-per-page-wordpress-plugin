@@ -111,6 +111,15 @@ def CreatePluginOptionDefaults(data):
     txt += AddLine(0, 'function ' + data['Name'] + 'OptionDefault()')
     txt += AddLine(0, '{')
 
+    lines_added = False
+    for section in data['Sections']:
+        if (section.has_key('ResetDefault') and section['ResetDefault'] == '1') or (data.has_key('ResetDefault') and data['ResetDefault'] == '1'):
+            txt += AddLine(1, 'delete_option(' + FormatOptionName(data, section) + ');')
+            lines_added = True
+
+    if lines_added:
+        txt += LineFeed()
+
     for section in data['Sections']:
         txt += AddLine(1, 'add_option(')
         txt += AddLine(2, FormatOptionName(data, section) + ', array(')
