@@ -426,8 +426,8 @@ function LoadRestOfContent()
     $wp_nonce_str = SafeReadPostString('wp_nonce');
     $post_id_val = SafeReadPostString('post_id');
 
-    $payment_options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
-    if((!isset($payment_options['enable_payment'])) and $payment_options['enable_payment'] != '1')
+    $membership_options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
+    if((isset($membership_options['RequireMembership'])) and $membership_options['RequireMembership'] == '1')
     {
         $post    = get_post($post_id_val);
         $content = $post->post_content;
@@ -446,7 +446,9 @@ function LoadRestOfContent()
         echo json_encode($response_data);
         die();
     }
-    else
+
+    $payment_options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
+    if((!isset($payment_options['enable_payment'])) and $payment_options['enable_payment'] != '1')
     {
         if(is_null($pageview_ref_int))
         {
