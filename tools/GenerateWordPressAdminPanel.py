@@ -213,6 +213,8 @@ def CreateSectionFieldFunction(data):
                 txt += AddLine(1, 'echo \'<input name="\' . ' + FormatOptionName(data, section) + ' . \'[' + field['Name'] + ']" type="checkbox" value="1" \' . checked(1, $selected, false) . \' />\';')
             elif (field['Type'] == 'text'):
                 txt += AddLine(1, 'echo \'<input name="\' . ' + FormatOptionName(data, section) + ' . \'[' + field['Name'] + ']" type="text" value="\' . $selected . \'" />\';')
+            elif (field['Type'] == 'textarea'):
+                txt += AddLine(1, 'echo \'<textarea rows="' + field['Rows'] + '" cols="' + field['Columns'] + '" name="\' . ' + FormatOptionName(data, section) + ' . \'[' + field['Name'] + ']" type="text">\'.$selected.\'</textarea>\';')
             else:
                 print
                 print('ERROR missing generator for input type "' + field['Type'] + '"')
