@@ -175,13 +175,20 @@ class RegistrationHandlerClass
 
     private function SendEmailVerification($email, $link)
     {
-        $body = '<p>This e-mail has been sent from '. site_url() . ' as a response to user registration.</p>';
-        $body .= '<p>We need to verify your e-mail address:</p>';
-        $body .= '<p><a href="' . $link . '">' . $link . '</a></p>';
+        $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+
+        $site_name = get_bloginfo('name');
+        $site_url = site_url();
+        $href = '<a href="' . $link . '">' . $link . '</a>';
+
+        $body = $options['email_body'];
+        $body = str_replace('{site_name}', $site_name, $body);
+        $body = str_replace('{site_url}', $site_url, $body);
+        $body = str_replace('{link}', $href, $body);
 
         $verification_email = new Email($email);
-        $verification_email->SetFromAddress('no_replay@hegvik.no');
-        $verification_email->SetSubject('Verify your e-mail address');
+        $verification_email->SetFromAddress($options['email_replay_addr']);
+        $verification_email->SetSubject($options['email_subject']);
         $verification_email->SetBody($body);
 
         return $verification_email->Send();
@@ -227,6 +234,8 @@ class RegistrationHandlerClass
 
     protected function SendEmailResetLink($email, $wp_user_id)
     {
+        $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
+
         $nonce = MembershipRandomString(NONCE_LENGTH);
         $secret = MembershipRandomString(SECRET_LENGTH);
         $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
@@ -236,18 +245,24 @@ class RegistrationHandlerClass
         $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
         $reg_id = $this->registration_data->SaveData();
 
-        $link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_PASSWORD_LINK . '&' . REG_ID . '=' . $reg_id . '&' . REG_NONCE . '=' . $nonce . '&' . REG_SECRET . '=' . $secret . '&p=' . get_the_ID();
+        $site_name = get_bloginfo('name');
+        $site_url = site_url();
 
         $user_info = get_userdata($wp_user_id);
+        $username = $user_info->user_login;
 
-        $body = '<p>This e-mail has been sent from ' . site_url() . ' as a response to user username and password recovery.</p>';
-        $body .= '<p>Your username: ' . $user_info->user_login . '</p>';
-        $body .= '<p>To change your password, use this link:</p>';
-        $body .= '<p><a href="' . $link . '">' . $link . '</a></p>';
+        $link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_PASSWORD_LINK . '&' . REG_ID . '=' . $reg_id . '&' . REG_NONCE . '=' . $nonce . '&' . REG_SECRET . '=' . $secret . '&p=' . get_the_ID();
+        $href = '<a href="' . $link . '">' . $link . '</a>';
+
+        $body = $options['email_body'];
+        $body = str_replace('{site_name}', $site_name, $body);
+        $body = str_replace('{site_url}', $site_url, $body);
+        $body = str_replace('{username}', $username, $body);
+        $body = str_replace('{link}', $href, $body);
 
         $reset_email = new Email($email);
-        $reset_email->SetFromAddress('no_replay@hegvik.no');
-        $reset_email->SetSubject('Recover username and password');
+        $reset_email->SetFromAddress($options['email_replay_addr']);
+        $reset_email->SetSubject($options['email_subject']);
         $reset_email->SetBody($body);
 
         return $reset_email->Send();

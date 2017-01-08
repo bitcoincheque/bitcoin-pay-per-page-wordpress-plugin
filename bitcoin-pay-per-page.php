@@ -1403,6 +1403,13 @@ function remove_payments()
     }
 }
 
+function redirect_after_logout()
+{
+    $linking_options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
+    wp_redirect($linking_options['LogoutPage'] );
+    exit();
+}
+
 /* Add AJAX handlers */
 add_action('wp_ajax_bcf_pppc_do_login',                                     'BCF_PayPerPage\AjaxDoLogin');
 add_action('wp_ajax_nopriv_bcf_pppc_do_login',                              'BCF_PayPerPage\AjaxDoLogin');
@@ -1431,6 +1438,7 @@ add_action('wp_ajax_nopriv_get_trusted_banks', 'BCF_PayPerPage\PaymentInterface_
 add_action('wp_head', 'BCF_PayPerPage\add_meta_data');
 add_action('init', 'BCF_PayPerPage\Init');
 add_action('admin_menu', 'BCF_PayPerPage\AdminMenu');
+add_action('wp_logout','BCF_PayPerPage\redirect_after_logout');
 
 /* Add filters */
 add_filter( 'the_content', 'BCF_PayPerPage\FilterContent');

@@ -4,9 +4,16 @@ namespace BCF_PayPerPage;
 
 define('BCF_PAYPERPAGE_MEMBERSHIP_OPTION', 'bcf_payperpage_membership_option');
 define('BCF_PAYPERPAGE_LINKING_OPTION', 'bcf_payperpage_linking_option');
+define('BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION', 'bcf_payperpage_email_verification_option');
+define('BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION', 'bcf_payperpage_email_reset_password_option');
 
 function MembershipOptionDefault()
 {
+    delete_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
+    delete_option(BCF_PAYPERPAGE_LINKING_OPTION);
+    delete_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+    delete_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
+
     add_option(
         BCF_PAYPERPAGE_MEMBERSHIP_OPTION, array(
             'RequireMembership' => '1',
@@ -17,7 +24,24 @@ function MembershipOptionDefault()
         BCF_PAYPERPAGE_LINKING_OPTION, array(
             'LoginPageLink' => '/login',
             'ProfilePageLink' => '/profile',
-            'PasswordPageLink' => '/password'
+            'PasswordPageLink' => '/password',
+            'LogoutPage' => '/'
+        )
+    );
+    add_option(
+        BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION, array(
+            'verify_new_emails' => '1',
+            'verify_changed_emails' => '1',
+            'email_replay_addr' => '',
+            'email_subject' => 'Verify your e-mail',
+            'email_body' => '<p>In order to complete the registration at <strong>{site_name}</strong> you must verify your e-mail address.</p>&#13;&#10;<p>Click or copy and paste this link into your web browser:</p>&#13;&#10;<p>{link}</p>'
+        )
+    );
+    add_option(
+        BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION, array(
+            'email_replay_addr' => '',
+            'email_subject' => 'Recover username and reset password',
+            'email_body' => '<p>You have requested to recover your username or password at <strong>{site_name}</strong>.</p>&#13;&#10;<p>Your username is: <strong>{username}</strong></p>&#13;&#10;<p>In order to reset your password, use this link:</p>&#13;&#10;<p>{link}</p>'
         )
     );
 }
@@ -26,6 +50,8 @@ function MembershipAdminMenu()
 {
     register_setting(BCF_PAYPERPAGE_MEMBERSHIP_OPTION, BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
     register_setting(BCF_PAYPERPAGE_LINKING_OPTION, BCF_PAYPERPAGE_LINKING_OPTION);
+    register_setting(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION, BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+    register_setting(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION, BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
 
     add_settings_section(
         'bcf_payperpage_membership_settings_section_id',
@@ -74,6 +100,81 @@ function MembershipAdminMenu()
         'bcf_payperpage_linking_settings_section_page',
         'bcf_payperpage_linking_settings_section_id'
     );
+    add_settings_field(
+        'bcf_payperpage_linking_logoutpage_settings_field_id',
+        'Log-out redirect',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsLinkingLogoutPage',
+        'bcf_payperpage_linking_settings_section_page',
+        'bcf_payperpage_linking_settings_section_id'
+    );
+    add_settings_section(
+        'bcf_payperpage_email_verification_settings_section_id',
+        'Verify new e-mail addresses',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsHelpemail_verification',
+        'bcf_payperpage_email_verification_settings_section_page'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_verification_verify_new_emails_settings_field_id',
+        'Require new users to verify their e-mail address:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_verificationverify_new_emails',
+        'bcf_payperpage_email_verification_settings_section_page',
+        'bcf_payperpage_email_verification_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_verification_verify_changed_emails_settings_field_id',
+        'Require existing users to verify change of e-mail address:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_verificationverify_changed_emails',
+        'bcf_payperpage_email_verification_settings_section_page',
+        'bcf_payperpage_email_verification_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_verification_email_replay_addr_settings_field_id',
+        'E-mail sender/replay address:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_verificationemail_replay_addr',
+        'bcf_payperpage_email_verification_settings_section_page',
+        'bcf_payperpage_email_verification_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_verification_email_subject_settings_field_id',
+        'E-mail subject:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_verificationemail_subject',
+        'bcf_payperpage_email_verification_settings_section_page',
+        'bcf_payperpage_email_verification_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_verification_email_body_settings_field_id',
+        'E-mail body message:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_verificationemail_body',
+        'bcf_payperpage_email_verification_settings_section_page',
+        'bcf_payperpage_email_verification_settings_section_id'
+    );
+    add_settings_section(
+        'bcf_payperpage_email_reset_password_settings_section_id',
+        'Reset password e-mail',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsHelpemail_reset_password',
+        'bcf_payperpage_email_reset_password_settings_section_page'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_reset_password_email_replay_addr_settings_field_id',
+        'E-mail sender/replay address:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_reset_passwordemail_replay_addr',
+        'bcf_payperpage_email_reset_password_settings_section_page',
+        'bcf_payperpage_email_reset_password_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_reset_password_email_subject_settings_field_id',
+        'E-mail subject:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_reset_passwordemail_subject',
+        'bcf_payperpage_email_reset_password_settings_section_page',
+        'bcf_payperpage_email_reset_password_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_reset_password_email_body_settings_field_id',
+        'E-mail body message:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_reset_passwordemail_body',
+        'bcf_payperpage_email_reset_password_settings_section_page',
+        'bcf_payperpage_email_reset_password_settings_section_id'
+    );
 }
 
 function MembershipDrawAdminPage()
@@ -96,6 +197,20 @@ function MembershipDrawAdminPage()
     echo '<input type="submit" name="Submit" value="Save Options" />';
     echo '</form>';
 
+    echo '<hr>';
+    echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+    echo do_settings_sections('bcf_payperpage_email_verification_settings_section_page');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+
+    echo '<hr>';
+    echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
+    echo do_settings_sections('bcf_payperpage_email_reset_password_settings_section_page');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+
     echo '</div>';
 }
 
@@ -107,6 +222,16 @@ function MembershipAdminDrawSettingsHelpMembership()
 function MembershipAdminDrawSettingsHelpLinking()
 {
     echo '<p>Here you can configure links for pages containg various forms.</p>';
+}
+
+function MembershipAdminDrawSettingsHelpemail_verification()
+{
+    echo '<p>Here you can configure sending of e-mails to user in order to confirm the e-mail exists..</p>';
+}
+
+function MembershipAdminDrawSettingsHelpemail_reset_password()
+{
+    echo '<p>Here you can configure sending of e-mails to user in order to reset a password. The e-mail must contain the {link} code that will be substituted with a link to the reset page.</p>';
 }
 
 function MembershipAdminDrawSettingsMembershipRequireMembership()
@@ -142,5 +267,68 @@ function MembershipAdminDrawSettingsLinkingPasswordPageLink()
     $options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
     $selected = $options['PasswordPageLink'];
     echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[PasswordPageLink]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsLinkingLogoutPage()
+{
+    $options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
+    $selected = $options['LogoutPage'];
+    echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[LogoutPage]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsemail_verificationverify_new_emails()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+    $selected = $options['verify_new_emails'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[verify_new_emails]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
+}
+
+function MembershipAdminDrawSettingsemail_verificationverify_changed_emails()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+    $selected = $options['verify_changed_emails'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[verify_changed_emails]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
+}
+
+function MembershipAdminDrawSettingsemail_verificationemail_replay_addr()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+    $selected = $options['email_replay_addr'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[email_replay_addr]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsemail_verificationemail_subject()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+    $selected = $options['email_subject'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[email_subject]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsemail_verificationemail_body()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
+    $selected = $options['email_body'];
+    echo '<textarea rows="8" cols="80" name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[email_body]" type="text">'.$selected.'</textarea>';
+}
+
+function MembershipAdminDrawSettingsemail_reset_passwordemail_replay_addr()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
+    $selected = $options['email_replay_addr'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION . '[email_replay_addr]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsemail_reset_passwordemail_subject()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
+    $selected = $options['email_subject'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION . '[email_subject]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsemail_reset_passwordemail_body()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
+    $selected = $options['email_body'];
+    echo '<textarea rows="8" cols="80" name="' . BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION . '[email_body]" type="text">'.$selected.'</textarea>';
 }
 

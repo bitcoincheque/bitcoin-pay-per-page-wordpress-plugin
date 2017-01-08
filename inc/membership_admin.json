@@ -3,6 +3,7 @@
     "Name" : "Membership",
     "Header" : "Pay-Per-Page-Click Member Sign-up",
     "Description" : "Settings for member registration and e-mail verification.",
+    "ResetDefault": "1",
 
     "Sections" : [
         {
@@ -48,6 +49,81 @@
                   "Title": "Reset Password page",
                   "Type": "text",
                   "Default": "/password"
+                },
+                {
+                    "Name": "LogoutPage",
+                    "Title": "Log-out redirect",
+                    "Type": "text",
+                    "Default": "/"
+                }
+            ]
+        },
+        {
+            "Name" : "email_verification",
+            "Title" : "Verify new e-mail addresses",
+            "Description" : "Here you can configure sending of e-mails to user in order to confirm the e-mail exists..",
+
+            "Fields" : [
+                {
+                    "Name" : "verify_new_emails",
+                    "Title" : "Require new users to verify their e-mail address:",
+                    "Type" : "checkbox",
+                    "Default" : "1"
+                },
+                {
+                    "Name" : "verify_changed_emails",
+                    "Title" : "Require existing users to verify change of e-mail address:",
+                    "Type" : "checkbox",
+                    "Default" : "1"
+                },
+                {
+                    "Name" : "email_replay_addr",
+                    "Title" : "E-mail sender/replay address:",
+                    "Type" : "text",
+                    "Default" : ""
+                },
+                {
+                    "Name": "email_subject",
+                    "Title": "E-mail subject:",
+                    "Type": "text",
+                    "Default": "Verify your e-mail"
+                },
+                {
+                    "Name": "email_body",
+                    "Title": "E-mail body message:",
+                    "Type": "textarea",
+                    "Rows": "8",
+                    "Columns": "80",
+                    "Default": "<p>In order to complete the registration at <strong>{site_name}</strong> you must verify your e-mail address.</p>&#13;&#10;<p>Click or copy and paste this link into your web browser:</p>&#13;&#10;<p>{link}</p>"
+                }
+            ]
+        },
+        {
+            "Name" : "email_reset_password",
+            "Title" : "Reset password e-mail",
+            "Description" : "Here you can configure sending of e-mails to user in order to reset a password. The e-mail must contain the {link} code that will be substituted with a link to the reset page.",
+            "ResetDefault": "0",
+
+            "Fields" : [
+                {
+                    "Name" : "email_replay_addr",
+                    "Title" : "E-mail sender/replay address:",
+                    "Type" : "text",
+                    "Default" : ""
+                },
+                {
+                    "Name": "email_subject",
+                    "Title": "E-mail subject:",
+                    "Type": "text",
+                    "Default": "Recover username and reset password"
+                },
+                {
+                    "Name": "email_body",
+                    "Title": "E-mail body message:",
+                    "Type": "textarea",
+                    "Rows": "8",
+                    "Columns": "80",
+                    "Default": "<p>You have requested to recover your username or password at <strong>{site_name}</strong>.</p>&#13;&#10;<p>Your username is: <strong>{username}</strong></p>&#13;&#10;<p>In order to reset your password, use this link:</p>&#13;&#10;<p>{link}</p>"
                 }
             ]
         }
