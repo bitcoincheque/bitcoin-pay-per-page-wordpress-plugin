@@ -1,0 +1,40 @@
+{
+    "Namespace" : "BCF_PayPerPage",
+    "Name" : "Autroresponder",
+    "Header" : "Autoresponder settings",
+    "Description" : "Settings for e-mail list subscriptions.",
+    "ResetDefault": "1",
+
+    "Sections" : [
+        {
+            "Name" : "Mailchimp",
+            "Title" : "MailChimp settings",
+            "Description" : "Here you can configure the MailChimp. New registered members will be added to your MailChimp list. The API Key and List ID can be found in your MailChimp account settings.",
+
+            "Fields" : [
+                {
+                    "Name" : "EnableMailchimp",
+                    "Title" : "Enable MailChimp",
+                    "Type" : "checkbox",
+                    "Default" : "1"
+                },
+                {
+                    "Name": "ApiKey",
+                    "Title": "API key",
+                    "Type": "textarea",
+                    "Rows": "1",
+                    "Columns": "80",
+                    "Default": ""
+                },
+                {
+                    "Name": "ListId",
+                    "Title": "List ID",
+                    "Type": "textarea",
+                    "Rows": "1",
+                    "Columns": "80",
+                    "Default": ""
+                }
+            ]
+        }
+    ]
+}

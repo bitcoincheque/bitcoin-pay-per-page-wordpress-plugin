@@ -248,4 +248,5 @@ def GenerateAdminPanel(filename):
     print('Done')
 
 
+GenerateAdminPanel('../inc/autoresponder_admin')
 GenerateAdminPanel('../inc/membership_admin')

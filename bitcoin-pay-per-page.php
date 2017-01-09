@@ -37,7 +37,8 @@ namespace BCF_PayPerPage;
 require_once ('inc/pageview_manager.php');
 require_once ('inc/payment-browser-header.php');
 require_once ('inc/payment_data_codec.php');
-require_once('inc/membership.php');
+require_once ('inc/membership.php');
+require_once ('inc/autoresponder.php');
 
 
 define ('BCF_PAYPAGE_OPTION_REQ_COUNTER',       'bcf_paypage_option_req_counter');
@@ -1305,9 +1306,11 @@ function AdminMenu()
     add_menu_page('pppc-admin-slug', 'Pay Per Page', 'manage_options', 'pppc-admin-menu-slug', 'BCF_PayPerPage\AdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Layout Design', 'Layout Design', 'manage_options', 'pppc-admin-layout-design-slug', 'BCF_PayPerPage\AdminLayoutDesign');
     add_submenu_page('pppc-admin-menu-slug', 'Membership', 'Membership', 'manage_options', 'pppc-admin-member-signup-slug', 'BCF_PayPerPage\MembershipDrawAdminPage');
+    add_submenu_page('pppc-admin-menu-slug', 'Autroresponder', 'Autroresponder', 'manage_options', 'pppc-admin-autroresponder-slug', 'BCF_PayPerPage\AutroresponderDrawAdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Payment Status', 'Payment Status', 'manage_options', 'pppc-admin-payment-status-slug', 'BCF_PayPerPage\AdminPaymentStatus');
 
     MembershipAdminMenu();
+    AutroresponderAdminMenu();
 }
 
 function ActivatePlugin()

@@ -28,6 +28,7 @@ use BCF_Email\Email;
 
 require_once ('membership_reg_data.php');
 require_once ('email.php');
+require_once ('autoresponder.php');
 
 class RegistrationHandlerClass
 {
@@ -355,6 +356,8 @@ class RegistrationHandlerClass
                 $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_USER_CREATED);
                 $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
                 $this->registration_data->SaveData();
+
+                AutroresponderSubscribeEmail($email);
 
                 $result = true;
             }
