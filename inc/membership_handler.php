@@ -84,6 +84,7 @@ class RegistrationHandlerClass
         if($username != '' && $password != '')
         {
             $nonce = MembershipRandomString(NONCE_LENGTH);
+            $this->registration_data->SetDataInt(MembershipRegistrationDataClass::TIMESTAMP, time());
             $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
             $password_hash = wp_hash_password($password);
             $this->registration_data->SetDataString(MembershipRegistrationDataClass::USERNAME, $username);

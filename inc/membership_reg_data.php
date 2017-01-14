@@ -36,6 +36,7 @@ class MembershipRegistrationDataClass extends DataCollectionClass
 
     /* List of table field names: */
     const ID = 'registration_id';
+    const TIMESTAMP = 'timestamp';
     const STATE = 'state';
     const USERNAME = 'username';
     const PASSWORD = 'passwd';
@@ -63,6 +64,12 @@ class MembershipRegistrationDataClass extends DataCollectionClass
             'db_field_name' => self::ID,
             'db_primary_key'=> true,
             'default_value' => null
+        ),
+        self::TIMESTAMP            => array(
+            'class_type'    => 'DateTimeTypeClass',
+            'db_field_name' => self::TIMESTAMP,
+            'db_primary_key'=> false,
+            'default_value' => ''
         ),
         self::STATE            => array(
             'class_type'    => 'UnsigedIntegerTypeClass',

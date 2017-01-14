@@ -1313,6 +1313,7 @@ function AdminMenu()
     add_submenu_page('pppc-admin-menu-slug', 'Membership', 'Membership', 'manage_options', 'pppc-admin-member-signup-slug', 'BCF_PayPerPage\MembershipDrawAdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Autroresponder', 'Autroresponder', 'manage_options', 'pppc-admin-autroresponder-slug', 'BCF_PayPerPage\AutroresponderDrawAdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Payment Status', 'Payment Status', 'manage_options', 'pppc-admin-payment-status-slug', 'BCF_PayPerPage\AdminPaymentStatus');
+    add_submenu_page('pppc-admin-menu-slug', 'Registration Status', 'Registration Status', 'manage_options', 'pppc-admin-registration-status-slug', 'BCF_PayPerPage\MembershipDrawRegAdminPage');
 
     MembershipAdminMenu();
     AutroresponderAdminMenu();

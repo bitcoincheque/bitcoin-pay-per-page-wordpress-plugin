@@ -766,6 +766,12 @@ class DateTimeTypeClass extends BaseTypeClass
         return parent::SetData($data_str);
     }
 
+    public function SetDataFromInt($data_int)
+    {
+        $data_str = date('Y-m-d H:i:s', $data_int);
+        return parent::SetData($data_str);
+    }
+
     public function GetString()
     {
         return parent::GetData();

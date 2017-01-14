@@ -20,6 +20,7 @@ define ('SECRET_LENGTH', 20);
 
 require_once ('membership_interface.php');
 require_once ('membership_admin.php');
+require_once ('membership_reg_admin.php');
 require_once ('util.php');
 require_once ('email.php');
 
