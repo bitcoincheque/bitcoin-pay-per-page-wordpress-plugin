@@ -121,14 +121,10 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $current_user = wp_get_current_user();
         if ( 0 == $current_user->ID )
         {
-            WriteDebugNote('Create log-in form to show profile');
-
             $form = $this->GetSimpleLoginFormHtml($texts);
         }
         else
         {
-            WriteDebugNote('Create profile form');
-
             $form = $this->CreateProfileFormHtml($texts);
         }
 

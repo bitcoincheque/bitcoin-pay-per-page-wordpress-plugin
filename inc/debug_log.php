@@ -30,6 +30,17 @@ function WriteDebugNote($data1=null, $data2=null, $data3=null)
     WriteDebugLog('NOTE', $data1, $data2, $data3);
 }
 
+function WriteDebugLogFunctionResult($result, $data1=null, $data2=null, $data3=null)
+{
+    if($result)
+    {
+        WriteDebugLog('NOTE', $data1, $data2, $data3);
+    }
+    else
+    {
+        WriteDebugLog('WARNING', $data1, $data2, $data3);
+    }
+}
 
 function WriteDebugLog($type, $data1, $data2, $data3)
 {
@@ -37,9 +48,8 @@ function WriteDebugLog($type, $data1, $data2, $data3)
     {
         $current_user = wp_get_current_user();
         $user_id      = $current_user->ID;
-        ini_set('error_log', WP_CONTENT_DIR . '/pay_per_page_debug.log');
 
-        $txt = $type . ' ID=' . $user_id . ': ';
+        $txt = $type . ' User=' . $user_id . ': ';
 
         $trace = debug_backtrace();
         if(isset($trace[2]['class']))
@@ -63,7 +73,7 @@ function WriteDebugLog($type, $data1, $data2, $data3)
             $txt .= ' ' . safe_dump($data3);
         }
 
-        error_log($txt);
+        WriteDebugFile($txt);
     }
 }
 
@@ -73,9 +83,8 @@ function WriteDebugLogFunctionCall($msg='', $password_arg_no=-1)
     {
         $current_user = wp_get_current_user();
         $user_id      = $current_user->ID;
-        ini_set('error_log', WP_CONTENT_DIR . '/pay_per_page_debug.log');
 
-        $txt = 'NOTE ID=' . $user_id . ': ';
+        $txt = 'NOTE User=' . $user_id . ': ';
 
         $trace = debug_backtrace();
         if(isset($trace[1]['class']))
@@ -98,10 +107,15 @@ function WriteDebugLogFunctionCall($msg='', $password_arg_no=-1)
             $i += 1;
         }
 
-        error_log($txt);
+        WriteDebugFile($txt);
     }
 }
 
+function WriteDebugFile($txt)
+{
+    $txt = date("Y-d-m H:i:s ", time()) . $txt . "\r\n";
+    error_log($txt, 3, WP_CONTENT_DIR . '/pay_per_page_debug.log');
+}
 
 function safe_dump($data, $clamps='')
 {

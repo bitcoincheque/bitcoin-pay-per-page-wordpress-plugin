@@ -382,6 +382,8 @@ class RegistrationHandlerClass
                 $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
                 $this->registration_data->SaveData();
 
+                $this->SendEmailNotificationNewUser($wp_user_id);
+
                 AutroresponderSubscribeEmail($email);
 
                 $result = true;

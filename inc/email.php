@@ -23,6 +23,9 @@
 
 namespace BCF_Email;
 
+use BCF_PayPerPage;
+
+require_once ('debug_log.php');
 
 class Email
 {
@@ -91,6 +94,7 @@ class Email
 
     public function Send()
     {
+        $result = false;
         $headers = array('Content-Type: text/html; charset=UTF-8');
 
         if($this->from_address != '')
@@ -108,11 +112,13 @@ class Email
         {
             if(wp_mail($this->receiver_address_list[0], $this->subject, $this->body, $headers))
             {
-                return true;
+                $result = true;
             }
         }
 
-        return false;
+        BCF_PayPerPage\WriteDebugLogFunctionResult($result, $this->receiver_address_list[0], $this->subject);
+
+        return $result;
     }
 
 }
