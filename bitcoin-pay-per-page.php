@@ -1314,6 +1314,7 @@ function AdminMenu()
     add_submenu_page('pppc-admin-menu-slug', 'Autroresponder', 'Autroresponder', 'manage_options', 'pppc-admin-autroresponder-slug', 'BCF_PayPerPage\AutroresponderDrawAdminPage');
     add_submenu_page('pppc-admin-menu-slug', 'Payment Status', 'Payment Status', 'manage_options', 'pppc-admin-payment-status-slug', 'BCF_PayPerPage\AdminPaymentStatus');
     add_submenu_page('pppc-admin-menu-slug', 'Registration Status', 'Registration Status', 'manage_options', 'pppc-admin-registration-status-slug', 'BCF_PayPerPage\MembershipDrawRegAdminPage');
+    add_submenu_page('pppc-admin-menu-slug', 'Statistics', 'Statistics', 'manage_options', 'pppc-admin-statistics-slug', 'BCF_PayPerPage\StatisticsDrawAdminPage');
 
     MembershipAdminMenu();
     AutroresponderAdminMenu();
