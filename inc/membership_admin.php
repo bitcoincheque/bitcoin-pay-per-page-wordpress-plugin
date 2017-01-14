@@ -203,7 +203,7 @@ function MembershipAdminMenu()
     );
     add_settings_field(
         'bcf_payperpage_email_register_notification_email_sendto_settings_field_id',
-        'E-mail sender/replay address:',
+        'Send to E-mail:',
         'BCF_PayPerPage\MembershipAdminDrawSettingsemail_register_notificationemail_sendto',
         'bcf_payperpage_email_register_notification_settings_section_page',
         'bcf_payperpage_email_register_notification_settings_section_id'
