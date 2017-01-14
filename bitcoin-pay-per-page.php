@@ -794,7 +794,7 @@ function add_meta_data()
 function Init()
 {
     $src = plugin_dir_url( __FILE__ ) . 'js/script.js';
-    wp_enqueue_script('bcf_payperpage_script_handler', $src, array( 'jquery' ), '0.1', true);
+    wp_enqueue_script('bcf_payperpage_script_handler', $src, array( 'jquery' ), '0.2', true);
 
     if(!isset($_COOKIE[BCF_PAYPAGE_OPTION_COOKIE_NAME]))
     {

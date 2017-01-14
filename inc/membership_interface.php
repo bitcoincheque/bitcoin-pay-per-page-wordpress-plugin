@@ -27,6 +27,7 @@ namespace BCF_PayPerPage;
 use MongoDB\Driver\WriteConcern;
 
 require_once('membership_handler.php');
+require_once ('statistics_handler.php');
 
 // Constants for AJAX POST and GET requests
 define('REG_ID',                    'rid');
@@ -186,6 +187,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
     {
         WriteDebugLogFunctionCall();
 
+        StatisticsPageview($post_id);
+
         $form = $this->GetLoginFormHtml($texts, $post_id);
         return $form;
     }
@@ -257,6 +260,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                                     $ok = true;
                                     $action = REG_RESP_ACTION_LOAD_FORM;
                                     $form = $this->GetRegisterEmailFormHtml($texts, $input_data[REG_POST_ID], null, 'Email address already taken. Please select another email address.');
+                                    StatisticsRegister($input_data[REG_POST_ID]);
                                 }
                             }
                             else
@@ -269,6 +273,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                             $ok = true;
                             $action = REG_RESP_ACTION_LOAD_FORM;
                             $form = $this->GetRegisterEmailFormHtml($texts, $input_data[REG_POST_ID]);
+                            StatisticsRegister($input_data[REG_POST_ID]);
                         }
                     }else{
                         $msg = 'Invalid username or password';
@@ -283,6 +288,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                 {
                     if($this->RegisterEmail($input_data[ REG_EMAIL ]))
                     {
+                        StatisticsVerifyEmail($input_data[REG_POST_ID]);
+
                         $ok = true;
                         $action = REG_RESP_ACTION_LOAD_FORM;
                         $texts[TEXT_FIELD_GREEN_MSG] = 'A verification e-mail has been sent to you. Please check your e-mail.';
@@ -322,6 +329,7 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                 switch($this->ConfirmEmail($input_data[REG_SECRET]))
                 {
                     case RegistrationHandlerClass::RESULT_OK:
+                        StatisticsCompleted($post_id);
                         $continue_registration = true;
                         break;
 

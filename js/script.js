@@ -113,6 +113,7 @@ jQuery(document).ready(function($)
     $(document).on('click', '#bcf_pppc_do_register_email', function() {
         var email = GetCheckInputTextFormData('#bcf_pppc_email', 'E-mail address missing.');
         var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
+        var post_id = GetCheckInputTextFormData('input#bcf_pppc_post_id', '');
         var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
 
         if(email != '') {
@@ -121,6 +122,7 @@ jQuery(document).ready(function($)
                 rid : reg_id,
                 event: 'register_email',
                 email: email,
+                post_id: post_id,
                 nonce: nonce,
                 wp_nonce: pppc_script_handler_vars.wp_nonce
             };

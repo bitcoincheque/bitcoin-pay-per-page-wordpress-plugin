@@ -21,6 +21,7 @@ define ('SECRET_LENGTH', 20);
 require_once ('membership_interface.php');
 require_once ('membership_admin.php');
 require_once ('membership_reg_admin.php');
+require_once('statistics_data.php');
 require_once ('util.php');
 require_once ('email.php');
 
@@ -241,6 +242,9 @@ function ActivateMembershipPlugin()
 
     $registration_data = new MembershipRegistrationDataClass();
     $registration_data->CreateDatabaseTable();
+
+    $statistics_data = new StatisticsDataClass();
+    $statistics_data->CreateDatabaseTable();
 }
 
 function DeactivateMembershipPlugin()

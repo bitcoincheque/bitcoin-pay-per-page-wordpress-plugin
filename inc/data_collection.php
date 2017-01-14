@@ -350,7 +350,7 @@ class DataCollectionClass extends DatabaseInterfaceClass
         return $data_array;
     }
 
-    public function SaveData()
+    public function SaveData($force_write = false)
     {
         $id = -1;
 
@@ -359,7 +359,7 @@ class DataCollectionClass extends DatabaseInterfaceClass
 
         $primary_key_name = $this->GetPrimaryKeyName();
         $primary_key_obj = $this->GetData($primary_key_name);
-        if($primary_key_obj->HasValidData())
+        if($primary_key_obj->HasValidData() and !$force_write)
         {
             /* Can only update a record if it exist in database. */
             $id = $this->UpdateRecord($table_name, $data_array, $primary_key_name);
