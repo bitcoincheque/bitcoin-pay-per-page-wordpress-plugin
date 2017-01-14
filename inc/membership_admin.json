@@ -126,6 +126,47 @@
                     "Default": "<p>You have requested to recover your username or password at <strong>{site_name}</strong>.</p>&#13;&#10;<p>Your username is: <strong>{username}</strong></p>&#13;&#10;<p>In order to reset your password, use this link:</p>&#13;&#10;<p>{link}</p>"
                 }
             ]
+        },
+        {
+            "Name" : "email_register_notification",
+            "Title" : "Send e-mail notification when new member registers",
+            "Description" : "Here you can configure the sending of e-mail to admins when a new user has signed up for membership.",
+            "ResetDefault": "0",
+
+            "Fields" : [
+                {
+                    "Name" : "send_notification",
+                    "Title" : "Send notification e-mail:",
+                    "Type" : "checkbox",
+                    "Default" : "1"
+                },
+                {
+                    "Name" : "email_replay_addr",
+                    "Title" : "E-mail sender/replay address:",
+                    "Type" : "text",
+                    "Default" : ""
+                },
+                {
+                    "Name" : "email_sendto",
+                    "Title" : "Send to E-mail:",
+                    "Type" : "text",
+                    "Default" : ""
+                },
+                {
+                    "Name": "email_subject",
+                    "Title": "E-mail subject:",
+                    "Type": "text",
+                    "Default": "Notification of New Member Registration"
+                },
+                {
+                    "Name": "email_body",
+                    "Title": "E-mail body message:",
+                    "Type": "textarea",
+                    "Rows": "8",
+                    "Columns": "80",
+                    "Default": "<p>A new member has registered at <strong>{site_name}</strong>.</p>&#13;&#10;<p>Username: {username}</p>"
+                }
+            ]
         }
     ]
 }

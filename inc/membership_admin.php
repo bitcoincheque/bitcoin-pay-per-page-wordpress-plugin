@@ -6,6 +6,7 @@ define('BCF_PAYPERPAGE_MEMBERSHIP_OPTION', 'bcf_payperpage_membership_option');
 define('BCF_PAYPERPAGE_LINKING_OPTION', 'bcf_payperpage_linking_option');
 define('BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION', 'bcf_payperpage_email_verification_option');
 define('BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION', 'bcf_payperpage_email_reset_password_option');
+define('BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION', 'bcf_payperpage_email_register_notification_option');
 
 function MembershipOptionDefault()
 {
@@ -13,6 +14,7 @@ function MembershipOptionDefault()
     delete_option(BCF_PAYPERPAGE_LINKING_OPTION);
     delete_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
     delete_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
+    delete_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
 
     add_option(
         BCF_PAYPERPAGE_MEMBERSHIP_OPTION, array(
@@ -44,6 +46,15 @@ function MembershipOptionDefault()
             'email_body' => '<p>You have requested to recover your username or password at <strong>{site_name}</strong>.</p>&#13;&#10;<p>Your username is: <strong>{username}</strong></p>&#13;&#10;<p>In order to reset your password, use this link:</p>&#13;&#10;<p>{link}</p>'
         )
     );
+    add_option(
+        BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION, array(
+            'send_notification' => '1',
+            'email_replay_addr' => '',
+            'email_sendto' => '',
+            'email_subject' => 'Notification of New Member Registration',
+            'email_body' => '<p>A new member has registered at <strong>{site_name}</strong>.</p>&#13;&#10;<p>Username: {username}</p>'
+        )
+    );
 }
 
 function MembershipAdminMenu()
@@ -52,6 +63,7 @@ function MembershipAdminMenu()
     register_setting(BCF_PAYPERPAGE_LINKING_OPTION, BCF_PAYPERPAGE_LINKING_OPTION);
     register_setting(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION, BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
     register_setting(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION, BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
+    register_setting(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION, BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
 
     add_settings_section(
         'bcf_payperpage_membership_settings_section_id',
@@ -175,6 +187,47 @@ function MembershipAdminMenu()
         'bcf_payperpage_email_reset_password_settings_section_page',
         'bcf_payperpage_email_reset_password_settings_section_id'
     );
+    add_settings_section(
+        'bcf_payperpage_email_register_notification_settings_section_id',
+        'Send e-mail notification when new member registers',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsHelpemail_register_notification',
+        'bcf_payperpage_email_register_notification_settings_section_page'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_register_notification_send_notification_settings_field_id',
+        'Send notification e-mail:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_register_notificationsend_notification',
+        'bcf_payperpage_email_register_notification_settings_section_page',
+        'bcf_payperpage_email_register_notification_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_register_notification_email_replay_addr_settings_field_id',
+        'E-mail sender/replay address:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_register_notificationemail_replay_addr',
+        'bcf_payperpage_email_register_notification_settings_section_page',
+        'bcf_payperpage_email_register_notification_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_register_notification_email_sendto_settings_field_id',
+        'E-mail sender/replay address:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_register_notificationemail_sendto',
+        'bcf_payperpage_email_register_notification_settings_section_page',
+        'bcf_payperpage_email_register_notification_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_register_notification_email_subject_settings_field_id',
+        'E-mail subject:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_register_notificationemail_subject',
+        'bcf_payperpage_email_register_notification_settings_section_page',
+        'bcf_payperpage_email_register_notification_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_email_register_notification_email_body_settings_field_id',
+        'E-mail body message:',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsemail_register_notificationemail_body',
+        'bcf_payperpage_email_register_notification_settings_section_page',
+        'bcf_payperpage_email_register_notification_settings_section_id'
+    );
 }
 
 function MembershipDrawAdminPage()
@@ -211,6 +264,13 @@ function MembershipDrawAdminPage()
     echo '<input type="submit" name="Submit" value="Save Options" />';
     echo '</form>';
 
+    echo '<hr>';
+    echo '<form action="options.php" method="post">';
+    echo settings_fields(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
+    echo do_settings_sections('bcf_payperpage_email_register_notification_settings_section_page');
+    echo '<input type="submit" name="Submit" value="Save Options" />';
+    echo '</form>';
+
     echo '</div>';
 }
 
@@ -232,6 +292,11 @@ function MembershipAdminDrawSettingsHelpemail_verification()
 function MembershipAdminDrawSettingsHelpemail_reset_password()
 {
     echo '<p>Here you can configure sending of e-mails to user in order to reset a password. The e-mail must contain the {link} code that will be substituted with a link to the reset page.</p>';
+}
+
+function MembershipAdminDrawSettingsHelpemail_register_notification()
+{
+    echo '<p>Here you can configure the sending of e-mail to admins when a new user has signed up for membership.</p>';
 }
 
 function MembershipAdminDrawSettingsMembershipRequireMembership()
@@ -330,5 +395,40 @@ function MembershipAdminDrawSettingsemail_reset_passwordemail_body()
     $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
     $selected = $options['email_body'];
     echo '<textarea rows="8" cols="80" name="' . BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION . '[email_body]" type="text">'.$selected.'</textarea>';
+}
+
+function MembershipAdminDrawSettingsemail_register_notificationsend_notification()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
+    $selected = $options['send_notification'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[send_notification]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
+}
+
+function MembershipAdminDrawSettingsemail_register_notificationemail_replay_addr()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
+    $selected = $options['email_replay_addr'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[email_replay_addr]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsemail_register_notificationemail_sendto()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
+    $selected = $options['email_sendto'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[email_sendto]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsemail_register_notificationemail_subject()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
+    $selected = $options['email_subject'];
+    echo '<input name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[email_subject]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsemail_register_notificationemail_body()
+{
+    $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
+    $selected = $options['email_body'];
+    echo '<textarea rows="8" cols="80" name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[email_body]" type="text">'.$selected.'</textarea>';
 }
 

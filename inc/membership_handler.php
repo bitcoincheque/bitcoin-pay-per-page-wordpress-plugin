@@ -290,6 +290,35 @@ class RegistrationHandlerClass
         return $reset_email->Send();
     }
 
+    protected function SendEmailNotificationNewUser($wp_user_id)
+    {
+        WriteDebugLogFunctionCall();
+
+        $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
+
+        if($options['send_notification'])
+        {
+            $site_name = get_bloginfo('name');
+            $site_url  = site_url();
+
+            $user_info = get_userdata($wp_user_id);
+            $username  = $user_info->user_login;
+
+            $body = $options['email_body'];
+            $body = str_replace('{site_name}', $site_name, $body);
+            $body = str_replace('{site_url}', $site_url, $body);
+            $body = str_replace('{username}', $username, $body);
+
+            $reset_email = new Email($options['email_sendto']);
+            $reset_email->SetFromAddress($options['email_replay_addr']);
+            $reset_email->SetSubject($options['email_subject']);
+            $reset_email->SetBody($body);
+
+            $result = $reset_email->Send();
+        }
+    }
+
+
     protected function UpdatePassword($password, $wp_user_id=null)
     {
         WriteDebugLogFunctionCall('', $password_arg_no=0);
