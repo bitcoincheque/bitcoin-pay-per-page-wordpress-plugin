@@ -39,6 +39,7 @@ require_once ('inc/payment-browser-header.php');
 require_once ('inc/payment_data_codec.php');
 require_once ('inc/membership.php');
 require_once ('inc/autoresponder.php');
+require_once ('inc/debug_log.php');
 
 
 define ('BCF_PAYPAGE_OPTION_REQ_COUNTER',       'bcf_paypage_option_req_counter');
@@ -246,6 +247,8 @@ function FilterContent( $content )
 
     if($position)
     {
+        WriteDebugNote('Load free protected content post_id=' . strval($post_id_val));
+
         $payment_options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
 
         $must_login_first = false;
@@ -430,6 +433,8 @@ function LoadRestOfContent()
     $membership_options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
     if((isset($membership_options['RequireMembership'])) and $membership_options['RequireMembership'] == '1')
     {
+        WriteDebugNote('Load remaining protected content ID=' . strval($post_id_val) . ' post_id=' . strval($post_id_val) . ' ref=' . strval($pageview_ref_int));
+
         $post    = get_post($post_id_val);
         $content = $post->post_content;
 

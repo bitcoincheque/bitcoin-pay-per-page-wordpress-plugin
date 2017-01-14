@@ -24,6 +24,8 @@
 
 namespace BCF_PayPerPage;
 
+use MongoDB\Driver\WriteConcern;
+
 require_once('membership_handler.php');
 
 // Constants for AJAX POST and GET requests
@@ -96,10 +98,16 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function CreateLoginForm($texts)
     {
+        WriteDebugLogFunctionCall();
+
         $current_user = wp_get_current_user();
         if ( 0 == $current_user->ID ) {
+            WriteDebugNote('Create log-in form');
+
             $form = $this->GetSimpleLoginFormHtml($texts);
         } else {
+            WriteDebugNote('Create log-out form');
+
             $form = $this->GetSimpleLogoutFormHtml($texts);
         }
 
@@ -108,13 +116,19 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function CreateProfileForm($texts)
     {
+        WriteDebugLogFunctionCall();
+
         $current_user = wp_get_current_user();
         if ( 0 == $current_user->ID )
         {
+            WriteDebugNote('Create log-in form to show profile');
+
             $form = $this->GetSimpleLoginFormHtml($texts);
         }
         else
         {
+            WriteDebugNote('Create profile form');
+
             $form = $this->CreateProfileFormHtml($texts);
         }
 
@@ -123,6 +137,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function CreatePasswordResetForm($input_data)
     {
+        WriteDebugLogFunctionCall();
+
         if(is_user_logged_in())
         {
             $texts = array();
@@ -172,12 +188,16 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function CreatePostContentForm($texts, $post_id)
     {
+        WriteDebugLogFunctionCall();
+
         $form = $this->GetLoginFormHtml($texts, $post_id);
         return $form;
     }
 
     public function EventHandler($input_data,  $post_id=null)
     {
+        WriteDebugLogFunctionCall();
+
         $texts = array();
         $ok = false;
         $action = null;
@@ -527,6 +547,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $response_data[ REG_RESP_STATUS ] = $status;
         $response_data[ REG_RESP_MSG ] = $msg;
 
+        WriteDebugNote('Result:', $response_data);
+
         return $response_data;
     }
 
@@ -628,6 +650,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetSimpleLoginFormHtml($texts=array())
     {
+        WriteDebugLogFunctionCall();
+
         $link_options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
 
         $form_code = 'method="post"';
@@ -665,6 +689,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetSimpleLogoutFormHtml($texts=array())
     {
+        WriteDebugLogFunctionCall();
+
         $link_options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
 
         $form_code = 'method="post"';
@@ -697,6 +723,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetLoginFormHtml($texts=array(), $post_id=null)
     {
+        WriteDebugLogFunctionCall();
+
         $link_options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
 
         $form_code = '';
@@ -730,6 +758,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetRegisterEmailFormHtml($texts=array(), $post_id)
     {
+        WriteDebugLogFunctionCall();
+
         $form_code = '';
         $hidden_fields = null;
         $texts[TEXT_FIELD_HEADER] = 'Register e-mail address';
@@ -754,6 +784,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetCheckYourEmailFormHtml($texts=array())
     {
+        WriteDebugLogFunctionCall();
+
         $form_code = '';
         $hidden_fields = null;
         $texts[TEXT_FIELD_HEADER] = 'Check your e-mail';
@@ -774,6 +806,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function CreateProfileFormHtml($texts=array())
     {
+        WriteDebugLogFunctionCall();
+
         $form_code = 'method="post"';
         $hidden_fields = array(
             'action' => REG_AJAX_ACTION,
@@ -826,6 +860,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetChangePasswordFormHtml($texts=array(), $wp_user_id)
     {
+        WriteDebugLogFunctionCall();
+
         $user_info = get_userdata($wp_user_id);
 
         $form_code = 'method="post"';
@@ -860,6 +896,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
 
     public function GetResetPasswordFormHtml($texts=array())
     {
+        WriteDebugLogFunctionCall();
+
         $form_code = 'method="post"';
         $hidden_fields = array(
             'action' => REG_AJAX_ACTION,

@@ -1,6 +1,9 @@
 <?php
 
+namespace BCF_PayPerPage;
+
 require_once ('autoresponder_admin.php');
+require_once ('debug_log.php');
 
 
 function AutroresponderSubscribeEmail($email, $fname='')
@@ -9,6 +12,8 @@ function AutroresponderSubscribeEmail($email, $fname='')
 
     if($options['EnableMailchimp'])
     {
+        WriteDebugLogFunctionCall('Mailchimp');
+
         $apikey = $options['ApiKey'];
         $listid = $options['ListId'];
         $dataCenter = substr($apikey,strpos($apikey,'-')+1);
@@ -38,7 +43,13 @@ function AutroresponderSubscribeEmail($email, $fname='')
 
         if(!$result)
         {
-            return curl_error($ch);
+            $error_info = curl_error($ch);
+            WriteDebugWarning('Error subscribe: '. $error_info);
+            return $error_info;
+        }
+        else
+        {
+            WriteDebugNote('E-mail subscribed successfully.');
         }
 
         #var_dump($result);

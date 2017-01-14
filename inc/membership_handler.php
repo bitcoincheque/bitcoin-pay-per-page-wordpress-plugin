@@ -77,6 +77,8 @@ class RegistrationHandlerClass
 
     public function RegisterUsernamePassword($username, $password, $remember, $post_id)
     {
+        WriteDebugLogFunctionCall('', $password_arg_no=1);
+
         $reg_id = 0;
 
         if($username != '' && $password != '')
@@ -100,6 +102,8 @@ class RegistrationHandlerClass
 
     public function RegisterEmail($email)
     {
+        WriteDebugLogFunctionCall();
+
         $result = false;
 
         if($email != '')
@@ -176,6 +180,8 @@ class RegistrationHandlerClass
 
     private function SendEmailVerification($email, $link)
     {
+        WriteDebugLogFunctionCall();
+
         $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
 
         $site_name = get_bloginfo('name');
@@ -192,11 +198,24 @@ class RegistrationHandlerClass
         $verification_email->SetSubject($options['email_subject']);
         $verification_email->SetBody($body);
 
-        return $verification_email->Send();
+        $result = $verification_email->Send();
+
+        if($result)
+        {
+            WriteDebugNote('OK e-mail sent.');
+        }
+        else
+        {
+            WriteDebugWarning('ERROR E-mail not sent.');
+        }
+
+        return $result;
     }
 
     public function ConfirmEmail($secret)
     {
+        WriteDebugLogFunctionCall();
+
         $result =  self::RESULT_ERROR_UNDEFINED;
 
         if( $this->has_data == true)
@@ -235,6 +254,8 @@ class RegistrationHandlerClass
 
     protected function SendEmailResetLink($email, $wp_user_id)
     {
+        WriteDebugLogFunctionCall();
+
         $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
 
         $nonce = MembershipRandomString(NONCE_LENGTH);
@@ -271,6 +292,8 @@ class RegistrationHandlerClass
 
     protected function UpdatePassword($password, $wp_user_id=null)
     {
+        WriteDebugLogFunctionCall('', $password_arg_no=0);
+
         $result = false;
         if($wp_user_id)
         {
@@ -336,6 +359,8 @@ class RegistrationHandlerClass
 
     public function CreateNewUser()
     {
+        WriteDebugLogFunctionCall();
+
         $result = false;
 
         $username = $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
@@ -375,6 +400,8 @@ class RegistrationHandlerClass
 
     public function LogInRegisteredUser($remember=false)
     {
+        WriteDebugLogFunctionCall();
+
         $username = $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
 
         $user = get_user_by('login', $username);
@@ -385,10 +412,14 @@ class RegistrationHandlerClass
             wp_set_auth_cookie($user_id);
             do_action('wp_login', $username);
 
+            WriteDebugNote(NOTE, 'User ' . $username . ' logged in.');
+
             return true;
         }
         else
         {
+            WriteDebugNote(NOTE, 'User ' . $username . ' failed to log in.');
+
             return false;
         }
     }
