@@ -3,7 +3,7 @@
     "Name" : "Membership",
     "Header" : "Pay-Per-Page-Click Member Sign-up",
     "Description" : "Settings for member registration and e-mail verification.",
-    "ResetDefault": "1",
+    "ResetDefault": "0",
 
     "Sections" : [
         {

@@ -10,12 +10,6 @@ define('BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION', 'bcf_payperpage_emai
 
 function MembershipOptionDefault()
 {
-    delete_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
-    delete_option(BCF_PAYPERPAGE_LINKING_OPTION);
-    delete_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
-    delete_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
-    delete_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
-
     add_option(
         BCF_PAYPERPAGE_MEMBERSHIP_OPTION, array(
             'RequireMembership' => '1',
