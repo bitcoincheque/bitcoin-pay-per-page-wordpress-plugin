@@ -302,133 +302,209 @@ function MembershipAdminDrawSettingsHelpemail_register_notification()
 function MembershipAdminDrawSettingsMembershipRequireMembership()
 {
     $options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
-    $selected = $options['RequireMembership'];
+    if(isset($options['RequireMembership'])){
+        $selected = $options['RequireMembership'];
+    }else{
+        $selected = false;
+    }
     echo '<input name="' . BCF_PAYPERPAGE_MEMBERSHIP_OPTION . '[RequireMembership]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
 
 function MembershipAdminDrawSettingsMembershipRequireEmailConfirmation()
 {
     $options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
-    $selected = $options['RequireEmailConfirmation'];
+    if(isset($options['RequireEmailConfirmation'])){
+        $selected = $options['RequireEmailConfirmation'];
+    }else{
+        $selected = false;
+    }
     echo '<input name="' . BCF_PAYPERPAGE_MEMBERSHIP_OPTION . '[RequireEmailConfirmation]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
 
 function MembershipAdminDrawSettingsLinkingLoginPageLink()
 {
     $options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
-    $selected = $options['LoginPageLink'];
+    if(isset($options['LoginPageLink'])){
+        $selected = $options['LoginPageLink'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[LoginPageLink]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsLinkingProfilePageLink()
 {
     $options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
-    $selected = $options['ProfilePageLink'];
+    if(isset($options['ProfilePageLink'])){
+        $selected = $options['ProfilePageLink'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[ProfilePageLink]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsLinkingPasswordPageLink()
 {
     $options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
-    $selected = $options['PasswordPageLink'];
+    if(isset($options['PasswordPageLink'])){
+        $selected = $options['PasswordPageLink'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[PasswordPageLink]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsLinkingLogoutPage()
 {
     $options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
-    $selected = $options['LogoutPage'];
+    if(isset($options['LogoutPage'])){
+        $selected = $options['LogoutPage'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[LogoutPage]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_verificationverify_new_emails()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
-    $selected = $options['verify_new_emails'];
+    if(isset($options['verify_new_emails'])){
+        $selected = $options['verify_new_emails'];
+    }else{
+        $selected = false;
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[verify_new_emails]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
 
 function MembershipAdminDrawSettingsemail_verificationverify_changed_emails()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
-    $selected = $options['verify_changed_emails'];
+    if(isset($options['verify_changed_emails'])){
+        $selected = $options['verify_changed_emails'];
+    }else{
+        $selected = false;
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[verify_changed_emails]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
 
 function MembershipAdminDrawSettingsemail_verificationemail_replay_addr()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
-    $selected = $options['email_replay_addr'];
+    if(isset($options['email_replay_addr'])){
+        $selected = $options['email_replay_addr'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[email_replay_addr]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_verificationemail_subject()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
-    $selected = $options['email_subject'];
+    if(isset($options['email_subject'])){
+        $selected = $options['email_subject'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[email_subject]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_verificationemail_body()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION);
-    $selected = $options['email_body'];
+    if(isset($options['email_body'])){
+        $selected = $options['email_body'];
+    }else{
+        $selected = "";
+    }
     echo '<textarea rows="8" cols="80" name="' . BCF_PAYPERPAGE_EMAIL_VERIFICATION_OPTION . '[email_body]" type="text">'.$selected.'</textarea>';
 }
 
 function MembershipAdminDrawSettingsemail_reset_passwordemail_replay_addr()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
-    $selected = $options['email_replay_addr'];
+    if(isset($options['email_replay_addr'])){
+        $selected = $options['email_replay_addr'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION . '[email_replay_addr]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_reset_passwordemail_subject()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
-    $selected = $options['email_subject'];
+    if(isset($options['email_subject'])){
+        $selected = $options['email_subject'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION . '[email_subject]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_reset_passwordemail_body()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
-    $selected = $options['email_body'];
+    if(isset($options['email_body'])){
+        $selected = $options['email_body'];
+    }else{
+        $selected = "";
+    }
     echo '<textarea rows="8" cols="80" name="' . BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION . '[email_body]" type="text">'.$selected.'</textarea>';
 }
 
 function MembershipAdminDrawSettingsemail_register_notificationsend_notification()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
-    $selected = $options['send_notification'];
+    if(isset($options['send_notification'])){
+        $selected = $options['send_notification'];
+    }else{
+        $selected = false;
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[send_notification]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
 
 function MembershipAdminDrawSettingsemail_register_notificationemail_replay_addr()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
-    $selected = $options['email_replay_addr'];
+    if(isset($options['email_replay_addr'])){
+        $selected = $options['email_replay_addr'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[email_replay_addr]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_register_notificationemail_sendto()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
-    $selected = $options['email_sendto'];
+    if(isset($options['email_sendto'])){
+        $selected = $options['email_sendto'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[email_sendto]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_register_notificationemail_subject()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
-    $selected = $options['email_subject'];
+    if(isset($options['email_subject'])){
+        $selected = $options['email_subject'];
+    }else{
+        $selected = "";
+    }
     echo '<input name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[email_subject]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_register_notificationemail_body()
 {
     $options = get_option(BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION);
-    $selected = $options['email_body'];
+    if(isset($options['email_body'])){
+        $selected = $options['email_body'];
+    }else{
+        $selected = "";
+    }
     echo '<textarea rows="8" cols="80" name="' . BCF_PAYPERPAGE_EMAIL_REGISTER_NOTIFICATION_OPTION . '[email_body]" type="text">'.$selected.'</textarea>';
 }
 

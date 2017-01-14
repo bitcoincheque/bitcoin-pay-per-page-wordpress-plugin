@@ -207,7 +207,22 @@ def CreateSectionFieldFunction(data):
             txt += AddLine(0, 'function ' + FormatSettingsFieldCallBackFunctionName(data, section, field) + '()')
             txt += AddLine(0, '{')
             txt += AddLine(1, '$options = get_option(' + FormatOptionName(data, section) + ');')
-            txt += AddLine(1, '$selected = $options[\'' + field['Name'] + '\'];')
+            txt += AddLine(1, 'if(isset($options[\'' + field['Name'] + '\'])){')
+            txt += AddLine(2, '$selected = $options[\'' + field['Name'] + '\'];')
+            txt += AddLine(1, '}else{')
+
+            if(field['Type'] == 'checkbox'):
+                txt += AddLine(2, '$selected = false;')
+            elif (field['Type'] == 'text'):
+                txt += AddLine(2, '$selected = "";')
+            elif (field['Type'] == 'textarea'):
+                txt += AddLine(2, '$selected = "";')
+            else:
+                print
+                print('ERROR missing generator for input type "' + field['Type'] + '"')
+                raise
+
+            txt += AddLine(1, '}')
 
             if(field['Type'] == 'checkbox'):
                 txt += AddLine(1, 'echo \'<input name="\' . ' + FormatOptionName(data, section) + ' . \'[' + field['Name'] + ']" type="checkbox" value="1" \' . checked(1, $selected, false) . \' />\';')

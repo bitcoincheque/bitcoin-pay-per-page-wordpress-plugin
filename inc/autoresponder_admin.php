@@ -74,21 +74,33 @@ function AutroresponderAdminDrawSettingsHelpMailchimp()
 function AutroresponderAdminDrawSettingsMailchimpEnableMailchimp()
 {
     $options = get_option(BCF_PAYPERPAGE_MAILCHIMP_OPTION);
-    $selected = $options['EnableMailchimp'];
+    if(isset($options['EnableMailchimp'])){
+        $selected = $options['EnableMailchimp'];
+    }else{
+        $selected = false;
+    }
     echo '<input name="' . BCF_PAYPERPAGE_MAILCHIMP_OPTION . '[EnableMailchimp]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
 
 function AutroresponderAdminDrawSettingsMailchimpApiKey()
 {
     $options = get_option(BCF_PAYPERPAGE_MAILCHIMP_OPTION);
-    $selected = $options['ApiKey'];
+    if(isset($options['ApiKey'])){
+        $selected = $options['ApiKey'];
+    }else{
+        $selected = "";
+    }
     echo '<textarea rows="1" cols="80" name="' . BCF_PAYPERPAGE_MAILCHIMP_OPTION . '[ApiKey]" type="text">'.$selected.'</textarea>';
 }
 
 function AutroresponderAdminDrawSettingsMailchimpListId()
 {
     $options = get_option(BCF_PAYPERPAGE_MAILCHIMP_OPTION);
-    $selected = $options['ListId'];
+    if(isset($options['ListId'])){
+        $selected = $options['ListId'];
+    }else{
+        $selected = "";
+    }
     echo '<textarea rows="1" cols="80" name="' . BCF_PAYPERPAGE_MAILCHIMP_OPTION . '[ListId]" type="text">'.$selected.'</textarea>';
 }
 
