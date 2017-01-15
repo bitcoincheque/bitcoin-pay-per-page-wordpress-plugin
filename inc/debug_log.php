@@ -113,7 +113,7 @@ function WriteDebugLogFunctionCall($msg='', $password_arg_no=-1)
 
 function WriteDebugFile($txt)
 {
-    $txt = date("Y-d-m H:i:s ", time()) . $txt . "\r\n";
+    $txt = '[' . date("d-M-Y H:i:s ", time()) . 'UTC] ' . $txt . "\r\n";
     error_log($txt, 3, WP_CONTENT_DIR . '/pay_per_page_debug.log');
 }
 
