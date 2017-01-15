@@ -261,6 +261,7 @@ class RegistrationHandlerClass
 
         $nonce = MembershipRandomString(NONCE_LENGTH);
         $secret = MembershipRandomString(SECRET_LENGTH);
+        $this->registration_data->SetDataInt(MembershipRegistrationDataClass::TIMESTAMP, time());
         $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
         $this->registration_data->SetDataString(MembershipRegistrationDataClass::SECRET, $secret);
         $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT);

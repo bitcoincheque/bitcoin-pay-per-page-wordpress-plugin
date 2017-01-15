@@ -236,6 +236,42 @@ function MembershipRandomString($length)
     return $str;
 }
 
+function ScheduleEvent()
+{
+    WriteDebugNote('ScheduleEvent.');
+
+    $timeout = 48*60*60;
+
+    global $wpdb;
+    $prefixed_table_name = $wpdb->prefix . 'bcf_payperpage_registration';
+    $sql = "SELECT * FROM " . $prefixed_table_name;
+    $record_list = $wpdb->get_results($sql, ARRAY_A);
+    foreach($record_list as $record)
+    {
+        $reg_rime = $record['timestamp'];
+        $reg_rime = strtotime($reg_rime);
+        if($reg_rime==false)
+        {
+            $reg_rime=0;
+        }
+        $now=time();
+
+        if(($reg_rime + $timeout) < $now)
+        {
+            $sql = "DELETE FROM " . $prefixed_table_name . " WHERE registration_id=" . $record['registration_id'];
+            $wpdb->get_results($sql, ARRAY_A);
+            if ($wpdb->last_error)
+            {
+                WriteDebugError('Error delete registration record ', $record['registration_id']);
+            }
+            else
+            {
+                WriteDebugNote('Delete registration record ', $record['registration_id']);
+            }
+        }
+    }
+}
+
 function ActivateMembershipPlugin()
 {
     MembershipOptionDefault();
@@ -245,9 +281,16 @@ function ActivateMembershipPlugin()
 
     $statistics_data = new StatisticsDataClass();
     $statistics_data->CreateDatabaseTable();
+
+    if (! wp_next_scheduled ( 'pppc_hourly_event' )) {
+        wp_schedule_event(time(), 'hourly', 'pppc_hourly_event');
+    }
 }
 
 function DeactivateMembershipPlugin()
 {
+    wp_clear_scheduled_hook('pppc_hourly_event');
 
 }
+
+add_action('pppc_hourly_event', 'BCF_PayPerPage\ScheduleEvent');
