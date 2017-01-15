@@ -171,7 +171,7 @@ function safe_dump($data, $clamps='')
             break;
 
         default:
-            WriteDebugError(__FUNCTION__ . ' invalid data type:', gettype($data));
+            WriteDebugError(' invalid data type:', gettype($data));
             die('invalid data type '. gettype($data));
             break;
     }
