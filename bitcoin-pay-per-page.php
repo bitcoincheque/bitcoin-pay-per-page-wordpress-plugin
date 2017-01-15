@@ -39,6 +39,7 @@ require_once ('inc/payment-browser-header.php');
 require_once ('inc/payment_data_codec.php');
 require_once ('inc/membership.php');
 require_once ('inc/autoresponder.php');
+require_once ('inc/statistics_admin.php');
 require_once ('inc/debug_log.php');
 
 
