@@ -41,6 +41,7 @@ require_once ('inc/membership.php');
 require_once ('inc/autoresponder.php');
 require_once ('inc/statistics_admin.php');
 require_once ('inc/debug_log.php');
+require_once ('inc/widgets.php');
 
 
 define ('BCF_PAYPAGE_OPTION_REQ_COUNTER',       'bcf_paypage_option_req_counter');
