@@ -19,6 +19,15 @@ jQuery(document).ready(function($)
         return text;
     }
 
+    function GetCheckInputCheckboxFormData(selector, error_message) {
+        var checked = $(selector).is(":checked")?1:0;
+        if(checked == 0) {
+            $(selector).css('border', '1px solid red');
+            SetStatusMessage('error', error_message);
+        }
+        return checked;
+    }
+
     function SetStatusMessage(color_code, message){
         var span_class = 'bcf_pppc_status_info';
         switch (color_code)
@@ -112,15 +121,17 @@ jQuery(document).ready(function($)
 
     $(document).on('click', '#bcf_pppc_do_register_email', function() {
         var email = GetCheckInputTextFormData('#bcf_pppc_email', 'E-mail address missing.');
+        var accept_terms = GetCheckInputCheckboxFormData('#bcf_pppc_accept_terms', 'You must accept the terms.');
         var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
         var post_id = GetCheckInputTextFormData('input#bcf_pppc_post_id', '');
         var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
 
-        if(email != '') {
+        if((email != '') && (accept_terms==1)) {
             var data = {
                 action: 'bcf_pppc_do_login',
                 rid : reg_id,
                 event: 'register_email',
+                accept_terms: accept_terms,
                 email: email,
                 post_id: post_id,
                 nonce: nonce,

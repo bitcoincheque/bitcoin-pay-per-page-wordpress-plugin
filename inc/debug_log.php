@@ -166,6 +166,17 @@ function safe_dump($data, $clamps='')
             }
             break;
 
+        case 'boolean':
+            if($data)
+            {
+                $txt .= 'true';
+            }
+            else
+            {
+                $txt .= 'false';
+            }
+            break;
+
         case 'NULL':
             $txt .= 'NULL';
             break;

@@ -53,7 +53,7 @@ function SanitizeInputBool($text)
 {
     if (preg_match('/^[01]$/', $text))
     {
-        $value = ($text=='0');
+        $value = ($text=='1');
     }
     else
     {

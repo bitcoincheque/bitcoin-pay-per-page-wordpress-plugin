@@ -61,6 +61,12 @@
                     "Title": "Log-out redirect",
                     "Type": "text",
                     "Default": "/"
+                },
+                {
+                    "Name": "TermsPage",
+                    "Title": "Terms and condition page",
+                    "Type": "text",
+                    "Default": "/terms"
                 }
             ]
         },

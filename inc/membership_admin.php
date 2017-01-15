@@ -22,7 +22,8 @@ function MembershipOptionDefault()
             'LoginPageLink' => '/login',
             'ProfilePageLink' => '/profile',
             'PasswordPageLink' => '/password',
-            'LogoutPage' => '/'
+            'LogoutPage' => '/',
+            'TermsPage' => '/terms'
         )
     );
     add_option(
@@ -118,6 +119,13 @@ function MembershipAdminMenu()
         'bcf_payperpage_linking_logoutpage_settings_field_id',
         'Log-out redirect',
         'BCF_PayPerPage\MembershipAdminDrawSettingsLinkingLogoutPage',
+        'bcf_payperpage_linking_settings_section_page',
+        'bcf_payperpage_linking_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_linking_termspage_settings_field_id',
+        'Terms and condition page',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsLinkingTermsPage',
         'bcf_payperpage_linking_settings_section_page',
         'bcf_payperpage_linking_settings_section_id'
     );
@@ -376,6 +384,17 @@ function MembershipAdminDrawSettingsLinkingLogoutPage()
         $selected = "";
     }
     echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[LogoutPage]" type="text" value="' . $selected . '" />';
+}
+
+function MembershipAdminDrawSettingsLinkingTermsPage()
+{
+    $options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
+    if(isset($options['TermsPage'])){
+        $selected = $options['TermsPage'];
+    }else{
+        $selected = "";
+    }
+    echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[TermsPage]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsemail_verificationverify_new_emails()

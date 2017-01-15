@@ -40,6 +40,7 @@ define('REG_DISPLAY_NAME',          'dispname');
 define('REG_PASSWORD',              'password');
 define('REG_CONFIRM_PW',            'confirmpw');
 define('REG_REMEMBER',              'remmember');
+define('REG_ACCEPT_TERMS',          'accept_terms');
 define('REG_EMAIL',                 'email');
 define('REG_POST_ID',               'post_id');
 define('REG_ERROR_MSG',             'error_message');
@@ -280,30 +281,38 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
                     }
                 }else{
                     $msg = 'Page error. Missing username or password in request.';
+                    WriteDebugError($msg);
                 }
                 break;
 
             case REG_EVENT_REGISTER_EMAIL:
-                if($input_data[REG_EMAIL])
+                if($input_data[REG_ACCEPT_TERMS])
                 {
-                    if($this->RegisterEmail($input_data[ REG_EMAIL ]))
+                    if($input_data[REG_EMAIL])
                     {
-                        StatisticsVerifyEmail($input_data[REG_POST_ID]);
+                        if($this->RegisterEmail($input_data[ REG_EMAIL ]))
+                        {
+                            StatisticsVerifyEmail($input_data[ REG_POST_ID ]);
 
-                        $ok = true;
-                        $action = REG_RESP_ACTION_LOAD_FORM;
-                        $texts[TEXT_FIELD_GREEN_MSG] = 'A verification e-mail has been sent to you. Please check your e-mail.';
-                        $form = $this->GetCheckYourEmailFormHtml($texts);
-                    }
-                    else
-                    {
-                        $msg = $this->GetErrorMessage();
-                        if(!$msg){
-                            $msg = 'Error registering e-mail';
+                            $ok                            = true;
+                            $action                        = REG_RESP_ACTION_LOAD_FORM;
+                            $texts[ TEXT_FIELD_GREEN_MSG ] = 'A verification e-mail has been sent to you. Please check your e-mail.';
+                            $form                          = $this->GetCheckYourEmailFormHtml($texts);
                         }
+                        else
+                        {
+                            $msg = $this->GetErrorMessage();
+                            if( ! $msg)
+                            {
+                                $msg = 'Error registering e-mail';
+                            }
+                        }
+                    }else{
+                        $msg = 'Page error. Missing e-mail in request.';
+                        WriteDebugError($msg);
                     }
                 }else{
-                    $msg = 'Missing e-mail';
+                    $msg = 'You must tick of to accept the terms and conditions.';
                 }
                 break;
 
@@ -764,6 +773,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
     {
         WriteDebugLogFunctionCall();
 
+        $link_options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
+
         $form_code = '';
         $hidden_fields = null;
         $texts[TEXT_FIELD_HEADER] = 'Register e-mail address';
@@ -775,6 +786,8 @@ class RegistrationInterfaceClass extends RegistrationHandlerClass
         $login_form .= '<td class="bcf_pppc_table_cell_form"><lable class="bcf_pppc_label">E-mail address:</lable></td>';
         $login_form .= '</tr><tr>';
         $login_form .= '<td class="bcf_pppc_table_forms"><input id="bcf_pppc_email" type="text" class="bcf_pppc_text_input" value="" name="email" /></td>';
+        $login_form .= '</tr><tr>';
+        $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_accept_terms" type="checkbox" class="bcf_pppc_checkbox_input" value="0" name="terms" />Yes, I accept the <a href="' . $link_options['TermsPage'] . '" target="_blank">terms and condition</a>.</td>';
         $login_form .= '</tr><tr>';
         $login_form .= '<td class="bcf_pppc_table_cell_form"><input id="bcf_pppc_do_register_email" type="button" value="Register" class="bcf_pppc_button" /> </td>';
         $login_form .= '</tr><tr>';

@@ -407,6 +407,7 @@ function AjaxDoLogin()
     $input_data[REG_EMAIL]      = SafeReadPostString(REG_EMAIL);
     $input_data[REG_POST_ID]    = SafeReadPostInt(REG_POST_ID);
     $input_data[REG_REMEMBER]   = SafeReadPostBool(REG_REMEMBER);
+    $input_data[REG_ACCEPT_TERMS]= SafeReadPostBool(REG_ACCEPT_TERMS);
 
     $register_interface = new RegistrationInterfaceClass($reg_id, $nonce);
     $response_data = $register_interface->EventHandler($input_data);
@@ -796,7 +797,7 @@ function add_meta_data()
 function Init()
 {
     $src = plugin_dir_url( __FILE__ ) . 'js/script.js';
-    wp_enqueue_script('bcf_payperpage_script_handler', $src, array( 'jquery' ), '0.2', true);
+    wp_enqueue_script('bcf_payperpage_script_handler', $src, array( 'jquery' ), '0.4', true);
 
     if(!isset($_COOKIE[BCF_PAYPAGE_OPTION_COOKIE_NAME]))
     {
