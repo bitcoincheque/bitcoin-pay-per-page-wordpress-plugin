@@ -31,7 +31,7 @@ function pppc_compact_login_widget()
     }
     else
     {
-        $output = '<a href="' . $link_options['LoginPageLink'] . '">Login</a> <a href="' . $link_options['LoginPageLink'] . '">Register</a>';
+        $output = '<a href="' . $link_options['LoginPageLink'] . '">Login</a> <a href="' . $link_options['RegisterPageLink'] . '">Register</a>';
     }
 
     return $output;
