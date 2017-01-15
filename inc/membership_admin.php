@@ -18,6 +18,7 @@ function MembershipOptionDefault()
     );
     add_option(
         BCF_PAYPERPAGE_LINKING_OPTION, array(
+            'RegisterPageLink' => '/register',
             'LoginPageLink' => '/login',
             'ProfilePageLink' => '/profile',
             'PasswordPageLink' => '/password',
@@ -84,6 +85,13 @@ function MembershipAdminMenu()
         'Page linking',
         'BCF_PayPerPage\MembershipAdminDrawSettingsHelpLinking',
         'bcf_payperpage_linking_settings_section_page'
+    );
+    add_settings_field(
+        'bcf_payperpage_linking_registerpagelink_settings_field_id',
+        'Register new member page',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsLinkingRegisterPageLink',
+        'bcf_payperpage_linking_settings_section_page',
+        'bcf_payperpage_linking_settings_section_id'
     );
     add_settings_field(
         'bcf_payperpage_linking_loginpagelink_settings_field_id',
@@ -313,6 +321,17 @@ function MembershipAdminDrawSettingsMembershipRequireEmailConfirmation()
         $selected = false;
     }
     echo '<input name="' . BCF_PAYPERPAGE_MEMBERSHIP_OPTION . '[RequireEmailConfirmation]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
+}
+
+function MembershipAdminDrawSettingsLinkingRegisterPageLink()
+{
+    $options = get_option(BCF_PAYPERPAGE_LINKING_OPTION);
+    if(isset($options['RegisterPageLink'])){
+        $selected = $options['RegisterPageLink'];
+    }else{
+        $selected = "";
+    }
+    echo '<input name="' . BCF_PAYPERPAGE_LINKING_OPTION . '[RegisterPageLink]" type="text" value="' . $selected . '" />';
 }
 
 function MembershipAdminDrawSettingsLinkingLoginPageLink()

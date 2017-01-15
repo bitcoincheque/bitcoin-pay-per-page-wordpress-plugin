@@ -33,6 +33,12 @@
 
             "Fields" : [
                 {
+                    "Name" : "RegisterPageLink",
+                    "Title" : "Register new member page",
+                    "Type" : "text",
+                    "Default" : "/register"
+                },
+                {
                     "Name" : "LoginPageLink",
                     "Title" : "Login page",
                     "Type" : "text",
