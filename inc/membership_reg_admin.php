@@ -43,7 +43,7 @@ function MembershipDrawRegAdminPage()
 {
     echo '<div class="wrap">';
     echo '<h2>Registration status</h2>';
-    echo '<p>Status for membership registrations.</p>';
+    echo '<p>Status for membership registrations. Completed registrations are put in Wordpress user database. Registrations are removed after 48 hours.</p>';
 
     global $wpdb;
     $prefixed_table_name = $wpdb->prefix . 'bcf_payperpage_registration';
@@ -85,7 +85,7 @@ function MembershipDrawRegAdminPage()
     }
 
     echo '<h2>Password reqovery status</h2>';
-    echo '<p>Status for members password recovery.</p>';
+    echo '<p>Status for members password recovery. Password request are removed after 48 hours.</p>';
 
     echo '<table border="1">';
     echo '<tr>';
