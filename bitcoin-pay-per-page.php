@@ -277,9 +277,9 @@ function FilterContent( $content )
             $from_url = SanitizeInputText($_SERVER['HTTP_REFERER']);
             $domain = parse_url($from_url, PHP_URL_HOST);
             $domain = explode('.', $domain);
-            if(count($domain) == 2)
+            if(count($domain) >= 2)
             {
-                if($domain[0] == 'google')
+                if($domain[count($domain)-2] == 'google')
                 {
                     $free_visitor_from_google = true;
                 }
