@@ -13,7 +13,8 @@ function MembershipOptionDefault()
     add_option(
         BCF_PAYPERPAGE_MEMBERSHIP_OPTION, array(
             'RequireMembership' => '1',
-            'RequireEmailConfirmation' => '0'
+            'RequireEmailConfirmation' => '0',
+            'GoogleVisitorsFree' => '0'
         )
     );
     add_option(
@@ -78,6 +79,13 @@ function MembershipAdminMenu()
         'bcf_payperpage_membership_requireemailconfirmation_settings_field_id',
         'Require membership sign-up before payments',
         'BCF_PayPerPage\MembershipAdminDrawSettingsMembershipRequireEmailConfirmation',
+        'bcf_payperpage_membership_settings_section_page',
+        'bcf_payperpage_membership_settings_section_id'
+    );
+    add_settings_field(
+        'bcf_payperpage_membership_googlevisitorsfree_settings_field_id',
+        'Visitors from Google search can read page without payment and membership',
+        'BCF_PayPerPage\MembershipAdminDrawSettingsMembershipGoogleVisitorsFree',
         'bcf_payperpage_membership_settings_section_page',
         'bcf_payperpage_membership_settings_section_id'
     );
@@ -329,6 +337,17 @@ function MembershipAdminDrawSettingsMembershipRequireEmailConfirmation()
         $selected = false;
     }
     echo '<input name="' . BCF_PAYPERPAGE_MEMBERSHIP_OPTION . '[RequireEmailConfirmation]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
+}
+
+function MembershipAdminDrawSettingsMembershipGoogleVisitorsFree()
+{
+    $options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
+    if(isset($options['GoogleVisitorsFree'])){
+        $selected = $options['GoogleVisitorsFree'];
+    }else{
+        $selected = false;
+    }
+    echo '<input name="' . BCF_PAYPERPAGE_MEMBERSHIP_OPTION . '[GoogleVisitorsFree]" type="checkbox" value="1" ' . checked(1, $selected, false) . ' />';
 }
 
 function MembershipAdminDrawSettingsLinkingRegisterPageLink()

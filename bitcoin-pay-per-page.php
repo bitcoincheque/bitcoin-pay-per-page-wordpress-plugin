@@ -253,6 +253,7 @@ function FilterContent( $content )
 
         $payment_options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
 
+        $free_visitor_from_google = false;
         $must_login_first = false;
         $payment_required = false;
         $registration_open = false;
@@ -271,6 +272,20 @@ function FilterContent( $content )
         $has_paid = $pageview_manager->HasUserPaidForThisPage($post_id);
 
         $member_options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
+        if(isset($member_options['GoogleVisitorsFree']) and $member_options['GoogleVisitorsFree'] == '1')
+        {
+            $from_url = SanitizeInputText($_SERVER['HTTP_REFERER']);
+            $domain = parse_url($from_url, PHP_URL_HOST);
+            $domain = explode('.', $domain);
+            if(count($domain) == 2)
+            {
+                if($domain[0] == 'google')
+                {
+                    $free_visitor_from_google = true;
+                }
+            }
+        }
+
         if(isset($member_options['RequireMembership']) and $member_options['RequireMembership'] == '1')
         {
             if(!is_user_logged_in())
@@ -293,30 +308,37 @@ function FilterContent( $content )
             }
         }
 
-        if($must_login_first)
+        if($free_visitor_from_google)
         {
-            $draw_free_content = true;
-            $draw_login_form = true;
-            $draw_protected_content_placeholder = true;
+            $draw_all_content = true;
         }
         else
         {
-            if($payment_required)
+            if($must_login_first)
             {
-                if($has_paid)
-                {
-                    $draw_all_content = true;
-                }
-                else
-                {
-                    $draw_free_content                  = true;
-                    $draw_payment_form                  = true;
-                    $draw_protected_content_placeholder = true;
-                }
+                $draw_free_content                  = true;
+                $draw_login_form                    = true;
+                $draw_protected_content_placeholder = true;
             }
             else
             {
-                $draw_all_content = true;
+                if($payment_required)
+                {
+                    if($has_paid)
+                    {
+                        $draw_all_content = true;
+                    }
+                    else
+                    {
+                        $draw_free_content                  = true;
+                        $draw_payment_form                  = true;
+                        $draw_protected_content_placeholder = true;
+                    }
+                }
+                else
+                {
+                    $draw_all_content = true;
+                }
             }
         }
 

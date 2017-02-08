@@ -23,6 +23,12 @@
                     "Title": "Require membership sign-up before payments",
                     "Type": "checkbox",
                     "Default": "0"
+                },
+                {
+                    "Name": "GoogleVisitorsFree",
+                    "Title": "Visitors from Google search can read page without payment and membership",
+                    "Type": "checkbox",
+                    "Default": "0"
                 }
             ]
         },
