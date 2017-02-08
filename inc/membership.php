@@ -240,7 +240,7 @@ function ScheduleEvent()
 {
     WriteDebugNote('ScheduleEvent.');
 
-    $timeout = 48*60*60;
+    $timeout = 720*60*60;  // Keep the records for 720 hours = 30 days.
 
     global $wpdb;
     $prefixed_table_name = $wpdb->prefix . 'bcf_payperpage_registration';
