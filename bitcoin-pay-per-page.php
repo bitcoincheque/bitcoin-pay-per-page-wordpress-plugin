@@ -272,16 +272,44 @@ function FilterContent( $content )
         $has_paid = $pageview_manager->HasUserPaidForThisPage($post_id);
 
         $member_options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
+
         if(isset($member_options['GoogleVisitorsFree']) and $member_options['GoogleVisitorsFree'] == '1')
         {
-            $from_url = SanitizeInputText($_SERVER['HTTP_REFERER']);
-            $domain = parse_url($from_url, PHP_URL_HOST);
-            $domain = explode('.', $domain);
-            if(count($domain) >= 2)
+
+            if(isset($_SERVER['HTTP_USER_AGENT']))
             {
-                if($domain[count($domain)-2] == 'google')
+                $agent = SanitizeInputText($_SERVER['HTTP_USER_AGENT']);
+
+                $notice = "HTTP_USER_AGENT=" . $agent;
+                WriteDebugNote($notice);
+
+                if(preg_match('/bot|crawl|slurp|spider|Google|Yahoo|msnbot/i', $agent))
                 {
+                    WriteDebugNote($notice, 'Search agent. Show all page.');
                     $free_visitor_from_google = true;
+                }
+
+            }
+
+            if(isset($_SERVER['HTTP_REFERER']))
+            {
+                $from_url = SanitizeInputText($_SERVER['HTTP_REFERER']);
+
+                $notice = "HTTP_REFERER=" . $from_url;
+                WriteDebugNote($notice);
+
+                $domain   = parse_url($from_url, PHP_URL_HOST);
+                $domain   = explode('.', $domain);
+                if(count($domain) >= 2)
+                {
+                    $notice = "domain=" . $domain[ count($domain) - 2 ];
+                    WriteDebugNote($notice);
+
+                    if(($domain[ count($domain) - 2 ] == 'google') || ($domain[ count($domain) - 2 ] == 'googleboot'))
+                    {
+                        WriteDebugNote($notice, 'Google search. Show all page.');
+                        $free_visitor_from_google = true;
+                    }
                 }
             }
         }
