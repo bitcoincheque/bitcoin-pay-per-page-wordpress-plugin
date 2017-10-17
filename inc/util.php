@@ -65,7 +65,7 @@ function SanitizeInputBool($text)
 
 function SafeReadGetString($key)
 {
-    if(!empty($_GET[$key]))
+    if(isset($_GET[$key]))
     {
         return SanitizeInputText($_REQUEST[$key]);
     }
@@ -77,7 +77,7 @@ function SafeReadGetString($key)
 
 function SafeReadGetInt($key)
 {
-    if(!empty($_GET[$key]))
+    if(isset($_GET[$key]))
     {
         return SanitizeInputInteger($_REQUEST[$key]);
     }
@@ -89,7 +89,7 @@ function SafeReadGetInt($key)
 
 function SafeReadGetBool($key)
 {
-    if(!empty($_GET[$key]))
+    if(isset($_GET[$key]))
     {
         return SanitizeInputBool($_POST[$key]);
     }
@@ -101,7 +101,7 @@ function SafeReadGetBool($key)
 
 function SafeReadPostString($key)
 {
-    if(!empty($_POST[$key]))
+    if(isset($_POST[$key]))
     {
         return SanitizeInputText($_POST[$key]);
     }
@@ -113,7 +113,7 @@ function SafeReadPostString($key)
 
 function SafeReadPostInt($key)
 {
-    if(!empty($_POST[$key]))
+    if(isset($_POST[$key]))
     {
         return SanitizeInputInteger($_POST[$key]);
     }
@@ -125,7 +125,7 @@ function SafeReadPostInt($key)
 
 function SafeReadPostBool($key)
 {
-    if(!empty($_POST[$key]))
+    if(isset($_POST[$key]))
     {
         return SanitizeInputBool($_POST[$key]);
     }
