@@ -236,6 +236,41 @@ function MembershipRandomString($length)
     return $str;
 }
 
+function AjaxHandler()
+{
+    $reg_id                     = SafeReadPostInt(REG_ID);
+    $input_data[REG_TYPE]       = SafeReadPostInt(REG_TYPE);
+    $nonce                      = SafeReadPostString(REG_NONCE);
+    $secret                     = SafeReadPostString(REG_SECRET);
+    $input_data[REG_POST_ID]    = SafeReadPostInt(REG_POST_ID);
+    $input_data[REG_EVENT]      = SafeReadPostString(REG_EVENT);
+    $input_data[REG_USERNAME]   = SafeReadPostString(REG_USERNAME);
+    $input_data[REG_FIRSTNAME]  = SafeReadPostString(REG_FIRSTNAME);
+    $input_data[REG_LASTNAME]   = SafeReadPostString(REG_LASTNAME);
+    $input_data[REG_PASSWORD]   = SafeReadPostString(REG_PASSWORD);
+    $input_data[REG_CONFIRM_PW] = SafeReadPostString(REG_CONFIRM_PW);
+    $input_data[REG_EMAIL]      = SafeReadPostString(REG_EMAIL);
+    $input_data[REG_REMEMBER]   = SafeReadPostBool(REG_REMEMBER);
+    $input_data[REG_ACCEPT_TERMS]= SafeReadPostBool(REG_ACCEPT_TERMS);
+
+    $register_interface = new RegistrationInterfaceClass($reg_id, $input_data[REG_TYPE], $input_data[REG_POST_ID], $nonce, $secret);
+    $response_data = $register_interface->EventHandler($input_data);
+
+    if($response_data[REG_RESP_STATUS] == REG_RESP_STATUS_LOGGED_IN)
+    {
+        $response_data['action'] = 'load_remaining_content';
+
+        $nonce_string = 'bcf_payperpage_load_rest_of_content-' . strval($input_data[REG_POST_ID]);
+        $wp_nonce = wp_create_nonce($nonce_string);
+        $send_js_data['wp_nonce'] = $wp_nonce;
+        $send_js_data['postid'] = get_the_ID();
+        MembershipPrepareAjaxAndStyle($send_js_data);
+    }
+
+    echo json_encode($response_data);
+    die();
+}
+
 function ScheduleEvent()
 {
     WriteDebugNote('ScheduleEvent.');
