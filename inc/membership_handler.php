@@ -44,34 +44,78 @@ class RegistrationHandlerClass
     private $has_data = false;
     private $error_message = '';
 
-    public function __construct($reg_id=null, $nonce=null)
+    public function __construct($reg_id, $reg_type, $post_id, $nonce, $secret)
     {
-        $this->registration_data = new MembershipRegistrationDataClass();
+        $this->has_data = true;
 
         if($reg_id != null)
         {
-            if($nonce)
+            $this->registration_data = new MembershipRegistrationDataClass();
+
+            if($this->registration_data->LoadData($reg_id))
             {
-                if($this->registration_data->LoadData($reg_id))
+                $my_reg_type = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::REG_TYPE);
+                if($my_reg_type != 0)
                 {
-                    $my_nonce = $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
-                    if($nonce === $my_nonce)
+                    if($my_reg_type != $reg_type)
                     {
-                        $this->has_data = true;
+                        $this->has_data = false;
                     }
-                    else
+                }
+
+                $my_post_id = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::POST_ID);
+                if($my_post_id != 0)
+                {
+                    if($my_post_id != $post_id)
                     {
-                        $this->registration_data = new MembershipRegistrationDataClass();
-                        $cookie = MembershipGetCookie();
-                        $this->registration_data->SetDataString(MembershipRegistrationDataClass::COOCKIE, $cookie);
+                        $this->has_data = false;
+                    }
+                }
+
+                $my_nonce = $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+                if($my_nonce != '')
+                {
+                    if($my_nonce != $nonce)
+                    {
+                        $this->has_data = false;
+                    }
+                }
+
+                $my_secret = $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
+                if($my_secret != '')
+                {
+                    if($my_secret != $secret)
+                    {
+                        $this->has_data = false;
                     }
                 }
             }
         }
         else
         {
+            $this->has_data = false;
+        }
+
+        if($this->has_data == false)
+        {
+            $this->registration_data = new MembershipRegistrationDataClass();
             $cookie = MembershipGetCookie();
             $this->registration_data->SetDataString(MembershipRegistrationDataClass::COOCKIE, $cookie);
+            $this->registration_data->SetDataInt(MembershipRegistrationDataClass::TIMESTAMP, time());
+            $nonce = MembershipRandomString(NONCE_LENGTH);
+            $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
+
+            /*
+            if($reg_type)
+            {
+                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::POST_ID, $reg_type);
+            }
+            */
+
+            if($post_id)
+            {
+                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::POST_ID, $post_id);
+            }
         }
     }
 
@@ -460,51 +504,133 @@ class RegistrationHandlerClass
 
     public function GetRegId()
     {
-        return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::ID);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::ID);
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public function GetRegType()
+    {
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::REG_TYPE);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetNonce()
     {
-        return $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetSecret()
     {
-        return $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetRegistrationState()
     {
-        return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::STATE);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::STATE);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetUsername()
     {
-        return $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetPassword()
     {
-        return $this->registration_data->GetDataString(MembershipRegistrationDataClass::PASSWORD);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::PASSWORD);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetEmail()
     {
-        return $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetWpUserId()
     {
-        return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::WP_USER_ID);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::WP_USER_ID);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetCookie()
     {
-        return $this->registration_data->GetDataString(MembershipRegistrationDataClass::COOCKIE);
+        if($this->has_data)
+        {
+            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::COOCKIE);
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public function GetErrorMessage()
     {
-        return $this->error_message;
+        if($this->has_data)
+        {
+            return $this->error_message;
+        }
+        else
+        {
+            return null;
+        }
     }
 }
