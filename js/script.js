@@ -10,24 +10,6 @@ var processing_text = "";
 
 jQuery(document).ready(function($)
 {
-    function GetCheckInputTextFormData(selector, error_message) {
-        var text = $(selector).val();
-        if(text == '') {
-            $(selector).css('border', '1px solid red');
-            SetStatusMessage('error', error_message);
-        }
-        return text;
-    }
-
-    function GetCheckInputCheckboxFormData(selector, error_message) {
-        var checked = $(selector).is(":checked")?1:0;
-        if(checked == 0) {
-            $(selector).css('border', '1px solid red');
-            SetStatusMessage('error', error_message);
-        }
-        return checked;
-    }
-
     function SetStatusMessage(color_code, message){
         var span_class = 'bcf_pppc_status_info';
         switch (color_code)
@@ -62,113 +44,36 @@ jQuery(document).ready(function($)
         }, 'json');
     }
 
-    $(document).on('click', '#bcf_pppc_do_login', function() {
-        var username = GetCheckInputTextFormData('#bcf_pppc_username', 'Username missing.');
-        var password = GetCheckInputTextFormData('#bcf_pppc_password', 'Password missing.');
-        var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
-        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
+    $(document).on('click', '#bcf_pppc_post_data', function() {
+        var data = {};
 
-        if (username == '' && password == '') {
-            SetStatusMessage('error','Username and password missing');
+        data['event'] = this.name;
+
+        var input_list = $('input.bcf_form_field');
+        for(var i=0; i<input_list.length; i++) {
+            input_item = input_list[i];
+            var element_name = input_item.name;
+            var element_value = '';
+            switch(input_item.type) {
+                case 'text':
+                    element_value = input_item.value;
+                    break;
+                case 'checkbox':
+                    element_value = input_item.checked?1:0;
+                    break;
+                case 'password':
+                    element_value = input_item.value;
+                    break;
+                case 'hidden':
+                    element_value = input_item.value;
+                    break;
+                default:
+                    element_value = null;
+                    break;
+            }
+            data[element_name] = element_value;
         }
 
-        if (username != '' && password != '') {
-            SetStatusMessage('info', 'Logging in...');
-
-            var data = {
-                action: 'bcf_pppc_do_login',
-                rid : reg_id,
-                event: 'login',
-                username: username,
-                password: password,
-                post_id : pppc_script_handler_vars.postid,
-                nonce: nonce,
-                wp_nonce: pppc_script_handler_vars.wp_nonce
-            };
-
-            load_register_form(data);
-        }
-    });
-
-    $(document).on('click', '#bcf_pppc_do_register', function() {
-        var username = GetCheckInputTextFormData('input#bcf_pppc_username', 'Username missing.');
-        var password = GetCheckInputTextFormData('input#bcf_pppc_password', 'Password missing.');
-        var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
-        var post_id = GetCheckInputTextFormData('input#bcf_pppc_post_id', '');
-        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
-
-        if (username == '' && password == '') {
-            SetStatusMessage('error','You must select a username and password to register');
-        }
-
-        if (username != '' && password != '') {
-            var data = {
-                action: 'bcf_pppc_do_login',
-                rid : reg_id,
-                event: 'register',
-                username: username,
-                password: password,
-                post_id: post_id,
-                nonce: nonce,
-                wp_nonce: pppc_script_handler_vars.wp_nonce
-            };
-
-            SetStatusMessage('info', 'Register...');
-
-            load_register_form(data);
-        }
-    });
-
-    $(document).on('click', '#bcf_pppc_do_register_email', function() {
-        var email = GetCheckInputTextFormData('#bcf_pppc_email', 'E-mail address missing.');
-        var accept_terms = GetCheckInputCheckboxFormData('#bcf_pppc_accept_terms', 'You must accept the terms.');
-        var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
-        var post_id = GetCheckInputTextFormData('input#bcf_pppc_post_id', '');
-        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
-
-        if((email != '') && (accept_terms==1)) {
-            var data = {
-                action: 'bcf_pppc_do_login',
-                rid : reg_id,
-                event: 'register_email',
-                accept_terms: accept_terms,
-                email: email,
-                post_id: post_id,
-                nonce: nonce,
-                wp_nonce: pppc_script_handler_vars.wp_nonce
-            };
-
-            SetStatusMessage('info', 'Register and sending you verification e-mail...');
-
-            load_register_form(data);
-        }
-    });
-
-    $(document).on('click', '#bcf_pppc_do_return_login' , function(){
-        var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
-        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
-
-        var data = {
-            action: 'bcf_pppc_do_login',
-            rid : reg_id,
-            event: 'goto_login',
-            nonce: nonce,
-            wp_nonce: pppc_script_handler_vars.wp_nonce
-        };
-        load_register_form(data);
-    });
-
-    $(document).on('click', '#bcf_pppc_do_resend_email' , function(){
-        var reg_id = GetCheckInputTextFormData('input#bcf_pppc_reg_id', '');
-        var nonce = GetCheckInputTextFormData('input#bcf_pppc_nonce', '');
-
-        var data = {
-            action: 'bcf_pppc_do_login',
-            rid : reg_id,
-            event: 'resend_register',
-            nonce: nonce,
-            wp_nonce: pppc_script_handler_vars.wp_nonce
-        };
         load_register_form(data);
     });
 

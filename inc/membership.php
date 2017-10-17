@@ -9,8 +9,6 @@
 
 namespace BCF_PayPerPage;
 
-use BCF_Email\Email;
-
 define ('BCF_PAYPAGE_REGISTRATION_COOKIE_NAME', 'payperpage_registration');
 
 define ('REG_AJAX_ACTION', 'pppc_membership_event');
@@ -49,8 +47,81 @@ function MembershipInit()
                 break;
         }
     }
+    else
+    {
+        $reg_type = SafeReadGetInt(REG_TYPE);
+        $event = SafeReadGetString(REG_EVENT);
+
+        switch($reg_type)
+        {
+            case MembershipRegistrationDataClass::REG_TYPE_READ_MORE_REGISTRATION:
+                switch($event)
+                {
+                    case REG_EVENT_CONFIRM_EMAIL:
+                        $reg_id     = SafeReadGetInt(REG_ID);
+                        $post_id    = SafeReadGetInt(REG_POST_ID);
+                        $nonce      = SafeReadGetString(REG_NONCE);
+                        $secret     = SafeReadGetString(REG_SECRET);
+
+                        $register_handler = new RegistrationHandlerClass(
+                            $reg_id,
+                            $reg_type,
+                            $post_id,
+                            $nonce,
+                            $secret
+                        );
+
+                        if($register_handler->HasUserData())
+                        {
+                            $result = $register_handler->ConfirmEmail();
+
+                            switch ($result)
+                            {
+                                case RegistrationHandlerClass::RESULT_OK:
+                                    if ($register_handler->HasAllRequiredInfo())
+                                    {
+                                        if (!$register_handler->UserExist())
+                                        {
+                                            if (!$register_handler->EmailExist())
+                                            {
+                                                if ($register_handler->CreateNewUser())
+                                                {
+                                                    $register_handler->LogInRegisteredUser();
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+
+                                case RegistrationHandlerClass::RESULT_CONFIRM_IS_DONE:
+                                    $register_handler->LogInRegisteredUser();
+                                    break;
+                            }
+                        }
+                        break;
+                }
+                break;
+        }
+    }
 
     wp_logout_url( home_url());
+}
+
+function MembershipRegisterForm()
+{
+    MembershipPrepareAjaxAndStyle();
+
+    $reg_id                     = SafeReadGetInt(REG_ID);
+    $reg_type                   = SafeReadGetInt(REG_TYPE);
+    $nonce                      = SafeReadGetString(REG_NONCE);
+    $input_data[REG_SECRET]     = SafeReadGetString(REG_SECRET);
+    $input_data[REG_EVENT]      = SafeReadGetString(REG_EVENT);
+
+    $input_data[REG_POST_ID] = get_the_ID();
+
+    $register_interface = new RegistrationInterfaceClass($reg_id, $reg_type, $input_data[REG_POST_ID], $nonce, $input_data[REG_SECRET]);
+
+    return $register_interface->CreateRegisterForm($input_data);
 }
 
 function MembershipLogin()
@@ -118,6 +189,7 @@ function PasswordResetForm()
     $input_data[REG_EVENT]      = SafeReadPostString(REG_EVENT);
     if($input_data[REG_EVENT])
     {
+        /* Post method for sending new password */
         $reg_id                       = SafeReadPostInt(REG_ID);
         $nonce                        = SafeReadPostString(REG_NONCE);
         $input_data[ REG_EMAIL ]      = SafeReadPostString(REG_EMAIL);
@@ -126,13 +198,24 @@ function PasswordResetForm()
     }
     else
     {
+        /* Get method from e-mail link */
         $reg_id                       = SafeReadGetInt(REG_ID);
         $nonce                        = SafeReadGetString(REG_NONCE);
-        $input_data[REG_EVENT]        = SafeReadGetString(REG_EVENT);
         $input_data[REG_SECRET]       = SafeReadGetString(REG_SECRET);
+        $input_data[REG_EVENT]        = SafeReadGetString(REG_EVENT);
+
+        $input_data[REG_TYPE]         = MembershipRegistrationDataClass::REG_TYPE_PASSWORD_RECOVERY;
     }
 
-    $register_interface = new RegistrationInterfaceClass($reg_id, $nonce);
+    $post_id = get_the_ID();
+
+    $register_interface = new RegistrationInterfaceClass(
+        $reg_id,
+        MembershipRegistrationDataClass::REG_TYPE_PASSWORD_RECOVERY,
+        $post_id,
+        $nonce,
+        $input_data[REG_SECRET]
+    );
 
     MembershipPrepareAjaxAndStyle();
 
@@ -327,5 +410,9 @@ function DeactivateMembershipPlugin()
     wp_clear_scheduled_hook('pppc_hourly_event');
 
 }
+
+/* Add AJAX handlers */
+add_action('wp_ajax_'.REG_AJAX_ACTION, 'BCF_PayPerPage\AjaxHandler');
+add_action('wp_ajax_nopriv_'.REG_AJAX_ACTION, 'BCF_PayPerPage\AjaxHandler');
 
 add_action('pppc_hourly_event', 'BCF_PayPerPage\ScheduleEvent');

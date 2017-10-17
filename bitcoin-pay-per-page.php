@@ -228,27 +228,35 @@ function GetProtectedContentPlaceholder()
 function FilterContent( $content )
 {
     $register_result = null;
+    $modified_content = '';
 
     $post_id_val = get_the_ID();
-
-    $input_data[ REG_EVENT ] = SafeReadGetString(REG_EVENT);
-    if($input_data[ REG_EVENT ] == REG_EVENT_CONFIRM_EMAIL)
-    {
-        $reg_id                     = SafeReadGetInt(REG_ID);
-        $nonce                      = SafeReadGetString(REG_NONCE);
-        $input_data[ REG_POST_ID ]  = SafeReadGetInt(REG_POST_ID);
-        $input_data[ REG_SECRET ]   = SafeReadGetString(REG_SECRET);
-
-        $register_interface = new RegistrationInterfaceClass($reg_id, $nonce);
-        $register_result = $register_interface->EventHandler($input_data, $post_id_val);
-    }
-
-    $modified_content = '';
 
     $position = strpos($content, BCF_PAYPAGE_REQUIRE_PAYMENT_TAG);
 
     if($position)
     {
+        $input_data[ REG_EVENT ] = SafeReadGetString(REG_EVENT);
+        if($input_data[ REG_EVENT ] == REG_EVENT_CONFIRM_EMAIL)
+        {
+            $reg_id                     = SafeReadGetInt(REG_ID);
+            $input_data[ REG_TYPE ]     = SafeReadGetInt(REG_TYPE);
+            $nonce                      = SafeReadGetString(REG_NONCE);
+            $secret                     = SafeReadGetString(REG_SECRET);
+            $input_data[ REG_POST_ID ]  = SafeReadGetInt(REG_POST_ID);
+            $input_data[ REG_SECRET ]   = SafeReadGetString(REG_SECRET);
+
+            $register_interface = new RegistrationInterfaceClass(
+                $reg_id,
+                MembershipRegistrationDataClass::REG_TYPE_READ_MORE_REGISTRATION,
+                $post_id_val,
+                $nonce,
+                $secret
+            );
+
+            $register_result = $register_interface->EventHandler($input_data, $post_id_val);
+        }
+
         WriteDebugNote('Load free protected content post_id=' . strval($post_id_val));
 
         $payment_options = get_option(BCF_PAYPAGE_PAYMENT_OPTIONS);
@@ -377,19 +385,16 @@ function FilterContent( $content )
 
         if($draw_login_form)
         {
-            $register_interface = new RegistrationInterfaceClass();
-
-            $modified_content .= '<div id="bcf_pppc_login_form">';
-            $post_id = get_the_ID();
             if($registration_open)
             {
                 $modified_content .= $register_result[REG_RESP_FORM];
             }
             else{
+                $post_id = get_the_ID();
+                $register_interface = new RegistrationInterfaceClass(null, MembershipRegistrationDataClass::REG_TYPE_READ_MORE_REGISTRATION, $post_id);
                 $texts = array();
                 $modified_content .= $register_interface->CreatePostContentForm($texts, $post_id);
             }
-            $modified_content .= '</div>';
 
             $add_ajax_handling = true;
 
@@ -817,7 +822,7 @@ function add_meta_data()
 function Init()
 {
     $src = plugin_dir_url( __FILE__ ) . 'js/script.js';
-    wp_enqueue_script('bcf_payperpage_script_handler', $src, array( 'jquery' ), '0.4', true);
+    wp_enqueue_script('bcf_payperpage_script_handler', $src, array( 'jquery' ), '0.12', true);
 
     if(!isset($_COOKIE[BCF_PAYPAGE_OPTION_COOKIE_NAME]))
     {
@@ -1478,6 +1483,7 @@ add_filter( 'the_content', 'BCF_PayPerPage\FilterContent');
 /* Add shortcodes */
 add_shortcode( 'testingpage', 'BCF_PayPerPage\testingpage' );
 add_shortcode( 'remove_payments', 'BCF_PayPerPage\remove_payments' );
+add_shortcode( 'pppc_register', 'BCF_PayPerPage\MembershipRegisterForm' );
 add_shortcode( 'pppc_login', 'BCF_PayPerPage\MembershipLogin' );
 add_shortcode('pppc_profile', 'BCF_PayPerPage\ProfileForm');
 add_shortcode('pppc_reset_password', 'BCF_PayPerPage\PasswordResetForm');

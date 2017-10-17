@@ -37,6 +37,7 @@ class MembershipRegistrationDataClass extends DataCollectionClass
     /* List of table field names: */
     const ID = 'registration_id';
     const TIMESTAMP = 'timestamp';
+    const REG_TYPE = 'reg_type';
     const STATE = 'state';
     const USERNAME = 'username';
     const PASSWORD = 'passwd';
@@ -48,13 +49,23 @@ class MembershipRegistrationDataClass extends DataCollectionClass
     const POST_ID = 'post_id';
     const SECRET = 'secret';
 
+    /* Registration types: */
+    const REG_TYPE_NOT_SET = 0;
+    const REG_TYPE_READ_MORE_REGISTRATION = 1;
+    const REG_TYPE_USER_REGISTRATION = 2;
+    const REG_TYPE_PASSWORD_RECOVERY = 3;
+    const REG_TYPE_LOGIN = 4;
+    const REG_TYPE_LOGOUT = 5;
+    const REG_TYPE_PROFILE = 6;
+
     /* State values: */
     const STATE_EMAIL_UNCONFIRMED = 0;
     const STATE_EMAIL_CONFIRMED = 1;
     const STATE_USER_CREATED = 2;
     const STATE_RESET_PASSWD_EMAIL_SENT = 3;
-    const STATE_RESET_PASSWD_DONE = 4;
-    const STATE_RESET_PASSWD_TIMEOUT = 5;
+    const STATE_RESET_PASSWD_EMAIL_CONFIRM = 4;
+    const STATE_RESET_PASSWD_DONE = 5;
+    const STATE_RESET_PASSWD_TIMEOUT = 6;
 
     /* Metadata describing database fields and data properties: */
     protected $MetaData = array
@@ -65,11 +76,17 @@ class MembershipRegistrationDataClass extends DataCollectionClass
             'db_primary_key'=> true,
             'default_value' => null
         ),
-        self::TIMESTAMP            => array(
+        self::TIMESTAMP     => array(
             'class_type'    => 'DateTimeTypeClass',
             'db_field_name' => self::TIMESTAMP,
             'db_primary_key'=> false,
             'default_value' => ''
+        ),
+        self::REG_TYPE      => array(
+            'class_type'    => 'UnsigedIntegerTypeClass',
+            'db_field_name' => self::REG_TYPE,
+            'db_primary_key'=> false,
+            'default_value' => self::REG_TYPE_NOT_SET
         ),
         self::STATE            => array(
             'class_type'    => 'UnsigedIntegerTypeClass',

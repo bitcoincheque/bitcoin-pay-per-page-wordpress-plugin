@@ -24,6 +24,10 @@ function GetRegStatusName($reg_status)
             $name='E-mail sent';
             break;
 
+        case MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_CONFIRM:
+            $name='E-mail verified';
+            break;
+
         case MembershipRegistrationDataClass::STATE_RESET_PASSWD_DONE:
             $name='Completed';
             break;
