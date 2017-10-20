@@ -1402,11 +1402,11 @@ function ActivatePlugin()
 
     ActivateMembershipPlugin();
 
-    $pageview_data = new PageView_Class();
-    $pageview_data->CreateDatabaseTable();
+    //$pageview_data = new PageView_Class();
+    //$pageview_data->CreateDatabaseTable();
 
-    $user_data = new UserDataClass();
-    $user_data->CreateDatabaseTable();
+    //$user_data = new UserDataClass();
+    //$user_data->CreateDatabaseTable();
 }
 
 

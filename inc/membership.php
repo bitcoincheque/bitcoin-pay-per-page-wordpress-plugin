@@ -395,10 +395,10 @@ function ActivateMembershipPlugin()
     MembershipOptionDefault();
 
     $registration_data = new MembershipRegistrationDataClass();
-    $registration_data->CreateDatabaseTable();
+    $registration_data->InitTable();
 
     $statistics_data = new StatisticsDataClass();
-    $statistics_data->CreateDatabaseTable();
+    $statistics_data->InitTable();
 
     if (! wp_next_scheduled ( 'pppc_hourly_event' )) {
         wp_schedule_event(time(), 'hourly', 'pppc_hourly_event');
