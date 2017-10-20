@@ -23,17 +23,14 @@
 
 namespace BCF_PayPerPage;
 
-require_once('data_collection.php');
-require_once('data_types.php');
+require_once(__DIR__ . '/../wp-plugin-utils/db_table.php');
 
-
-class PageView_Class extends DataCollectionClass
+class PageView_Class extends DataTableAbsClass
 {
     /* Database table name: */
-    const DB_TABLE_NAME = 'bcf_payperpage_pageview';
+    const TABLE_NAME = 'bcf_payperpage_pageview';
 
     /* List of table field names: */
-    const DB_FIELD_PAGEVIEW_ID = 'pageview_id';
     const DB_FIELD_DATETIME = 'datetime';
     const DB_FIELD_POST_ID = 'post_id';
     const DB_FIELD_USER_ID = 'user_id';
@@ -42,13 +39,7 @@ class PageView_Class extends DataCollectionClass
     const DB_FIELD_NONCE = 'nonce';
 
     /* Metadata describing database field and data properties: */
-    protected $MetaData = array(
-        self::DB_FIELD_PAGEVIEW_ID => array(
-            'class_type'    => 'PageViewIdTypeClass',
-            'db_field_name' => self::DB_FIELD_PAGEVIEW_ID,
-            'db_primary_key'=> true,
-            'default_value' => 0
-        ),
+    static $MetaData = array(
         self::DB_FIELD_DATETIME => array(
             'class_type'    => 'DateTimeTypeClass',
             'db_field_name' => self::DB_FIELD_DATETIME,
@@ -56,7 +47,7 @@ class PageView_Class extends DataCollectionClass
             'default_value' => ''
         ),
         self::DB_FIELD_POST_ID    => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
+            'class_type'    => 'DbTypeUnsignedInteger',
             'db_field_name' => self::DB_FIELD_POST_ID,
             'db_primary_key'=> false,
             'default_value' => 0

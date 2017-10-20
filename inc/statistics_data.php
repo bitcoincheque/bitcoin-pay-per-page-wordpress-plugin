@@ -25,17 +25,15 @@
 namespace BCF_PayPerPage;
 
 
-require_once('data_collection.php');
-require_once('data_types.php');
+require_once(__DIR__ . '/../wp-plugin-utils/db_table.php');
 
 
-class StatisticsDataClass extends DataCollectionClass
+class StatisticsDataClass extends DataTableAbsClass
 {
     /* Database table name: */
-    const DB_TABLE_NAME = 'bcf_payperpage_statistics';
+    const TABLE_NAME = 'bcf_payperpage_statistics';
 
     /* List of table field names: */
-    const STAT_ID = 'stat_id';
     const POST_ID = 'post_id';
     const PAGEVIEW = 'pageview';
     const REGISTER = 'register';
@@ -43,42 +41,26 @@ class StatisticsDataClass extends DataCollectionClass
     const COMPLETED = 'completed';
 
     /* Metadata describing database fields and data properties: */
-    protected $MetaData = array
+    static $MetaData = array
     (
-        self::STAT_ID            => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::STAT_ID,
-            'db_primary_key'=> true,
-            'default_value' => null
-        ),
         self::POST_ID            => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::POST_ID,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => 0
         ),
         self::PAGEVIEW            => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::PAGEVIEW,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => 0
         ),
         self::REGISTER            => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::REGISTER,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => 0
         ),
         self::VERIFY      => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::VERIFY,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => 0
         ),
         self::COMPLETED               => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::COMPLETED,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => 0
         )
     );

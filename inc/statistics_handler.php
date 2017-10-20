@@ -36,16 +36,18 @@ function RegisterEvent($post_id, $event_type)
     if(gettype($post_id) == 'integer')
     {
         $statistics_data = new StatisticsDataClass();
-        if($statistics_data->LoadData($post_id))
+        if($statistics_data->LoadData(StatisticsDataClass::POST_ID, $post_id))
         {
-            $statistics_data->AddDataInt($event_type, 1);
+            $number = $statistics_data->GetData($event_type);
+            $number = $number + 1;
+            $statistics_data->SetData($event_type, $number);
             $statistics_data->SaveData();
         }
         else
         {
-            $statistics_data->SetDataInt(StatisticsDataClass::STAT_ID, $post_id);
-            $statistics_data->AddDataInt($event_type, 1);
-            $statistics_data->SaveData(true);
+            $statistics_data->SetData(StatisticsDataClass::POST_ID, $post_id);
+            $statistics_data->SetData($event_type, 1);
+            $statistics_data->SaveData();
         }
     }
     else

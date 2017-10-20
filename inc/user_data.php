@@ -23,11 +23,10 @@
 
 namespace BCF_PayPerPage;
 
-require_once('data_collection.php');
-require_once('data_types.php');
+require_once(__DIR__ . '/../wp-plugin-utils/db_table.php');
 
 
-class UserDataClass extends DataCollectionClass
+class UserDataClass extends DataTableAbsClass
 {
     /* Database table name: */
     const DB_TABLE_NAME = 'bcf_payperpage_users';

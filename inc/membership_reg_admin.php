@@ -13,7 +13,7 @@ function GetRegStatusName($reg_status)
             break;
 
         case MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED:
-            $name='Verified';
+            $name='E-mail verified';
             break;
 
         case MembershipRegistrationDataClass::STATE_USER_CREATED:
@@ -72,7 +72,7 @@ function MembershipDrawRegAdminPage()
         {
             $any=true;
             echo '<tr>';
-            echo '<td>' . $record['registration_id'] . '</td>';
+            echo '<td>' . $record['id'] . '</td>';
             echo '<td>' . $record['timestamp'] . '</td>';
             echo '<td>' . GetRegStatusName($record['state']) . '</td>';
             echo '<td>' . $record['username'] . '</td>';
@@ -107,7 +107,7 @@ function MembershipDrawRegAdminPage()
         {
             $any=true;
             echo '<tr>';
-            echo '<td>' . $record['registration_id'] . '</td>';
+            echo '<td>' . $record['id'] . '</td>';
             echo '<td>' . $record['timestamp'] . '</td>';
             echo '<td>' . GetRegStatusName($record['state']) . '</td>';
             echo '<td>' . $record['username'] . '</td>';

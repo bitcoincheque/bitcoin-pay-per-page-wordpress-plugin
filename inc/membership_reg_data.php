@@ -25,17 +25,15 @@
 namespace BCF_PayPerPage;
 
 
-require_once('data_collection.php');
-require_once('data_types.php');
+require_once(__DIR__ . '/../wp-plugin-utils/db_table.php');
 
 
-class MembershipRegistrationDataClass extends DataCollectionClass
+class MembershipRegistrationDataClass extends DataTableAbsClass
 {
     /* Database table name: */
-    const DB_TABLE_NAME = 'bcf_payperpage_registration';
+    const TABLE_NAME = 'bcf_payperpage_registration';
 
     /* List of table field names: */
-    const ID = 'registration_id';
     const TIMESTAMP = 'timestamp';
     const REG_TYPE = 'reg_type';
     const STATE = 'state';
@@ -68,84 +66,54 @@ class MembershipRegistrationDataClass extends DataCollectionClass
     const STATE_RESET_PASSWD_TIMEOUT = 6;
 
     /* Metadata describing database fields and data properties: */
-    protected $MetaData = array
+    static $MetaData = array
     (
-        self::ID            => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::ID,
-            'db_primary_key'=> true,
-            'default_value' => null
-        ),
         self::TIMESTAMP     => array(
-            'class_type'    => 'DateTimeTypeClass',
-            'db_field_name' => self::TIMESTAMP,
-            'db_primary_key'=> false,
-            'default_value' => ''
+            'data_type'    => 'DbTypeTimeStamp',
+            'default_value' => 0
         ),
         self::REG_TYPE      => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::REG_TYPE,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => self::REG_TYPE_NOT_SET
         ),
         self::STATE            => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::STATE,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => self::STATE_EMAIL_UNCONFIRMED
         ),
         self::USERNAME      => array(
-            'class_type'    => 'TextTypeClass',
-            'db_field_name' => self::USERNAME,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeString',
             'default_value' => ''
         ),
         self::PASSWORD               => array(
-            'class_type'    => 'TextTypeClass',
-            'db_field_name' => self::PASSWORD,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeString',
             'default_value' => ''
         ),
         self::EMAIL          => array(
-            'class_type'    => 'TextTypeClass',
-            'db_field_name' => self::EMAIL,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeString',
             'default_value' => ''
         ),
         self::WP_USER_ID    => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::WP_USER_ID,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => 0
         ),
         self::RETRY_COUNTER => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::RETRY_COUNTER,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => 0
         ),
         self::COOCKIE => array(
-            'class_type'    => 'TextTypeClass',
-            'db_field_name' => self::COOCKIE,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeString',
             'default_value' => null
         ),
         self::NONCE         => array(
-            'class_type'    => 'TextTypeClass',
-            'db_field_name' => self::NONCE,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeString',
             'default_value' => ''
         ),
         self::POST_ID => array(
-            'class_type'    => 'UnsigedIntegerTypeClass',
-            'db_field_name' => self::POST_ID,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeUnsignedInteger',
             'default_value' => null
         ),
         self::SECRET         => array(
-            'class_type'    => 'TextTypeClass',
-            'db_field_name' => self::SECRET,
-            'db_primary_key'=> false,
+            'data_type'    => 'DbTypeString',
             'default_value' => ''
         ),
     );

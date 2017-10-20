@@ -29,8 +29,8 @@ function StatisticsDrawAdminPage()
     foreach($record_list as $record)
     {
         echo '<tr>';
-        echo '<td>' . $record['stat_id'] . '</td>';
-        echo '<td>' . get_the_title($record['stat_id']) . '</td>';
+        echo '<td>' . $record['id'] . '</td>';
+        echo '<td>' . get_the_title($record['id']) . '</td>';
         echo '<td>' . $record['pageview'] . '</td>';
         echo '<td>' . $record['register'] . '</td>';
         echo '<td>' . $record['verify'] . '</td>';

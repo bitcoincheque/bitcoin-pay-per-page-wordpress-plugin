@@ -34,9 +34,9 @@ Text Domain: bcf_payperpage
 
 namespace BCF_PayPerPage;
 
-require_once ('inc/pageview_manager.php');
-require_once ('inc/payment-browser-header.php');
-require_once ('inc/payment_data_codec.php');
+//require_once ('inc/pageview_manager.php');
+//require_once ('inc/payment-browser-header.php');
+//require_once ('inc/payment_data_codec.php');
 require_once ('inc/membership.php');
 require_once ('inc/autoresponder.php');
 require_once ('inc/statistics_admin.php');
@@ -275,9 +275,9 @@ function FilterContent( $content )
         $add_ajax_handling = false;
         $send_js_data = array();
 
-        $pageview_manager = new PageViewManagerClass();
-        $post_id     = new UnsigedIntegerTypeClass($post_id_val);
-        $has_paid = $pageview_manager->HasUserPaidForThisPage($post_id);
+        //$pageview_manager = new PageViewManagerClass();
+        //$post_id     = new UnsigedIntegerTypeClass($post_id_val);
+        //$has_paid = $pageview_manager->HasUserPaidForThisPage($post_id);
 
         $member_options = get_option(BCF_PAYPERPAGE_MEMBERSHIP_OPTION);
 
@@ -358,6 +358,7 @@ function FilterContent( $content )
             }
             else
             {
+                /*
                 if($payment_required)
                 {
                     if($has_paid)
@@ -373,8 +374,11 @@ function FilterContent( $content )
                 }
                 else
                 {
+                */
                     $draw_all_content = true;
+                /*
                 }
+                */
             }
         }
 
@@ -824,6 +828,7 @@ function Init()
     $src = plugin_dir_url( __FILE__ ) . 'js/script.js';
     wp_enqueue_script('bcf_payperpage_script_handler', $src, array( 'jquery' ), '0.12', true);
 
+    /*
     if(!isset($_COOKIE[BCF_PAYPAGE_OPTION_COOKIE_NAME]))
     {
         $coockie_counter = get_option(BCF_PAYPAGE_OPTION_COOCKIE_COUNTER);
@@ -838,6 +843,7 @@ function Init()
             //echo 'Set coockie: ' . BCF_PAYPAGE_OPTION_COOKIE_NAME . ' = ' . $coockie_counter . ' (Expire ' . $seconds . ' sec.)';
         }
     }
+    */
 
     MembershipInit();
 }
@@ -1416,7 +1422,7 @@ function DeactivatePlugin()
     DeactivateMembershipPlugin();
 }
 
-
+/*
 function testingpage()
 {
     if(isset($_COOKIE[BCF_PAYPAGE_OPTION_COOKIE_NAME]))
@@ -1428,6 +1434,7 @@ function testingpage()
         return "The cookie: '" . BCF_PAYPAGE_OPTION_COOKIE_NAME . "' is not set.";
     }
 }
+*/
 
 function remove_payments()
 {

@@ -52,9 +52,9 @@ class RegistrationHandlerClass
         {
             $this->registration_data = new MembershipRegistrationDataClass();
 
-            if($this->registration_data->LoadData($reg_id))
+            if($this->registration_data->LoadData(MembershipRegistrationDataClass::PRIMARY_KEY, $reg_id))
             {
-                $my_reg_type = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::REG_TYPE);
+                $my_reg_type = $this->registration_data->GetData(MembershipRegistrationDataClass::REG_TYPE);
                 if($my_reg_type != 0)
                 {
                     if($my_reg_type != $reg_type)
@@ -63,7 +63,7 @@ class RegistrationHandlerClass
                     }
                 }
 
-                $my_post_id = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::POST_ID);
+                $my_post_id = $this->registration_data->GetData(MembershipRegistrationDataClass::POST_ID);
                 if($my_post_id != 0)
                 {
                     if($my_post_id != $post_id)
@@ -72,7 +72,7 @@ class RegistrationHandlerClass
                     }
                 }
 
-                $my_nonce = $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+                $my_nonce = $this->registration_data->GetData(MembershipRegistrationDataClass::NONCE);
                 if($my_nonce != '')
                 {
                     if($my_nonce != $nonce)
@@ -81,7 +81,7 @@ class RegistrationHandlerClass
                     }
                 }
 
-                $my_secret = $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
+                $my_secret = $this->registration_data->GetData(MembershipRegistrationDataClass::SECRET);
                 if($my_secret != '')
                 {
                     if($my_secret != $secret)
@@ -100,21 +100,21 @@ class RegistrationHandlerClass
         {
             $this->registration_data = new MembershipRegistrationDataClass();
             $cookie = MembershipGetCookie();
-            $this->registration_data->SetDataString(MembershipRegistrationDataClass::COOCKIE, $cookie);
-            $this->registration_data->SetDataInt(MembershipRegistrationDataClass::TIMESTAMP, time());
+            $this->registration_data->SetData(MembershipRegistrationDataClass::COOCKIE, $cookie);
+            $this->registration_data->SetData(MembershipRegistrationDataClass::TIMESTAMP, time());
             $nonce = MembershipRandomString(NONCE_LENGTH);
-            $this->registration_data->SetDataString(MembershipRegistrationDataClass::NONCE, $nonce);
+            $this->registration_data->SetData(MembershipRegistrationDataClass::NONCE, $nonce);
 
             /*
             if($reg_type)
             {
-                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::POST_ID, $reg_type);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::POST_ID, $reg_type);
             }
             */
 
             if($post_id)
             {
-                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::POST_ID, $post_id);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::POST_ID, $post_id);
             }
         }
     }
@@ -128,11 +128,11 @@ class RegistrationHandlerClass
     {
         $result = false;
 
-        $my_reg_type = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::REG_TYPE);
+        $my_reg_type = $this->registration_data->GetData(MembershipRegistrationDataClass::REG_TYPE);
 
         if($my_reg_type==MembershipRegistrationDataClass::REG_TYPE_NOT_SET)
         {
-            $this->registration_data->SetDataInt(MembershipRegistrationDataClass::REG_TYPE, $reg_type);
+            $this->registration_data->SetData(MembershipRegistrationDataClass::REG_TYPE, $reg_type);
             $result = true;
         }
         else if($my_reg_type == $reg_type)
@@ -154,10 +154,11 @@ class RegistrationHandlerClass
             if($username != '' && $password != '')
             {
                 $password_hash = wp_hash_password($password);
-                $this->registration_data->SetDataString(MembershipRegistrationDataClass::USERNAME, $username);
-                $this->registration_data->SetDataString(MembershipRegistrationDataClass::PASSWORD, $password_hash);
-                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::POST_ID, $post_id);
-                $reg_id = $this->registration_data->SaveData();
+                $this->registration_data->SetData(MembershipRegistrationDataClass::USERNAME, $username);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::PASSWORD, $password_hash);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::POST_ID, $post_id);
+                $this->registration_data->SaveData();
+                $reg_id = $this->registration_data->GetData(MembershipRegistrationDataClass::PRIMARY_KEY);
             }
 
             if($reg_id > 0)
@@ -177,46 +178,49 @@ class RegistrationHandlerClass
 
         if($email != '')
         {
-            $old_email = $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
+            $old_email = $this->registration_data->GetData(MembershipRegistrationDataClass::EMAIL);
 
             if($old_email and $email != $old_email)
             {
                 $this->registration_data = new MembershipRegistrationDataClass();
-                $this->registration_data->SetDataString(MembershipRegistrationDataClass::EMAIL, $email);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::EMAIL, $email);
 
-                $post_id = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::POST_ID);
-                $this->registration_data->SetDataString(MembershipRegistrationDataClass::POST_ID, $post_id);
+                $post_id = $this->registration_data->GetData(MembershipRegistrationDataClass::POST_ID);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::POST_ID, $post_id);
 
                 $secret = MembershipRandomString(SECRET_LENGTH);
-                $this->registration_data->SetDataString(MembershipRegistrationDataClass::SECRET, $secret);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::SECRET, $secret);
 
-                $reg_id = $this->registration_data->SaveData();
+                $this->registration_data->SaveData();
+                $reg_id = $this->registration_data->GetData(MembershipRegistrationDataClass::PRIMARY_KEY);
 
                 $retry_counter=0;
             }
             else
             {
-                $this->registration_data->SetDataString(MembershipRegistrationDataClass::REG_TYPE, $reg_type);
-                $this->registration_data->SetDataString(MembershipRegistrationDataClass::EMAIL, $email);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::REG_TYPE, $reg_type);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::EMAIL, $email);
 
-                $secret = $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
+                $secret = $this->registration_data->GetData(MembershipRegistrationDataClass::SECRET);
                 if($secret == '')
                 {
                     $secret = MembershipRandomString(SECRET_LENGTH);
-                    $this->registration_data->SetDataString(MembershipRegistrationDataClass::SECRET, $secret);
+                    $this->registration_data->SetData(MembershipRegistrationDataClass::SECRET, $secret);
                 }
 
-                $this->registration_data->AddDataInt(MembershipRegistrationDataClass::RETRY_COUNTER, 1);
+                $retry = $this->registration_data->GetData(MembershipRegistrationDataClass::RETRY_COUNTER);
+                $retry += 1;
+                $this->registration_data->SetData(MembershipRegistrationDataClass::RETRY_COUNTER, $retry);
                 $this->registration_data->SaveData();
 
-                $reg_id = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::ID);
-                $retry_counter = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::RETRY_COUNTER);
-                $post_id = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::POST_ID);
+                $reg_id = $this->registration_data->GetData(MembershipRegistrationDataClass::PRIMARY_KEY);
+                $retry_counter = $this->registration_data->GetData(MembershipRegistrationDataClass::RETRY_COUNTER);
+                $post_id = $this->registration_data->GetData(MembershipRegistrationDataClass::POST_ID);
             }
 
             if($retry_counter < 5)
             {
-                $nonce = $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+                $nonce = $this->registration_data->GetData(MembershipRegistrationDataClass::NONCE);
 
                 $verification_link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_CONFIRM_EMAIL . '&' . REG_ID . '=' . $reg_id . '&' .REG_TYPE . '=' . $reg_type . '&' . REG_NONCE . '=' . $nonce . '&' . REG_SECRET . '=' . $secret;
 
@@ -281,10 +285,10 @@ class RegistrationHandlerClass
     {
         WriteDebugLogFunctionCall();
 
-        switch($this->registration_data->GetDataString(MembershipRegistrationDataClass::STATE))
+        switch($this->registration_data->GetData(MembershipRegistrationDataClass::STATE))
         {
             case MembershipRegistrationDataClass::STATE_EMAIL_UNCONFIRMED:
-                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED);
                 $this->registration_data->SaveData();
                 $result = self::RESULT_OK;
                 break;
@@ -311,18 +315,19 @@ class RegistrationHandlerClass
             $options = get_option(BCF_PAYPERPAGE_EMAIL_RESET_PASSWORD_OPTION);
 
             $secret = MembershipRandomString(SECRET_LENGTH);
-            $this->registration_data->SetDataString(MembershipRegistrationDataClass::SECRET, $secret);
-            $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT);
-            $this->registration_data->SetDataString(MembershipRegistrationDataClass::EMAIL, $email);
-            $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
-            $reg_id = $this->registration_data->SaveData();
+            $this->registration_data->SetData(MembershipRegistrationDataClass::SECRET, $secret);
+            $this->registration_data->SetData(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT);
+            $this->registration_data->SetData(MembershipRegistrationDataClass::EMAIL, $email);
+            $this->registration_data->SetData(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
+            $this->registration_data->SaveData();
+            $reg_id = $this->registration_data->GetData(MembershipRegistrationDataClass::PRIMARY_KEY);
 
             $site_name = get_bloginfo('name');
             $site_url  = site_url();
 
             $user_info = get_userdata($wp_user_id);
             $username  = $user_info->user_login;
-            $nonce = $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+            $nonce = $this->registration_data->GetData(MembershipRegistrationDataClass::NONCE);
 
             $link = site_url() . '?' . REG_EVENT . '=' . REG_EVENT_PASSWORD_LINK . '&' . REG_ID . '=' . $reg_id . '&' . REG_NONCE . '=' . $nonce . '&' . REG_SECRET . '=' . $secret . '&p=' . $post_id;
             $href = '<a href="' . $link . '">' . $link . '</a>';
@@ -350,10 +355,10 @@ class RegistrationHandlerClass
     {
         WriteDebugLogFunctionCall();
 
-        switch($this->registration_data->GetDataString(MembershipRegistrationDataClass::STATE))
+        switch($this->registration_data->GetData(MembershipRegistrationDataClass::STATE))
         {
             case MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_SENT:
-                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_CONFIRM);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_CONFIRM);
                 $this->registration_data->SaveData();
                 $result = self::RESULT_OK;
                 break;
@@ -426,13 +431,13 @@ class RegistrationHandlerClass
         }
         else
         {
-            switch($this->registration_data->GetDataString(MembershipRegistrationDataClass::STATE))
+            switch($this->registration_data->GetData(MembershipRegistrationDataClass::STATE))
             {
                 case MembershipRegistrationDataClass::STATE_RESET_PASSWD_EMAIL_CONFIRM:
-                    $wp_user_id = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::WP_USER_ID);
+                    $wp_user_id = $this->registration_data->GetData(MembershipRegistrationDataClass::WP_USER_ID);
                     wp_set_password($password, $wp_user_id);
 
-                    $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_DONE);
+                    $this->registration_data->SetData(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_RESET_PASSWD_DONE);
                     $this->registration_data->SaveData();
 
                     $result = self::RESULT_OK;
@@ -458,17 +463,17 @@ class RegistrationHandlerClass
 
     public function HasAllRequiredInfo()
     {
-        $username = $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
-        $password =  $this->registration_data->GetDataString(MembershipRegistrationDataClass::PASSWORD);
-        $email =  $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
-        $state = $this->registration_data->GetDataInt(MembershipRegistrationDataClass::STATE);
+        $username = $this->registration_data->GetData(MembershipRegistrationDataClass::USERNAME);
+        $password =  $this->registration_data->GetData(MembershipRegistrationDataClass::PASSWORD);
+        $email =  $this->registration_data->GetData(MembershipRegistrationDataClass::EMAIL);
+        $state = $this->registration_data->GetData(MembershipRegistrationDataClass::STATE);
 
         return ($username and $password and $email and $state == MembershipRegistrationDataClass::STATE_EMAIL_CONFIRMED);
     }
 
     public function UserExist()
     {
-        $username = $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
+        $username = $this->registration_data->GetData(MembershipRegistrationDataClass::USERNAME);
 
         $user_id = username_exists($username);
         if($user_id === false){
@@ -480,7 +485,7 @@ class RegistrationHandlerClass
 
     public function EmailExist()
     {
-        $email = $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
+        $email = $this->registration_data->GetData(MembershipRegistrationDataClass::EMAIL);
 
         $user_id = email_exists($email);
         if($user_id === false){
@@ -496,11 +501,11 @@ class RegistrationHandlerClass
 
         $result = false;
 
-        $username = $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
+        $username = $this->registration_data->GetData(MembershipRegistrationDataClass::USERNAME);
 
         if(validate_username($username))
         {
-            $email = $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
+            $email = $this->registration_data->GetData(MembershipRegistrationDataClass::EMAIL);
 
             $temp_password = wp_hash_password(MembershipRandomString(8));
 
@@ -508,11 +513,11 @@ class RegistrationHandlerClass
 
             if( ! is_wp_error($wp_user_id))
             {
-                $password_hash = $this->registration_data->GetDataString(MembershipRegistrationDataClass::PASSWORD);
+                $password_hash = $this->registration_data->GetData(MembershipRegistrationDataClass::PASSWORD);
                 $this->wp_set_hashed_password($password_hash, $wp_user_id);
 
-                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_USER_CREATED);
-                $this->registration_data->SetDataInt(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::STATE, MembershipRegistrationDataClass::STATE_USER_CREATED);
+                $this->registration_data->SetData(MembershipRegistrationDataClass::WP_USER_ID, $wp_user_id);
                 $this->registration_data->SaveData();
 
                 $this->SendEmailNotificationNewUser($wp_user_id);
@@ -537,7 +542,7 @@ class RegistrationHandlerClass
     {
         WriteDebugLogFunctionCall();
 
-        $username = $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
+        $username = $this->registration_data->GetData(MembershipRegistrationDataClass::USERNAME);
 
         $user = get_user_by('login', $username);
         if(!($user === false))
@@ -564,7 +569,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::ID);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::PRIMARY_KEY);
         }
         else
         {
@@ -576,7 +581,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::REG_TYPE);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::REG_TYPE);
         }
         else
         {
@@ -588,7 +593,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::NONCE);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::NONCE);
         }
         else
         {
@@ -600,7 +605,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::SECRET);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::SECRET);
         }
         else
         {
@@ -612,7 +617,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::STATE);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::STATE);
         }
         else
         {
@@ -624,7 +629,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::USERNAME);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::USERNAME);
         }
         else
         {
@@ -636,7 +641,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::PASSWORD);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::PASSWORD);
         }
         else
         {
@@ -648,7 +653,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::EMAIL);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::EMAIL);
         }
         else
         {
@@ -660,7 +665,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataInt(MembershipRegistrationDataClass::WP_USER_ID);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::WP_USER_ID);
         }
         else
         {
@@ -672,7 +677,7 @@ class RegistrationHandlerClass
     {
         if($this->has_data)
         {
-            return $this->registration_data->GetDataString(MembershipRegistrationDataClass::COOCKIE);
+            return $this->registration_data->GetData(MembershipRegistrationDataClass::COOCKIE);
         }
         else
         {

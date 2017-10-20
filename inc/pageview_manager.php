@@ -23,7 +23,6 @@
 
 namespace BCF_PayPerPage;
 
-require_once ('db_interface.php');
 require_once ('page_view_data.php');
 require_once ('util.php');
 
